@@ -1,0 +1,18 @@
+Installation after checking out from SVN
+
+make sure qmake is in your path!
+
+==========================================
+the automatic way: 
+- run build.sh in the directory where you 
+found it
+- add extension=php_qt.so to your php.ini file
+
+==========================================
+by foot:
+- Make sure you have DBus support in Qt, set QTDIR and put qmake into your path
+- Run ./prepare_svn.sh to fetch Smoke, Kalyptus and CMake modules
+- rename CMakeLists.txt.php-qt to CMakeLists.txt (it will overwrite the other CMakeLists.txt file)
+- Create a build dir and run cmake, make and make install
+- Define qt.codec=Latin1 and extension=php_qt.so in your php.ini file
+

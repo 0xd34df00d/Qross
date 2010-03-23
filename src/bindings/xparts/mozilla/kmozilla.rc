@@ -1,0 +1,11 @@
+<!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
+<kpartgui name="khtmlpart" version="1">
+<MenuBar>
+ <Menu name="edit">
+  <Action name="stop" />
+  <Action name="reload" />
+  <Separator />
+  <Action name="nonexistant" />
+ </Menu>
+</MenuBar>
+</kpartgui>

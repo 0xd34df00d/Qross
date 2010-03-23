@@ -1,0 +1,30 @@
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#cmakedefine PHPQT_DEBUG 1
+#cmakedefine PHPQT_MOC_DEBUG 1
+#cmakedefine PHPQT_CONSTRUCT_DEBUG 1
+#cmakedefine PHPQT_DESTRUCT_DEBUG 1
+#cmakedefine PHPQT_METHOD_DEBUG 1
+#cmakedefine PHPQT_STATICMETHOD_DEBUG 1
+#cmakedefine PHPQT_VIRTUALMETHOD_DEBUG 1
+#cmakedefine PHPQT_SIGNAL_DEBUG 1
+#cmakedefine PHPQT_SLOT_DEBUG 1
+#cmakedefine PHPQT_MAPPTR_DEBUG 1
+#cmakedefine PHPQT_UNMAPPTR_DEBUG 1
+#cmakedefine PHPQT_MAPHANDLE_DEBUG 1
+#cmakedefine PHPQT_UNMAPHANDLE_DEBUG 1
+
+#if PHP_MAJOR_VERSION > 5 || (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2)
+#define refcount__GC refcount__gc
+#define is_ref__GC is_ref__gc
+#else
+#define refcount__GC refcount
+#define is_ref__GC is_ref
+#endif
+
+#undef ZEND_DLEXPORT
+#define ZEND_DLEXPORT Q_DECL_EXPORT
+
+#endif

@@ -1,0 +1,56 @@
+
+PyKDE 4 - Python bindings for KDE 4.4
+=====================================
+Main Developer - Simon Edwards <simon@simonzone.com>, Jim Bublitz <jbublitz@nwinternet.com>
+
+
+Install
+-------
+See INSTALL for installation instructions and read the Tips below.
+
+
+License
+-------
+Each files should have its our license header, but generally speaking the code
+that makes up the PyKDE4 Python modules (libraries) are ̈́"LGPL or later", and
+the rest is "GPL or later".
+
+
+Tips
+----
+
+* Python 3 is supported for the base bindings but currently not for the
+  plugins and embedding. When running cmake specify which python executable
+  you want to use by passing in the -DPYTHON_EXECUTABLE= option. When
+  building from the top level in kdebindings you will want to disable
+  krosspython as it does not support Python 3. For example:
+
+    cmake -DPYTHON_EXECUTABLE=/usr/bin/python3 -DENABLE_KROSSPYTHON=off
+
+* Almost every class and method in the KDE API is supported. For most
+  developers PyKDE4 is in good enough shape to start porting and
+  development of PyKDE4 based programs.
+
+* PyKDE4 is very sensitive to binary compatibility in KDE's libraries.
+  (PyKDE uses also every class and method in KDE.) Don't be surprised if
+  your PyKDE install breaks after updating your KDE SVN checkout. I (Simon)
+  will do my best to fix things as they break, and to try to keep things up
+  to date when new methods and classes are added to the KDE API.
+
+* If you have written some example code which could be included with PyKDE4,
+  then get in touch!
+
+* The modules, kdecore, kdeui, solid, sonnet etc are now located under a
+  "PyKDE4" top level module. For example, this is what you need now:
+
+     from PyKDE4.kdecore import *
+
+     or
+
+     from PyKDE4 import kdecore
+
+* Bug reports can be sent to Jim Bublitz <jbublitz@nwinternet.com> and Simon
+  Edwards <simon@simonzone.com>
+
+
+-- Simon Edwards <simon@simonzone.com>

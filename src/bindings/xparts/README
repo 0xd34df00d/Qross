@@ -1,0 +1,26 @@
+
+You will find here the XPart technology, as implemented by Simon Haussman,
+Mathias Ettrich and Lars Knoll. Basically, XPart allows out of process
+embedding. For more information, see:
+http://trolls.troll.no/~lars/xparts/doc/xparts.html
+
+Currently XPart is more a proof of concept than a stabilized and maintained
+technology. The only application using it is kmozilla, which makes the
+Gecko html/browser (the one of mozilla) available as a kpart.
+
+The technology is not used enough to guarantee that the current state is the
+best, so it might develop it further. Understand by that, that 
+_binary compatibility might not be kept between releases_ .
+
+But don't be afraid by that. XPart is a very promising technology and the api
+looks good for the moment. We do not plan any change. 
+
+If you are developing something with XPart, please make yourself known to the
+kde development mailing lists, so that we can help you and get feedback.  I'm
+working on a xpart notepad to show how to develop a xpart editor component.
+This editor will be committed after the 2.1 release though. I am also working
+on making vim available as a xpart/kpart component.
+
+	Philippe Fremy <pfremy@chez.com>
+
+

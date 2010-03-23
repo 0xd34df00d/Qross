@@ -1,0 +1,11 @@
+KPart::queryInterface?
+
+Interfaces in GTK???
+eindeutiger DCOP name fuer Interfaces
+
+XPartHost:
+started neuen manager und pollt.
+
+XPartManager
+
+KWin: Smart transient handling

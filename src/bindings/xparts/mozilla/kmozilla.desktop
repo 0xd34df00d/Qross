@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Service
+Exec=foobar
+Comment=Embeddable HTML viewing component
+MimeType=text/html;text/xml;
+Icon=konqueror
+Name=KMOZILLA
+ServiceTypes=KParts/ReadOnlyPart,Browser/View
+X-KDE-Library=libkmozillapart

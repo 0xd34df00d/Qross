@@ -1,0 +1,77 @@
+uicp Installation
+-----------------------------
+
+In general, uicp is automatically installed as part of a standard installation
+of PHP-Qt. It may, however, be installed completely independently of PHP-Qt;
+this document describes the process
+
+Requirements:
+	CMake 2.4 or newer
+	Qt 4.4.0 or newer
+	A C++ compiler
+	
+Quick install
+----------------------------
+cmake .;make;sudo make install
+
+Detailed Instructions
+----------------------------
+	
+1) Change to the top-level directory of your uicp checkout
+2) Type: cmake .
+
+You should see something like this:
+-- Check for working C compiler: /usr/bin/gcc
+-- Check for working C compiler: /usr/bin/gcc -- works
+-- Check size of void*
+-- Check size of void* - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Looking for Q_WS_X11
+-- Looking for Q_WS_X11 - found
+-- Looking for Q_WS_MAC
+-- Looking for Q_WS_MAC - not found.
+-- Looking for Q_WS_WIN
+-- Looking for Q_WS_WIN - not found.
+-- Found Qt-Version 4.4.1
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/foo/uicp/
+
+If not, make sure you have Qt 4.4.0 installed and that the qmake from
+Qt 4.4.0 is in your path before any other qmake binaries.
+
+3) Type: make
+
+You should see something like this:
+Scanning dependencies of target uic_bin
+[  6%] Building CXX object CMakeFiles/uic_bin.dir/customwidgetsinfo.o
+[ 13%] Building CXX object CMakeFiles/uic_bin.dir/databaseinfo.o
+[ 20%] Building CXX object CMakeFiles/uic_bin.dir/driver.o
+[ 26%] Building CXX object CMakeFiles/uic_bin.dir/treewalker.o
+[ 33%] Building CXX object CMakeFiles/uic_bin.dir/ui4.o
+[ 40%] Building CXX object CMakeFiles/uic_bin.dir/uic.o
+[ 46%] Building CXX object CMakeFiles/uic_bin.dir/validator.o
+[ 53%] Building CXX object CMakeFiles/uic_bin.dir/php/phpextractimages.o
+[ 60%] Building CXX object CMakeFiles/uic_bin.dir/php/phpwritedeclaration.o
+[ 66%] Building CXX object CMakeFiles/uic_bin.dir/php/phpwriteincludes.o
+[ 73%] Building CXX object CMakeFiles/uic_bin.dir/php/phpwriteicondata.o
+[ 80%] Building CXX object CMakeFiles/uic_bin.dir/php/phpwriteicondeclaration.o
+[ 86%] Building CXX object CMakeFiles/uic_bin.dir/php/phpwriteiconinitialization.o
+[ 93%] Building CXX object CMakeFiles/uic_bin.dir/php/phpwriteinitialization.o
+[100%] Building CXX object CMakeFiles/uic_bin.dir/main.o
+Linking CXX executable uicp
+[100%] Built target uic_bin
+
+
+4) Type: sudo make install
+
+You should see something like this:
+[100%] Built target uic_bin
+Linking CXX executable CMakeFiles/CMakeRelink.dir/uicp
+Install the project...
+-- Install configuration: ""
+-- Installing /usr/local/bin/uicp
+
+Note that installing uicp is optional, you can simply copy the uicp binary
+wherever you like.

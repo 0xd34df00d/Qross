@@ -1,0 +1,43 @@
+#
+# to use the file to build a Qt only version of PHP-Qt, copy it to CMakeLists.txt
+#
+# make a build/ dir, step into
+# run: cmake ..
+# run: make
+#
+# for further information read the README file in php/phpqt
+#
+
+cmake_minimum_required(VERSION 2.6)
+
+project(PHP-Qt)
+
+# where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules )
+
+FIND_PACKAGE(Perl REQUIRED)
+FIND_PACKAGE (Qt4 REQUIRED)
+
+add_definitions (${QT_DEFINITIONS}  -DHAVE_CONFIG_H=1)
+include_directories (${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${QT_INCLUDES} )
+
+FIND_PACKAGE (PHP5 REQUIRED)
+FIND_PACKAGE (OpenGL REQUIRED)
+
+OPTION(ENABLE_SMOKE "build Smoke" ON)
+OPTION(ENABLE_QTWEBKIT_SMOKE "build QtWebKitSmoke" OFF)
+OPTION(ENABLE_QTSCRIPT_SMOKE "build QtScriptSmoke" OFF)
+OPTION(ENABLE_QTUITOOLS_SMOKE "build QtUiToolsSmoke" OFF)
+OPTION(ENABLE_PHONON_SMOKE "build PhononSmoke" OFF)
+OPTION(ENABLE_QSCI_SMOKE "build QsciSmoke" OFF)
+OPTION(ENABLE_QWT_SMOKE "build QwtSmoke" OFF)
+OPTION(ENABLE_KDE_SMOKE "build KDESmoke" OFF)
+OPTION(ENABLE_KDEVPLATFORM_SMOKE "build KDevPlatformSmoke" OFF)
+OPTION(ENABLE_KHTML_SMOKE "build KHTMLSmoke" OFF)
+OPTION(ENABLE_KTEXTEDITOR_SMOKE "build KTextEditorSmoke" OFF)
+OPTION(ENABLE_SOLID_SMOKE "build SolidSmoke" OFF)
+OPTION(ENABLE_PHP-QT "build PHP-Qt" ON)
+
+set(kdebindings_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+add_subdirectory(smoke)
+add_subdirectory(php)

@@ -1,0 +1,11 @@
+<!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
+<kpartgui name="notepad_xpart" version="1">
+<MenuBar>
+	<Menu name="File">
+		<Action name="open_url" />
+		<Action name="close_url" />
+		<Separator />
+		<Action name="nonexistant" />
+	</Menu>
+</MenuBar>
+</kpartgui>

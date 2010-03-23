@@ -1,0 +1,11 @@
+<!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
+<kpartgui name="xparthost_shell" version="1">
+
+<MenuBar>
+	<Menu name="File">
+		<Merge/>
+	</Menu>
+	<Merge/>
+</MenuBar>
+
+</kpartgui>

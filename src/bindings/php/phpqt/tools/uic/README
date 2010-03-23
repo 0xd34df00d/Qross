@@ -1,0 +1,15 @@
+This is uicp, the user interface compiler for PHP which creates standard
+PHP code out of the *.ui files created by QtDesigner. It is part of
+PHP-Qt and derived from version 4.4.1 of Trolltech's uic included with Qt.
+
+Author: Thomas Moenicke
+
+Contributors:
+	Katrina Niolet,
+	Falko Menge
+
+Usage:
+
+phpuic designer.ui -o ui_designer.php
+
+For more information, see http://php-qt.org

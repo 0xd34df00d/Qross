@@ -1,0 +1,14 @@
+<!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
+<kpartgui name="part" version="1">
+<MenuBar>
+ <Menu name="edit">
+  <Action name="stop" />
+  <Action name="reload" />
+  <Separator />
+  <Action name="nonexistant" />
+ </Menu>
+</MenuBar>
+<ToolBar fullWidth="true" name="locationToolBar" newline="true">
+  <Action name="location" />
+</ToolBar>    
+</kpartgui>
