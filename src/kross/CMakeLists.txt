@@ -1,3 +1,5 @@
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+
 # the core library
 add_subdirectory( core )
 # the ui library

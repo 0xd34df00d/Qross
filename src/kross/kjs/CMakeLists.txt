@@ -1,11 +1,10 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/kross
-    ${KDE4_KJS_INCLUDES}
     ${CMAKE_SOURCE_DIR}/kjsembed
-    ${KDE4_KDECORE_INCLUDES}
-    ${KDE4_KDEUI_INCLUDES}
-    ${KDE4_KIO_INCLUDES}
-)
+    )
+    
+FIND_PACKAGE (Qt4 REQUIRED)
+INCLUDE (${QT_USE_FILE})
 
 ########### next target ###############
 
@@ -14,6 +13,7 @@ set(krosskjs_PART_SRCS
    kjsinterpreter.cpp
 )
 
-kde4_add_plugin(krosskjs ${krosskjs_PART_SRCS})
-target_link_libraries(krosskjs ${KDE4_KDEUI_LIBS} ${KDE4_KDECORE_LIBS} krosscore kjs kjsembed)
-install(TARGETS krosskjs DESTINATION ${PLUGIN_INSTALL_DIR})
+# TODO: add_plugin?
+#kde4_add_plugin(krosskjs ${krosskjs_PART_SRCS})
+#target_link_libraries(krosskjs ${QT_LIBRARIES} krosscore kjs kjsembed)
+#install(TARGETS krosskjs DESTINATION ${PLUGIN_INSTALL_DIR})
