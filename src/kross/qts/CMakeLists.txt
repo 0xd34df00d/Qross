@@ -1,4 +1,4 @@
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/..)
 
 FIND_PACKAGE (Qt4 REQUIRED)
 SET (QT_USE_QTUITOOLS TRUE)
