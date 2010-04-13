@@ -21,16 +21,13 @@
 #ifndef KROSS_EXPORT_H
 #define KROSS_EXPORT_H
 
-/* needed for KDE_EXPORT and KDE_IMPORT macros */
-#include <kdemacros.h>
-
 #ifndef KROSS_EXPORT
 # if defined(MAKE_KROSS_LIB)
    /* We are building this library */
 #  define KROSS_EXPORT KDE_EXPORT
 # else
    /* We are using this library */
-#  define KROSS_EXPORT KDE_IMPORT
+#  define KROSS_EXPORT Q_DECL_IMPORT
 # endif
 #endif
 
@@ -40,7 +37,7 @@
 #  define KROSSCORE_EXPORT KDE_EXPORT
 # else
    /* We are using this library */
-#  define KROSSCORE_EXPORT KDE_IMPORT
+#  define KROSSCORE_EXPORT Q_DECL_IMPORT
 # endif
 #endif
 
@@ -50,15 +47,15 @@
 #  define KROSSUI_EXPORT KDE_EXPORT
 # else
    /* We are using this library */
-#  define KROSSUI_EXPORT KDE_IMPORT
+#  define KROSSUI_EXPORT Q_DECL_IMPORT
 # endif
 #endif
 
 # ifndef KROSS_EXPORT_DEPRECATED
-#  define KROSS_EXPORT_DEPRECATED KDE_DEPRECATED KROSS_EXPORT
+#  define KROSS_EXPORT_DEPRECATED Q_DECL_DEPRECATED KROSS_EXPORT
 # endif
 # ifndef KROSSCORE_EXPORT_DEPRECATED
-#  define KROSSCORE_EXPORT_DEPRECATED KDE_DEPRECATED KROSSCORE_EXPORT
+#  define KROSSCORE_EXPORT_DEPRECATED Q_DECL_DEPRECATED KROSSCORE_EXPORT
 # endif
 
 #endif

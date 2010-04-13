@@ -27,8 +27,8 @@
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 
-#include <klocale.h>
-#include <kicon.h>
+#include <QtCore/QLocale>
+#include <QtGui/QIcon>
 #include <kmimetype.h>
 
 using namespace Kross;

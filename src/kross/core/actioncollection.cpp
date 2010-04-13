@@ -29,7 +29,7 @@
 #include <QtCore/QFileInfo>
 #include <QtXml/QDomAttr>
 
-#include <kicon.h>
+#include <QtGui/QIcon>
 #include <klocalizedstring.h>
 
 using namespace Kross;

@@ -23,12 +23,12 @@
 // Qt
 
 #include <QtCore/QFile>
+#include <QtGui/QApplication>
+#include <QtCore/QUrl>
 
 // KDE
-#include <kapplication.h>
 #include <kcmdlineargs.h>
 #include <kaboutdata.h>
-#include <kurl.h>
 
 // Kross
 #include "../core/manager.h"

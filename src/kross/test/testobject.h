@@ -42,8 +42,8 @@ class QDate;
 class QTime;
 class QDateTime;
 
-#include <kurl.h>
-#include <kdebug.h>
+#include <QtCore/QUrl>
+#include <QtCore/QDebug>
 
 #include "../core/action.h"
 #include "../core/object.h"

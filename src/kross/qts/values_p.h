@@ -40,8 +40,7 @@
 #include <QScriptValueIterator>
 #include <QDebug>
 
-#include <kurl.h>
-#include <klocale.h>
+#include <QtCore/QLocale>
 
 using namespace Kross;
 

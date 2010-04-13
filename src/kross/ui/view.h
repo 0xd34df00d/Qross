@@ -29,7 +29,7 @@
 #include <QtGui/QItemSelection>
 #include <QtGui/QTreeView>
 
-#include <kdialog.h>
+#include <QtGui/QDialog>
 
 class KLineEdit;
 class QComboBox;
@@ -206,7 +206,7 @@ namespace Kross {
             * \return the KPushButton instance which has the actionname \p actionname
             * or NULL if there is not such button.
             */
-            KPushButton* button(const QString& actionname) const;
+            QPushButton* button(const QString& actionname) const;
 
             /**
             * Create and return a new KPushButton instance for the given actionname.
@@ -217,7 +217,7 @@ namespace Kross {
             * \return The new KPushButton instance or NULL if e.g. there exist no
             * such action with \p actionname .
             */
-            KPushButton* createButton(QWidget* parentWidget, const QString& actionname);
+            QPushButton* createButton(QWidget* parentWidget, const QString& actionname);
 
         public Q_SLOTS:
 

@@ -29,7 +29,6 @@
 //#include <QtGui/QAction>
 //#include <QtCore/QUrl>
 
-#include <kdemacros.h>
 //#include "errorinterface.h"
 //#include "childreninterface.h"
 

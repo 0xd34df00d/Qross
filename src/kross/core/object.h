@@ -29,7 +29,7 @@
 #include "krossconfig.h"
 #include "errorinterface.h"
 
-#include <ksharedptr.h>
+#include <qsharedpointer.h>
 
 namespace Kross {
 
@@ -73,7 +73,7 @@ namespace Kross {
             /**
              * Shared pointer to implement reference-counting.
              */
-            typedef KSharedPtr<Object> Ptr;
+            typedef QSharedPointer<Object> Ptr;
 
             /**
              * Default constructor.
