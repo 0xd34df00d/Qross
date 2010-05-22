@@ -66,9 +66,6 @@ int main(int argc, char **argv)
     QScriptEngine* engine = new QScriptEngine();
     QScriptValue global = engine->globalObject();
 
-    app->addLibraryPath("/home/d34df00d/Programming/qross/build/qts");
-    qDebug()<<"QLibraryInfo::PluginsPath="<<QLibraryInfo::location(QLibraryInfo::PluginsPath);
-
     qDebug () << engine->availableExtensions();
 
     engine->importExtension("qross").toString();

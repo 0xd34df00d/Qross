@@ -19,7 +19,7 @@ include_directories(${CMAKE_SOURCE_DIR}/qross)
 set(qrossqtstest_SRCS main.cpp)
 add_executable(qrossqtstest ${qrossqtstest_SRCS})
 
-target_link_libraries(qrossqtstest ${QT_LIBRARIES} qrossqtsplugin)
+target_link_libraries(qrossqtstest ${QT_LIBRARIES})
 # set(qrossqtsplugintest_SRCS main.cpp)
 # target_link_libraries(qrossqtsplugintest ${KDE4_KDECORE_LIBS} )
 # kde4_add_executable(qrossqtsplugintest ${qrossqtsplugintest_SRCS})
