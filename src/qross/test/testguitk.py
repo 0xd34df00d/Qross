@@ -1,4 +1,4 @@
-#!/usr/bin/env kross
+#!/usr/bin/env qross
 
 class TkTest:
 	def __init__(self):

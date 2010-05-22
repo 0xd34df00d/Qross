@@ -1,6 +1,6 @@
-/** @section modules The optional Kross modules
+/** @section modules The optional Qross modules
  *
- * Kross is able to optional dynamic load modules witch provide then
+ * Qross is able to optional dynamic load modules witch provide then
  * additional functionality for scripts.
  *
  * @subsection forms The Forms module

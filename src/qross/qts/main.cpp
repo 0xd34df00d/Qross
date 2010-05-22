@@ -66,10 +66,10 @@ int main(int argc, char **argv)
     QScriptEngine* engine = new QScriptEngine();
     QScriptValue global = engine->globalObject();
 
-    qDebug () << engine->availableExtensions();
+    app->addLibraryPath("/home/d34df00d/Programming/qross/build/qts");
+    qDebug()<<"QLibraryInfo::PluginsPath="<<QLibraryInfo::location(QLibraryInfo::PluginsPath);
 
-    //qDebug()<<"QLibraryInfo::PluginsPath="<<QLibraryInfo::location(QLibraryInfo::PluginsPath);
-    //app->addLibraryPath("/home/kde4/kde4/lib/kde4/");
+    qDebug () << engine->availableExtensions();
 
     engine->importExtension("qross").toString();
 

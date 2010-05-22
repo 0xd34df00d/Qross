@@ -64,13 +64,13 @@
 
 extern "C"
 {
-    KDE_EXPORT QObject* krossmodule()
+    KDE_EXPORT QObject* qrossmodule()
     {
-        return new Kross::FormModule();
+        return new Qross::FormModule();
     }
 }
 
-using namespace Kross;
+using namespace Qross;
 
 /*********************************************************************************
  * FormList
@@ -93,7 +93,7 @@ QString FormListView::text(int row) {
  * FormFileWidget
  */
 
-namespace Kross {
+namespace Qross {
 
     /// \internal d-pointer class.
     class FormFileWidget::Private
@@ -199,7 +199,7 @@ QString FormFileWidget::selectedFile() const
  * FormProgressDialog
  */
 
-namespace Kross {
+namespace Qross {
     /// \internal d-pointer class.
     class FormProgressDialog::Private
     {
@@ -328,7 +328,7 @@ bool FormProgressDialog::isCanceled()
  * FormDialog
  */
 
-namespace Kross {
+namespace Qross {
 
     /// \internal d-pointer class.
     class FormDialog::Private
@@ -445,7 +445,7 @@ QString FormDialog::result()
 {
     int i = metaObject()->indexOfEnumerator("ButtonCode");
     if( i < 0 ) {
-        kWarning() << "Kross::FormDialog::setButtons No such enumerator \"ButtonCode\"";
+        kWarning() << "Qross::FormDialog::setButtons No such enumerator \"ButtonCode\"";
         return QString();
     }
     QMetaEnum e = metaObject()->enumerator(i);
@@ -466,7 +466,7 @@ void FormDialog::slotCurrentPageChanged(KPageWidgetItem* current)
 }
 
 
-namespace Kross {
+namespace Qross {
     /// \internal d-pointer class.
     class FormAssistant::Private
     {
@@ -562,7 +562,7 @@ QString FormAssistant::result()
 {
     int i = metaObject()->indexOfEnumerator("AssistantButtonCode");
     if( i < 0 ) {
-        kWarning() << "Kross::FormAssistant::setButtons No such enumerator \"AssistantButtonCode\"";
+        kWarning() << "Qross::FormAssistant::setButtons No such enumerator \"AssistantButtonCode\"";
         return QString();
     }
     QMetaEnum e = metaObject()->enumerator(i);
@@ -586,7 +586,7 @@ void FormAssistant::slotCurrentPageChanged(KPageWidgetItem* current)
  * FormModule
  */
 
-namespace Kross {
+namespace Qross {
 
     /// \internal extension of the QUiLoader class.
     class UiLoader : public QUiLoader
@@ -772,11 +772,11 @@ QWidget* FormModule::createWidgetFromUIFile(QWidget* parent, const QString& file
 {
     QFile file(filename);
     if( ! file.exists() ) {
-        kDebug() << QString("Kross::FormModule::createWidgetFromUIFile: There exists no such file \"%1\"").arg(filename);
+        kDebug() << QString("Qross::FormModule::createWidgetFromUIFile: There exists no such file \"%1\"").arg(filename);
         return false;
     }
     if( ! file.open(QFile::ReadOnly) ) {
-        kDebug() << QString("Kross::FormModule::createWidgetFromUIFile: Failed to open the file \"%1\"").arg(filename);
+        kDebug() << QString("Qross::FormModule::createWidgetFromUIFile: Failed to open the file \"%1\"").arg(filename);
         return false;
     }
     const QString xml = file.readAll();
@@ -810,12 +810,12 @@ QObject* FormModule::loadPart(QWidget* parent, const QString& name, const QUrl& 
     //name e.g. "libkghostview"
     KPluginFactory* factory = KPluginLoader( name.toLatin1() ).factory();
     if( ! factory ) {
-        kWarning() << QString("Kross::FormModule::loadPart: No such library \"%1\"").arg(name);
+        kWarning() << QString("Qross::FormModule::loadPart: No such library \"%1\"").arg(name);
         return 0;
     }
     KParts::ReadOnlyPart* part = factory->create< KParts::ReadOnlyPart >( parent );
     if( ! part ) {
-        kWarning() << QString("Kross::FormModule::loadPart: Library \"%1\" is not a KPart").arg(name);
+        kWarning() << QString("Qross::FormModule::loadPart: Library \"%1\" is not a KPart").arg(name);
         return 0;
     }
     if( url.isValid() )

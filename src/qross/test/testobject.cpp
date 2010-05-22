@@ -191,21 +191,21 @@ QVariant TestObject::func_qvariant_qvariant(const QVariant& v)
     return v;
 }
 
-Qross::Object::Ptr TestObject::func_krossobject_krossobject(Qross::Object::Ptr object)
+Qross::Object::Ptr TestObject::func_qrossobject_qrossobject(Qross::Object::Ptr object)
 {
-    //kDebug() << "TestObject::func_krossobject_krossobject";
+    //kDebug() << "TestObject::func_qrossobject_qrossobject";
     return object;
 }
 
-QStringList TestObject::get_krossobject_methods(Qross::Object::Ptr object)
+QStringList TestObject::get_qrossobject_methods(Qross::Object::Ptr object)
 {
-    //kDebug() << "TestObject::get_krossobject_methods";
+    //kDebug() << "TestObject::get_qrossobject_methods";
     return object->methodNames();
 }
 
-QVariant TestObject::call_krossobject_method(Qross::Object::Ptr object, const QString& methodname, const QVariantList& args)
+QVariant TestObject::call_qrossobject_method(Qross::Object::Ptr object, const QString& methodname, const QVariantList& args)
 {
-    //kDebug() << "TestObject::call_krossobject_method";
+    //kDebug() << "TestObject::call_qrossobject_method";
     return object->callMethod(methodname, args);
 }
 

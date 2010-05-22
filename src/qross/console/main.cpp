@@ -26,7 +26,7 @@
 #include <QtGui/QApplication>
 #include <QtCore/QUrl>
 
-// Kross
+// Qross
 #include "../core/manager.h"
 #include "../core/action.h"
 #include "../core/interpreter.h"

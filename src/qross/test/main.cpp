@@ -19,7 +19,7 @@
 
 #include "testobject.h"
 
-// Kross
+// Qross
 #include "../core/action.h"
 #include "../core/interpreter.h"
 #include "../core/manager.h"

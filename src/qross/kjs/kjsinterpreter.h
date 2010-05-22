@@ -17,27 +17,27 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_KJSINTERPRETER_H
-#define KROSS_KJSINTERPRETER_H
+#ifndef QROSS_KJSINTERPRETER_H
+#define QROSS_KJSINTERPRETER_H
 
-#include "../core/krossconfig.h"
+#include "../core/qrossconfig.h"
 #include "../core/interpreter.h"
 #include "../core/action.h"
 #include "../core/manager.h"
 
 
 
-namespace Kross {
+namespace Qross {
 
     // Forward declarations.
     class KjsScript;
     class KjsInterpreterPrivate;
 
     /**
-     * The KjsInterpreter class implements \a Kross::Interpreter
+     * The KjsInterpreter class implements \a Qross::Interpreter
      * for the KDE Javascript interpreter backend.
      */
-    class KjsInterpreter : public Kross::Interpreter
+    class KjsInterpreter : public Qross::Interpreter
     {
             friend class KjsScript;
         public:
@@ -45,11 +45,11 @@ namespace Kross {
             /**
              * Constructor.
              *
-             * \param info The \a Kross::InterpreterInfo instance
+             * \param info The \a Qross::InterpreterInfo instance
              *        which describes the \a KjsInterpreter for
-             *        applications using Kross.
+             *        applications using Qross.
              */
-            explicit KjsInterpreter(Kross::InterpreterInfo* info);
+            explicit KjsInterpreter(Qross::InterpreterInfo* info);
 
             /**
              * Destructor.
@@ -59,7 +59,7 @@ namespace Kross {
             /**
              * \return a \a KjsScript instance.
              */
-            virtual Kross::Script* createScript(Kross::Action* Action);
+            virtual Qross::Script* createScript(Qross::Action* Action);
 
         private:
             /// \internal d-pointer instance.

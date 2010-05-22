@@ -1,11 +1,11 @@
-#!/usr/bin/env krosstest
+#!/usr/bin/env qrosstest
 
 require 'test/unit'
 
 require "TestObject1"
 require "TestObject2"
 
-KrossAction = self.action()
+QrossAction = self.action()
 
 class MyClass
     def initialize(result)
@@ -24,7 +24,7 @@ def testFunction2(arg1,arg2)
     return [arg1,arg2]
 end
 
-class TestKross < Test::Unit::TestCase
+class TestQross < Test::Unit::TestCase
 
 	def setup
 	end
@@ -228,7 +228,7 @@ class TestKross < Test::Unit::TestCase
 		assert( TestObject1.func_qurl_qurl("") == "" )
 		assert( TestObject1.func_qurl_qurl("/home/myuser") == "/home/myuser" )
 		assert( TestObject1.func_qurl_qurl("file:///home/myuser/myfile.txt") == "file:///home/myuser/myfile.txt" )
-		assert( TestObject1.func_qurl_qurl("http://myname:mypass@kross.dipe.org?404.cgi?test=123&test2=456") == "http://myname:mypass@kross.dipe.org?404.cgi?test=123&test2=456" )
+		assert( TestObject1.func_qurl_qurl("http://myname:mypass@qross.dipe.org?404.cgi?test=123&test2=456") == "http://myname:mypass@qross.dipe.org?404.cgi?test=123&test2=456" )
 		assert( TestObject1.func_kurl_kurl("http://www.kde.org/whatiskde/") == "http://www.kde.org/whatiskde/" )
 		assert( ! TestObject1.func_kurl_qstring("http://www.kde.org/whatiskde/") )
 	end
@@ -285,29 +285,29 @@ class TestKross < Test::Unit::TestCase
 	end
 
 	def testFunctions
-		assert( KrossAction.functionNames().include?("testFunction1") )
-		assert( KrossAction.callFunction("testFunction1",[true]) == true )
-		assert( KrossAction.callFunction("testFunction1",[false]) == false )
-		assert( KrossAction.callFunction("testFunction1",[524]) == 524 )
-		assert( KrossAction.callFunction("testFunction1",[-958]) == -958 )
-		assert( KrossAction.callFunction("testFunction1",[524.98]) == 524.98 )
-		assert( KrossAction.callFunction("testFunction1",[-958.1257]) == -958.1257 )
-		assert( KrossAction.callFunction("testFunction1",[""]) == "" )
-		assert( KrossAction.callFunction("testFunction1",["  Some\nString  "]) == "  Some\nString  " )
-		assert( KrossAction.callFunction("testFunction1",[[]]) == [] )
-		assert( KrossAction.callFunction("testFunction1",[["one",23,"two",nil,false]]) == ["one",23,"two",nil,false] )
-		assert( KrossAction.functionNames().include?("testFunction2") )
-		assert( KrossAction.callFunction("testFunction2",[[],[]]) == [[],[]] )
-		assert( KrossAction.callFunction("testFunction2",[[1,"test"],nil]) == [[1,"test"],nil] )
+		assert( QrossAction.functionNames().include?("testFunction1") )
+		assert( QrossAction.callFunction("testFunction1",[true]) == true )
+		assert( QrossAction.callFunction("testFunction1",[false]) == false )
+		assert( QrossAction.callFunction("testFunction1",[524]) == 524 )
+		assert( QrossAction.callFunction("testFunction1",[-958]) == -958 )
+		assert( QrossAction.callFunction("testFunction1",[524.98]) == 524.98 )
+		assert( QrossAction.callFunction("testFunction1",[-958.1257]) == -958.1257 )
+		assert( QrossAction.callFunction("testFunction1",[""]) == "" )
+		assert( QrossAction.callFunction("testFunction1",["  Some\nString  "]) == "  Some\nString  " )
+		assert( QrossAction.callFunction("testFunction1",[[]]) == [] )
+		assert( QrossAction.callFunction("testFunction1",[["one",23,"two",nil,false]]) == ["one",23,"two",nil,false] )
+		assert( QrossAction.functionNames().include?("testFunction2") )
+		assert( QrossAction.callFunction("testFunction2",[[],[]]) == [[],[]] )
+		assert( QrossAction.callFunction("testFunction2",[[1,"test"],nil]) == [[1,"test"],nil] )
 
 		#TODO this results in a crach in Ruby 1.8.6 in the callcache code. Probably related to the issue Cyrille jumped at?
-		#puts KrossAction.callFunction("testFunction1",[KrossAction])
+		#puts QrossAction.callFunction("testFunction1",[QrossAction])
 
     end
 
 	def testObject
-		assert( KrossAction.name() == "MyAction" )
-		assert( KrossAction.interpreter() == "ruby" )
+		assert( QrossAction.name() == "MyAction" )
+		assert( QrossAction.interpreter() == "ruby" )
 
 		assert( TestObject1.name() == "TestObject1" )
 		assert( TestObject2.name() == "TestObject2" )
@@ -414,7 +414,7 @@ class TestKross < Test::Unit::TestCase
 	def testClass
 		s = "my string"
 		myclass = MyClass.new(s)
-		assert(TestObject1.call_krossobject_method(myclass, "myMethod") == s)
+		assert(TestObject1.call_qrossobject_method(myclass, "myMethod") == s)
 	end
 
 	def testOtherObject
@@ -432,15 +432,15 @@ class TestKross < Test::Unit::TestCase
 	end
 
 	def testEvaluation
-		assert(KrossAction.evaluate("1+2") == 3)
-		assert(KrossAction.evaluate("testFunction1(nil)") == nil)
-		assert(KrossAction.evaluate("testFunction1(99)") == 99)
+		assert(QrossAction.evaluate("1+2") == 3)
+		assert(QrossAction.evaluate("testFunction1(nil)") == nil)
+		assert(QrossAction.evaluate("testFunction1(99)") == 99)
 	end
 
 end
 
 require 'test/unit/ui/console/testrunner'
-Test::Unit::UI::Console::TestRunner.run(TestKross)
+Test::Unit::UI::Console::TestRunner.run(TestQross)
 
 #require "TestObject1"
 #puts "=======> " + TestObject1.func_bool_bool(false).to_s()

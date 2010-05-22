@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_FORM_H
-#define KROSS_FORM_H
+#ifndef QROSS_FORM_H
+#define QROSS_FORM_H
 
 #include <QtGui/QWidget>
 #include <QtCore/QUrl>
@@ -28,7 +28,7 @@
 #include <kassistantdialog.h>
 //#include <kfilewidget.h>
 
-namespace Kross {
+namespace Qross {
 
     /**
      * The FormListView class provides access to a ListView.
@@ -141,8 +141,8 @@ namespace Kross {
      *
      * Example (in Python) :
      * \code
-     * import time, Kross
-     * forms = Kross.module("forms")
+     * import time, Qross
+     * forms = Qross.module("forms")
      * progress = forms.showProgressDialog("My Title")
      * progress.setText("Some <i>detailed</i> text.")
      * for i in range(0,101):
@@ -213,10 +213,10 @@ namespace Kross {
      *
      * Example (in Python) :
      * \code
-     * import Kross
+     * import Qross
      * import sys,os
      * ourPath=(filter(lambda p: os.path.exists(p+'/mywidget.ui'),sys.path)+[''])[0]
-     * forms = Kross.module("forms")
+     * forms = Qross.module("forms")
      * mydialog = forms.createDialog("MyDialog")
      * mydialog.setButtons("Ok|Cancel")
      * mydialog.setFaceType("Plain") #Auto Plain List Tree Tabbed
@@ -354,10 +354,10 @@ namespace Kross {
      *
      * Example (in Python) :
      * \code
-     * import Kross
+     * import Qross
      * import sys,os
      * ourPath=(filter(lambda p: os.path.exists(p+'/mywidget.ui'),sys.path)+[''])[0]
-     * forms = Kross.module("forms")
+     * forms = Qross.module("forms")
      * myassistant = forms.createAssistant("MyAssistant")
      * myassistant.showHelpButton(0)
      * mypage = myassistant.addPage("name","header")
@@ -511,8 +511,8 @@ namespace Kross {
      *
      * Example (in Python) :
      * \code
-     * import Kross
-     * forms = Kross.module("forms")
+     * import Qross
+     * forms = Qross.module("forms")
      * dialog = forms.createDialog("My Dialog")
      * dialog.setButtons("Ok|Cancel")
      * page = dialog.addPage("Welcome","Welcome Page","document-open")

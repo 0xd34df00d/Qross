@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_TEST_TESTOBJECT_H
-#define KROSS_TEST_TESTOBJECT_H
+#ifndef QROSS_TEST_TESTOBJECT_H
+#define QROSS_TEST_TESTOBJECT_H
 
 #include <QtCore/QObject>
 #include <QtCore/QString>
@@ -50,7 +50,7 @@ class QDate;
 
 class OtherObject;
 
-/// \internal class to test functionality within krosstest
+/// \internal class to test functionality within qrosstest
 class TestObject : public QObject
 {
         Q_OBJECT
@@ -166,10 +166,10 @@ class TestObject : public QObject
         void func_void_qstringlist(QStringList);
         QString func_qstring_qstring_int(QString,int);
 
-        // Kross::Object
-        Qross::Object::Ptr func_krossobject_krossobject(Qross::Object::Ptr object);
-        QStringList get_krossobject_methods(Qross::Object::Ptr object);
-        QVariant call_krossobject_method(Qross::Object::Ptr object, const QString& methodname, const QVariantList& args = QVariantList());
+        // Qross::Object
+        Qross::Object::Ptr func_qrossobject_qrossobject(Qross::Object::Ptr object);
+        QStringList get_qrossobject_methods(Qross::Object::Ptr object);
+        QVariant call_qrossobject_method(Qross::Object::Ptr object, const QString& methodname, const QVariantList& args = QVariantList());
 
         // QObject
         QObject* func_createChildTestObject(const QString& objectname);
@@ -192,7 +192,7 @@ class TestObject : public QObject
         QList<OtherObject*> func_otherobjectlist_otherobjectlist(QList<OtherObject*>);
 };
 
-/// \internal class used in TestObject to test functionality within krosstest
+/// \internal class used in TestObject to test functionality within qrosstest
 class OtherObject : public QObject
 {
         Q_OBJECT
@@ -202,7 +202,7 @@ class OtherObject : public QObject
         QObject* testObject() const { return parent(); }
 };
 
-/// \internal class used in a handler within krosstest to provide a OtherObject wrapper on demand
+/// \internal class used in a handler within qrosstest to provide a OtherObject wrapper on demand
 class OtherObjectWrapper : public QObject, public Qross::WrapperInterface
 {
         Q_OBJECT
@@ -217,7 +217,7 @@ class OtherObjectWrapper : public QObject, public Qross::WrapperInterface
 };
 
 /**
-* \internal class to test threading functionality within krosstest.
+* \internal class to test threading functionality within qrosstest.
 *
 * Following python code does provide a sample how this class
 * may used to test the threading functionality.

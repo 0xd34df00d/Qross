@@ -31,16 +31,16 @@
 
 extern "C"
 {
-    KDE_EXPORT QObject* krossmodule()
+    KDE_EXPORT QObject* qrossmodule()
     {
-        return new Kross::TranslationModule();
+        return new Qross::TranslationModule();
     }
 }
 
-using namespace Kross;
+using namespace Qross;
 
 
-namespace Kross {
+namespace Qross {
 
     /// \internal d-pointer class.
     class TranslationModule::Private

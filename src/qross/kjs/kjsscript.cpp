@@ -41,9 +41,9 @@
 #include <QPointer>
 #include <QTextCodec>
 
-using namespace Kross;
+using namespace Qross;
 
-namespace Kross {
+namespace Qross {
 
     /// Extract an errormessage from a KJS::Completion object.
     static ErrorInterface extractError(const KJS::Completion& completion, KJS::ExecState* exec)
@@ -115,7 +115,7 @@ namespace Kross {
                     if( it.value() & ChildrenInterface::AutoConnectSignals ) {
                         QObject* sender = children->object( it.key() );
                         if( sender ) {
-                            krossdebug( QString("KjsScript::addFunctions sender name=%1 className=%2").arg(sender->objectName()).arg(sender->metaObject()->className()) );
+                            qrossdebug( QString("KjsScript::addFunctions sender name=%1 className=%2").arg(sender->objectName()).arg(sender->metaObject()->className()) );
                             m_autoconnect.append( sender );
                         }
                     }
@@ -129,7 +129,7 @@ namespace Kross {
 
                 KJS::JSObject* obj = m_engine->addObject(object, name.isEmpty() ? object->objectName() : name);
                 if( ! obj ) {
-                    krosswarning( QString("Failed to publish the QObject name=\"%1\" objectName=\"%2\"").arg(name).arg(object ? object->objectName() : "NULL") );
+                    qrosswarning( QString("Failed to publish the QObject name=\"%1\" objectName=\"%2\"").arg(name).arg(object ? object->objectName() : "NULL") );
                     return false;
                 }
                 m_publishedObjects << QPair<KJS::JSObject*, QPointer<QObject> >(obj, object);
@@ -163,7 +163,7 @@ KjsScript::KjsScript(Interpreter* interpreter, Action* action)
     : Script(interpreter, action)
     , d(new KjsScriptPrivate())
 {
-    krossdebug( QString("KjsScript::KjsScript") );
+    qrossdebug( QString("KjsScript::KjsScript") );
     d->m_engine = 0;
 
     d->addFunctions( &Manager::self() );
@@ -172,7 +172,7 @@ KjsScript::KjsScript(Interpreter* interpreter, Action* action)
 
 KjsScript::~KjsScript()
 {
-    krossdebug( QString("KjsScript::~KjsScript") );
+    qrossdebug( QString("KjsScript::~KjsScript") );
     finalize();
     delete d;
 }
@@ -183,7 +183,7 @@ bool KjsScript::initialize()
         finalize(); // finalize before initialize
     clearError(); // clear previous errors.
 
-    krossdebug( QString("KjsScript::initialize") );
+    qrossdebug( QString("KjsScript::initialize") );
 
     d->m_engine = new KJSEmbed::Engine();
 
@@ -193,10 +193,10 @@ bool KjsScript::initialize()
 
     // publish our own action and the manager
     d->publishObject(exec, "self", action());
-    d->publishObject(exec, "Kross", &Manager::self());
+    d->publishObject(exec, "Qross", &Manager::self());
 
     d->m_defaultFunctionNames = functionNames();
-    d->m_defaultFunctionNames << "Kross";
+    d->m_defaultFunctionNames << "Qross";
 
     { // publish the global objects.
         QHash< QString, QObject* > objects = Manager::self().objects();
@@ -214,13 +214,13 @@ bool KjsScript::initialize()
 
     /*
     { // some debugging
-        krossdebug( QString("Global object") );
+        qrossdebug( QString("Global object") );
         KJS::JSObject* obj = kjsinterpreter->globalObject();
         KJS::ExecState* exec = kjsinterpreter->globalExec();
         KJS::PropertyNameArray props;
         obj->getPropertyNames(exec, props);
         for(KJS::PropertyNameArrayIterator it = props.begin(); it != props.end(); ++it)
-            krossdebug( QString("  property name=%1").arg( it->ascii() ) );
+            qrossdebug( QString("  property name=%1").arg( it->ascii() ) );
     }
     */
 
@@ -256,7 +256,7 @@ void KjsScript::finalize()
 
         /* the kjsobj-instance will be or got already deleted by KJS and we don't need to care
         KJS::JSObject* kjsobj = (*it).first;
-        krossdebug(QString("KjsScript::finalize published object=%1").arg( kjsobj->className().ascii() ));
+        qrossdebug(QString("KjsScript::finalize published object=%1").arg( kjsobj->className().ascii() ));
         delete kjsobj;
         */
     }
@@ -272,7 +272,7 @@ void KjsScript::finalize()
 void KjsScript::execute()
 {
     if(! initialize()) {
-        krosswarning( QString("KjsScript::execute aborted cause initialize failed.") );
+        qrosswarning( QString("KjsScript::execute aborted cause initialize failed.") );
         return;
     }
 
@@ -282,7 +282,7 @@ void KjsScript::execute()
 
     QTextCodec *codec = QTextCodec::codecForLocale();
     KJS::UString c = codec ? KJS::UString(codec->toUnicode(code)) : KJS::UString(code.data(), code.size());
-    //krossdebug( QString("KjsScript::execute code=\n%1").arg(c.qstring()) );
+    //qrossdebug( QString("KjsScript::execute code=\n%1").arg(c.qstring()) );
     KJSEmbed::Engine::ExitStatus exitstatus = d->m_engine->execute(c);
 
     KJS::Completion completion = d->m_engine->completion();
@@ -298,7 +298,7 @@ void KjsScript::execute()
     KJS::JSObject* kjsglobal = kjsinterpreter->globalObject();
     if( exec->hadException() ) {
         ErrorInterface error = extractError(d->m_engine->completion(), exec);
-        krossdebug(QString("KjsScript::execute() failed: %1").arg(error.errorMessage()));
+        qrossdebug(QString("KjsScript::execute() failed: %1").arg(error.errorMessage()));
         setError(&error);
         //exec->clearException();
         return;
@@ -312,7 +312,7 @@ void KjsScript::execute()
             if( metamethod.methodType() == QMetaMethod::Signal ) {
                 const QString signature = metamethod.signature();
                 const QByteArray name = signature.left(signature.indexOf('(')).toLatin1();
-                krossdebug( QString("KjsScript::execute function=%1").arg(name.data()) );
+                qrossdebug( QString("KjsScript::execute function=%1").arg(name.data()) );
 
                 KJS::Identifier id = KJS::Identifier( KJS::UString(name.data()) );
                 KJS::JSValue *functionvalue = kjsglobal->get(exec, id);
@@ -323,17 +323,17 @@ void KjsScript::execute()
                 if( exec->hadException() )
                     continue;
                 if ( function && function->implementsCall() ) {
-                    krossdebug( QString("KjsScript::execute connect function=%1 with signal=%2").arg(name.data()).arg(signature) );
+                    qrossdebug( QString("KjsScript::execute connect function=%1 with signal=%2").arg(name.data()).arg(signature) );
 
                     QByteArray sendersignal = QString("2%1").arg(signature).toLatin1();
                     QByteArray receiverslot = QString("1%1").arg(signature).toLatin1();
                     KJSEmbed::SlotProxy* receiver = new KJSEmbed::SlotProxy(kjsglobal, exec->dynamicInterpreter(), object, signature.toLatin1());
 
                     if( connect(object, sendersignal, receiver, receiverslot) ) {
-                        krossdebug( QString("KjsScript::execute connected function=%1 with object=%2 signal=%3").arg(name.data()).arg(object->objectName()).arg(signature) );
+                        qrossdebug( QString("KjsScript::execute connected function=%1 with object=%2 signal=%3").arg(name.data()).arg(object->objectName()).arg(signature) );
                     }
                     else {
-                        krosswarning( QString("KjsScript::execute failed to connect object=%1 signal=%2").arg(object->objectName()).arg(signature) );
+                        qrosswarning( QString("KjsScript::execute failed to connect object=%1 signal=%2").arg(object->objectName()).arg(signature) );
                     }
 
                 }
@@ -384,7 +384,7 @@ QVariant KjsScript::callFunction(const QString& name, const QVariantList& args)
     if( exec->hadException() ) {
         ErrorInterface error = extractError(d->m_engine->completion(), exec);
         //setError(&error);
-        krossdebug(QString("KjsScript::callFunction(\"%1\") Prev error: %2").arg(name).arg(error.errorMessage()));
+        qrossdebug(QString("KjsScript::callFunction(\"%1\") Prev error: %2").arg(name).arg(error.errorMessage()));
         return QVariant();
     }
 
@@ -394,7 +394,7 @@ QVariant KjsScript::callFunction(const QString& name, const QVariantList& args)
 
     KJS::JSObject *function = functionvalue->toObject(exec);
     if ( ! function || ! function->implementsCall() ) {
-        krossdebug(QString("KjsScript::callFunction(\"%1\") No such function").arg(name));
+        qrossdebug(QString("KjsScript::callFunction(\"%1\") No such function").arg(name));
         setError(QString("No such function \"%1\"").arg(name));
         return QVariant();
     }
@@ -424,7 +424,7 @@ QVariant KjsScript::callFunction(const QString& name, const QVariantList& args)
     if( exec->hadException() ) {
         ErrorInterface error = extractError(d->m_engine->completion(), exec);
         //exec->clearException();
-        krossdebug(QString("KjsScript::callFunction(\"%1\") Call failed: %2").arg(name).arg(error.errorMessage()));
+        qrossdebug(QString("KjsScript::callFunction(\"%1\") Call failed: %2").arg(name).arg(error.errorMessage()));
         setError(&error);
         return QVariant();
     }

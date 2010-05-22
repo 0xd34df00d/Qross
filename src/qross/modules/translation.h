@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_TRANSLATION_H
-#define KROSS_TRANSLATION_H
+#ifndef QROSS_TRANSLATION_H
+#define QROSS_TRANSLATION_H
 
 #include <QObject>
 #include <QVariantList>
@@ -27,15 +27,15 @@ class QString;
 
 class KLocalizedString;
 
-namespace Kross {
+namespace Qross {
 
     /**
      * The TranslationModule provides access to KDE translation and internationalization facilities.
      *
      * Example (in Python) :
      * \code
-     * import Kross
-     * t = Kross.module("kdetranslation")
+     * import Qross
+     * t = Qross.module("kdetranslation")
      * print t.i18n("This string can be translated")
      * print t.i18ncp("Plural example", "%1 file not deleted %2", "%1 files not deleted %2", 3, [t.i18n("yesterday")])
      * \endcode

@@ -1,4 +1,4 @@
-#!/usr/bin/env krosstest
+#!/usr/bin/env qrosstest
 
 #require 'Qt'
 require 'korundum4'

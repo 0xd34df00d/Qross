@@ -23,13 +23,13 @@
 //#include <kglobal.h>
 //#include <kstandarddirs.h>
 
-// The in krossconfig.h defined KROSS_EXPORT_INTERPRETER macro defines an
-// exported C function used as factory for Kross::KjsInterpreter instances.
-KROSS_EXPORT_INTERPRETER( Kross::KjsInterpreter )
+// The in qrossconfig.h defined QROSS_EXPORT_INTERPRETER macro defines an
+// exported C function used as factory for Qross::KjsInterpreter instances.
+QROSS_EXPORT_INTERPRETER( Qross::KjsInterpreter )
 
-using namespace Kross;
+using namespace Qross;
 
-namespace Kross {
+namespace Qross {
 
     /// \internal
     class KjsInterpreterPrivate
@@ -39,8 +39,8 @@ namespace Kross {
 
 }
 
-KjsInterpreter::KjsInterpreter(Kross::InterpreterInfo* info)
-    : Kross::Interpreter(info)
+KjsInterpreter::KjsInterpreter(Qross::InterpreterInfo* info)
+    : Qross::Interpreter(info)
     , d(new KjsInterpreterPrivate())
 {
 }
@@ -50,7 +50,7 @@ KjsInterpreter::~KjsInterpreter()
     delete d;
 }
 
-Kross::Script* KjsInterpreter::createScript(Kross::Action* action)
+Qross::Script* KjsInterpreter::createScript(Qross::Action* action)
 {
     return new KjsScript(this, action);
 }

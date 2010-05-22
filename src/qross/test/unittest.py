@@ -1,22 +1,22 @@
-#!/usr/bin/env krosstest
+#!/usr/bin/env qrosstest
 # -*- coding: utf-8 -*-
 # coding: utf-8
 
 """
-  This Python script is used to test the Kross scripting framework.
+  This Python script is used to test the Qross scripting framework.
 """
 
 import unittest
 import TestObject1
 from TestObject2 import *
 
-KrossAction = self
+QrossAction = self
 
 def testFunction(*args):
     return args
 
-class TestKross(unittest.TestCase):
-	""" Testcases to test the Kross python functionality for regressions. """
+class TestQross(unittest.TestCase):
+	""" Testcases to test the Qross python functionality for regressions. """
 
 	def setUp(self):
 		self.object1 = TestObject1
@@ -140,7 +140,7 @@ class TestKross(unittest.TestCase):
 		#self.assert_( self.object1.func_qurl_qurl("") == "" )
 		self.assert_( self.object1.func_qurl_qurl("/home/myuser") == "/home/myuser" )
 		self.assert_( self.object1.func_qurl_qurl("file:///home/myuser/myfile.txt") == "file:///home/myuser/myfile.txt" )
-		self.assert_( self.object1.func_qurl_qurl("http://myname:mypass@kross.dipe.org?404.cgi?test=123&test2=456") == "http://myname:mypass@kross.dipe.org?404.cgi?test=123&test2=456" )
+		self.assert_( self.object1.func_qurl_qurl("http://myname:mypass@qross.dipe.org?404.cgi?test=123&test2=456") == "http://myname:mypass@qross.dipe.org?404.cgi?test=123&test2=456" )
 		self.assert_( self.object1.func_kurl_kurl("http://www.kde.org/whatiskde/") == "http://www.kde.org/whatiskde/" )
 		self.assert_( self.object1.func_kurl_qstring("http://www.kde.org/whatiskde/") == None )
 
@@ -165,14 +165,14 @@ class TestKross(unittest.TestCase):
 		self.assert_( self.object1.func_qvariant_qvariant(" Test \n\r This String $%&\"") == " Test \n\r This String $%&\"")
 
 	def testFunctions(self):
-		self.assert_( "testFunction" in KrossAction.functionNames() )
-		self.assert_( KrossAction.callFunction("testFunction",[]) == [] )
-		self.assert_( KrossAction.callFunction("testFunction",[True,False]) == [True,False] )
-		self.assert_( KrossAction.callFunction("testFunction",[524,-958]) == [524,-958] )
-		self.assert_( KrossAction.callFunction("testFunction",[524.98,-958.1257]) == [524.98,-958.1257] )
-		self.assert_( KrossAction.callFunction("testFunction",["","  Some\nString  "]) == ["","  Some\nString  "] )
-		self.assert_( KrossAction.callFunction("testFunction",[["one",23,"two",None,False]]) == [["one",23,"two",None,False]] )
-		self.assert_( KrossAction.callFunction("testFunction",[KrossAction]) == [KrossAction] )
+		self.assert_( "testFunction" in QrossAction.functionNames() )
+		self.assert_( QrossAction.callFunction("testFunction",[]) == [] )
+		self.assert_( QrossAction.callFunction("testFunction",[True,False]) == [True,False] )
+		self.assert_( QrossAction.callFunction("testFunction",[524,-958]) == [524,-958] )
+		self.assert_( QrossAction.callFunction("testFunction",[524.98,-958.1257]) == [524.98,-958.1257] )
+		self.assert_( QrossAction.callFunction("testFunction",["","  Some\nString  "]) == ["","  Some\nString  "] )
+		self.assert_( QrossAction.callFunction("testFunction",[["one",23,"two",None,False]]) == [["one",23,"two",None,False]] )
+		self.assert_( QrossAction.callFunction("testFunction",[QrossAction]) == [QrossAction] )
 
 	def testObject(self):
 		self.assert_( self.object1.name() == "TestObject1" and self.object2.name() == "TestObject2" )
@@ -281,7 +281,7 @@ class TestKross(unittest.TestCase):
 				return self.result
 		s = "my string"
 		myclass = MyClass(s)
-		self.assert_( self.object1.call_krossobject_method(myclass, "myMethod") == s )
+		self.assert_( self.object1.call_qrossobject_method(myclass, "myMethod") == s )
 
 	def testOtherObject(self):
 		otherobj1 = self.object1.func_otherobject("OtherObject1")
@@ -298,16 +298,16 @@ class TestKross(unittest.TestCase):
 		self.assert_( l[1].parentObject().objectName == "OtherObject2" )
 
 	def testEvaluation(self):
-		self.assert_( KrossAction.evaluate("1+2") == 3 )
-		self.assert_( KrossAction.evaluate("testFunction(None,99)") == [None,99] )
+		self.assert_( QrossAction.evaluate("1+2") == 3 )
+		self.assert_( QrossAction.evaluate("testFunction(None,99)") == [None,99] )
 
 print "__name__ = %s" % __name__
 #print "__main__ = %s %s" % (__main__,dir(__main__))
 #print "TestObject3.name = %s" % TestObject3.name()
 
-suite = unittest.makeSuite(TestKross)
+suite = unittest.makeSuite(TestQross)
 unittest.TextTestRunner(verbosity=2).run(suite)
 
-#import Kross, TestObject1
+#import Qross, TestObject1
 #print "===========> %s" % TestObject1.func_qsize_qsize( [12,-94] )
 #print "===========> %s" % TestObject1.func_qsizef_qsizef( [12.2,-94.2] )

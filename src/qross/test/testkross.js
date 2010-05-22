@@ -1,7 +1,7 @@
-#!/usr/bin/env kross
+#!/usr/bin/env qross
 
-var kross = Kross
-var kjsaction = kross.action("MyKjsScript")
+var qross = Qross
+var kjsaction = qross.action("MyKjsScript")
 
 kjsaction.setInterpreter("python")
 kjsaction.setCode("print \"Hello world from Python\"")

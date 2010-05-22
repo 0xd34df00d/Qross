@@ -1,4 +1,4 @@
-#!/usr/bin/env kross
+#!/usr/bin/env qross
 
 // Print something on the console.
 println("Let's start the Unittest :-)");
@@ -218,14 +218,14 @@ tester.assertMap(testobj1.func_qvariantmap_qvariantmap([]), [])
 //self.callFunction("setIconName",new Array("MyIconName"));
 //tester.assert(self.callFunction("iconName"), "MyIconName");
 
-// test Kross::Object::Ptr and EcmaObject functionality
+// test Qross::Object::Ptr and EcmaObject functionality
 function MyClass(result) {
     this.myMethod = function() {
         return result;
     }
 }
 var myclass = new MyClass("my string");
-tester.assert(TestObject1.call_krossobject_method(myclass,"myMethod"), "my string");
+tester.assert(TestObject1.call_qrossobject_method(myclass,"myMethod"), "my string");
 
 // test evaluate functionality
 tester.assert(self.evaluate("1+2"), 3);

@@ -17,35 +17,35 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_KJSSCRIPT_H
-#define KROSS_KJSSCRIPT_H
+#ifndef QROSS_KJSSCRIPT_H
+#define QROSS_KJSSCRIPT_H
 
-#include "../core/krossconfig.h"
+#include "../core/qrossconfig.h"
 #include "../core/script.h"
 
-namespace Kross {
+namespace Qross {
 
     // Forward declarations.
     class KjsScriptPrivate;
 
     /**
-     * The KjsScript class implements \a Kross::Script to provide
+     * The KjsScript class implements \a Qross::Script to provide
      * scripts for the KDE JavaScript interpreter backend.
      */
-    class KjsScript : public Kross::Script
+    class KjsScript : public Qross::Script
     {
         public:
 
             /**
              * Constructor.
              *
-             * \param interpreter The \a Kross::Kjs::KjsInterpreter used
+             * \param interpreter The \a Qross::Kjs::KjsInterpreter used
              *       to create this KjsScript instance.
              * \param Action The with this KjsScript associated
-             *       \a Kross::Action instance that spends us
+             *       \a Qross::Action instance that spends us
              *       e.g. the python scripting code.
              */
-            KjsScript(Kross::Interpreter* interpreter, Kross::Action* action);
+            KjsScript(Qross::Interpreter* interpreter, Qross::Action* action);
 
             /**
              * Destructor.

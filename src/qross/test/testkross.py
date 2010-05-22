@@ -1,7 +1,7 @@
-#!/usr/bin/env kross
+#!/usr/bin/env qross
 
 """
-  This Python script demonstrates how Kross could be used from
+  This Python script demonstrates how Qross could be used from
   within python scripts.
 """
 
@@ -12,9 +12,9 @@ print "__name__ = %s" % __name__
 #self.object1 = TestObject1
 #self.object2 = TestObject2
 
-import Kross
-#print dir(Kross)
-kjsaction = Kross.action("MyKjsScript")
+import Qross
+#print dir(Qross)
+kjsaction = Qross.action("MyKjsScript")
 #print dir(kjsaction)
 kjsaction.setInterpreter("javascript")
 kjsaction.setCode( "println(\"Hello world from Kjs\");" )

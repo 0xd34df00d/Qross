@@ -48,7 +48,7 @@ ActionCollectionModel::ActionCollectionModel(QObject* parent, ActionCollection* 
     : QAbstractItemModel(parent)
     , d( new Private() )
 {
-    //krossdebug( QString( "ActionCollectionModel::ActionCollectionModel:") );
+    //qrossdebug( QString( "ActionCollectionModel::ActionCollectionModel:") );
     d->collection = collection ? collection : Qross::Manager::self().actionCollection();
     d->mode = mode;
     //setSupportedDragActions(Qt::MoveAction);
@@ -103,7 +103,7 @@ QModelIndex ActionCollectionModel::indexForAction( Action *act ) const
 
 void ActionCollectionModel::slotCollectionToBeInserted( ActionCollection* child, ActionCollection* parent )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotCollectionToBeInserted: %1 %2" ).arg( child->name() ).arg( parent->name( ) )  );
+    //qrossdebug( QString( "ActionCollectionModel::slotCollectionToBeInserted: %1 %2" ).arg( child->name() ).arg( parent->name( ) )  );
     Q_ASSERT( parent );
     Q_UNUSED( child )
     int row = parent->actions().count() + parent->collections().count(); // we assume child is appended!!
@@ -113,13 +113,13 @@ void ActionCollectionModel::slotCollectionToBeInserted( ActionCollection* child,
 
 void ActionCollectionModel::slotCollectionInserted( ActionCollection*, ActionCollection* )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotCollectionInserted: %1 %2" ).arg( child->name( ) ).arg( parent->name( ) )  );
+    //qrossdebug( QString( "ActionCollectionModel::slotCollectionInserted: %1 %2" ).arg( child->name( ) ).arg( parent->name( ) )  );
     endInsertRows();
 }
 
 void ActionCollectionModel::slotCollectionToBeRemoved( ActionCollection* child, ActionCollection* parent )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotCollectionToBeRemoved: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
+    //qrossdebug( QString( "ActionCollectionModel::slotCollectionToBeRemoved: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
     int row = rowNumber( child );
     QModelIndex parIdx = indexForCollection( parent );
     beginRemoveRows( parIdx, row, row );
@@ -127,13 +127,13 @@ void ActionCollectionModel::slotCollectionToBeRemoved( ActionCollection* child, 
 
 void ActionCollectionModel::slotCollectionRemoved( ActionCollection*, ActionCollection* )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotCollectionRemoved: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
+    //qrossdebug( QString( "ActionCollectionModel::slotCollectionRemoved: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
     endRemoveRows();
 }
 
 void ActionCollectionModel::slotActionToBeInserted( Action* child, ActionCollection* parent )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotActionInserted: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
+    //qrossdebug( QString( "ActionCollectionModel::slotActionInserted: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
     Q_ASSERT( parent );
     Q_UNUSED( child )
     int row = parent->actions().count(); // assume child is appended to actions!!
@@ -143,13 +143,13 @@ void ActionCollectionModel::slotActionToBeInserted( Action* child, ActionCollect
 
 void ActionCollectionModel::slotActionInserted( Action*, ActionCollection* )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotActionInserted: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
+    //qrossdebug( QString( "ActionCollectionModel::slotActionInserted: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
     endInsertRows();
 }
 
 void ActionCollectionModel::slotActionToBeRemoved( Action* child, ActionCollection* parent )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotActionToBeRemoved: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
+    //qrossdebug( QString( "ActionCollectionModel::slotActionToBeRemoved: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
     Q_ASSERT( parent );
     int row = parent->actions().indexOf( child );
     QModelIndex parIdx = indexForCollection( parent );
@@ -158,7 +158,7 @@ void ActionCollectionModel::slotActionToBeRemoved( Action* child, ActionCollecti
 
 void ActionCollectionModel::slotActionRemoved( Action*, ActionCollection* )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotActionRemoved: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
+    //qrossdebug( QString( "ActionCollectionModel::slotActionRemoved: %1 %2" ).arg( child->name() ).arg( parent->name() ) );
     endRemoveRows();
 }
 
@@ -171,14 +171,14 @@ void ActionCollectionModel::slotUpdated()
 
 void ActionCollectionModel::slotDataChanged( ActionCollection* coll )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotDataChanged: %1" ).arg( coll->name() ) );
+    //qrossdebug( QString( "ActionCollectionModel::slotDataChanged: %1" ).arg( coll->name() ) );
     QModelIndex idx = indexForCollection( coll );
     emit dataChanged( idx, idx ); // NOTE: change if more than one column
 }
 
 void ActionCollectionModel::slotDataChanged( Action* act )
 {
-    //krossdebug( QString( "ActionCollectionModel::slotDataChanged: %1" ).arg( act->name() ) );
+    //qrossdebug( QString( "ActionCollectionModel::slotDataChanged: %1" ).arg( act->name() ) );
     QModelIndex idx = indexForAction( act );
     emit dataChanged( idx, idx ); // NOTE: change if more than one column
 }
@@ -423,7 +423,7 @@ QString fullPath(const QModelIndex& index)
 
 QMimeData* ActionCollectionModel::mimeData(const QModelIndexList& indexes) const
 {
-    //krossdebug( QString("ActionCollectionModel::mimeData") );
+    //qrossdebug( QString("ActionCollectionModel::mimeData") );
     QMimeData* mimeData = new QMimeData();
     QByteArray encodedData;
 
@@ -471,7 +471,7 @@ bool ActionCollectionModel::dropMimeData(const QMimeData* data, Qt::DropAction a
         beginRow = parent.row();
     else
         beginRow = rowCount( QModelIndex() );
-    krossdebug( QString("ActionCollectionModel::dropMimeData: beginRow=%1").arg(beginRow) );
+    qrossdebug( QString("ActionCollectionModel::dropMimeData: beginRow=%1").arg(beginRow) );
     */
 
     QModelIndex targetindex = index( row, column, parent );
@@ -518,7 +518,7 @@ void ActionCollectionProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 
 bool ActionCollectionProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
 {
-    //krossdebug( QString( "ActionCollectionProxyModel::filterAcceptsRow: row=%1 parentrow=%2" ).arg( source_row ).arg( source_parent.row() ) );
+    //qrossdebug( QString( "ActionCollectionProxyModel::filterAcceptsRow: row=%1 parentrow=%2" ).arg( source_row ).arg( source_parent.row() ) );
     QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
     if( ! index.isValid() )
         return false;

@@ -8,4 +8,4 @@ add_executable(qross ${qross_SRCS})
 
 target_link_libraries(qross ${QT_LIBRARIES} qrosscore)
 # TODO: DESTINATION
-#install(TARGETS kross)
+#install(TARGETS qross)

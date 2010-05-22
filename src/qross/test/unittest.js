@@ -1,4 +1,4 @@
-#!/usr/bin/env krosstest
+#!/usr/bin/env qrosstest
 
 // Print something on the console.
 println("Let's start the KjsEmbed Unittest :-)");
@@ -433,7 +433,7 @@ var testobj2 = TestObject2
 tester.printResult();
 
 /*
-f = Kross.module('forms');
+f = Qross.module('forms');
 d = f.createDialog('TestGuiFormDialog');
 d.setButtons('Ok|Cancel');
 d.exec_loop();

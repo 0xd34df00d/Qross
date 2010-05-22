@@ -22,9 +22,9 @@ set_target_properties(qrossui PROPERTIES VERSION ${GENERIC_LIB_VERSION}
                      )
 
 # TODO: DESTINATION
-#install(TARGETS krossui)
+#install(TARGETS qrossui)
 
 ########### install files ###############
 
-#install(FILES guiclient.h model.h view.h DESTINATION ${INCLUDE_INSTALL_DIR}/kross/ui)
+#install(FILES guiclient.h model.h view.h DESTINATION ${INCLUDE_INSTALL_DIR}/qross/ui)
 install(FILES model.h DESTINATION ${INCLUDE_INSTALL_DIR}/qross/ui COMPONENT Devel)

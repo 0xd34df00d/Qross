@@ -1,9 +1,9 @@
-#!/usr/bin/env kross
+#!/usr/bin/env qross
 
-require 'Kross'
+require 'Qross'
 
-dialog = Kross.createDialog("TestGuiFormDialog")
+dialog = Qross.createDialog("TestGuiFormDialog")
 form = dialog
 print "form %s %s" % (form,dir(form))
-form.loadUiFile("/home/kde4/koffice/libs/kross/test/testguiform.ui")
+form.loadUiFile("/home/kde4/koffice/libs/qross/test/testguiform.ui")
 form.exec_loop()

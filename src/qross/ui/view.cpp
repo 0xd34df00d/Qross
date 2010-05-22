@@ -247,7 +247,7 @@ void ActionCollectionEditor::commit()
  * ActionCollectionView
  */
 
-namespace Kross {
+namespace Qross {
 
     /// \internal d-pointer class.
     class ActionCollectionView::Private
@@ -442,7 +442,7 @@ void ActionCollectionView::slotRun()
         Action* action = ActionCollectionModel::action(index);
         if( ! action )
             continue;
-        connect(action, SIGNAL(finished(Kross::Action*)), SLOT(slotSelectionChanged()));
+        connect(action, SIGNAL(finished(Qross::Action*)), SLOT(slotSelectionChanged()));
         action->trigger();
     }
     slotSelectionChanged();
@@ -457,8 +457,8 @@ void ActionCollectionView::slotStop()
         Action* action = ActionCollectionModel::action(index);
         if( ! action )
             continue;
-        //connect(action, SIGNAL(started(Kross::Action*)), SLOT(slotSelectionChanged()));
-        //connect(action, SIGNAL(finished(Kross::Action*)), SLOT(slotSelectionChanged()));
+        //connect(action, SIGNAL(started(Qross::Action*)), SLOT(slotSelectionChanged()));
+        //connect(action, SIGNAL(finished(Qross::Action*)), SLOT(slotSelectionChanged()));
         action->finalize();
     }
     slotSelectionChanged();

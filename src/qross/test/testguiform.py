@@ -1,16 +1,16 @@
-#!/usr/bin/env kross
+#!/usr/bin/env qross
 
-import Kross, os
+import Qross, os
 
-#window = Kross.activeWindow()
+#window = Qross.activeWindow()
 #if window == None:
 #    print "Creating new dialog"
-#    window = Kross.createDialog("TestGuiFormDialog")
+#    window = Qross.createDialog("TestGuiFormDialog")
 #else:
 #    print "Using active window"
 
 print "1................"
-forms = Kross.module("forms")
+forms = Qross.module("forms")
 print "2................"
 print "===================================> %s" % forms
 print dir(forms)
@@ -22,9 +22,9 @@ dialog.setFaceType("List") #Auto Plain List Tree Tabbed
 #print "===> dialog %s %s" % (dialog,dir(dialog))
 
 #page0 = dialog.addPage("Welcome","Welcome","about_kde")
-##widget0 = Kross.forms().createWidget(page0, 'QWidget', 'MyForm1', {})
-##widget0label = Kross.forms().createWidget(page0, 'QLabel', 'label', {'text':'Testlabel'})
-#widget0 = Kross.forms().createWidgetFromUI(page0,
+##widget0 = Qross.forms().createWidget(page0, 'QWidget', 'MyForm1', {})
+##widget0label = Qross.forms().createWidget(page0, 'QLabel', 'label', {'text':'Testlabel'})
+#widget0 = Qross.forms().createWidgetFromUI(page0,
     #'<ui version="4.0" >'
     #' <class>Form</class>'
     #' <widget class="QWidget" name="Form" >'
@@ -60,7 +60,7 @@ widget1.setMode("Opening")
 widget1.setFilter("*.cpp|C++ Source Files\n*.h|Header files")
 
 #optionspage = dialog.addPage("Options","Import Options","configure")
-#optionswidget = Kross.forms().createWidgetFromUIFile(optionspage, "/home/kde4/koffice/krita/plugins/viewplugins/scripting/scripts/pilimport.ui")
+#optionswidget = Qross.forms().createWidgetFromUIFile(optionspage, "/home/kde4/koffice/krita/plugins/viewplugins/scripting/scripts/pilimport.ui")
 
 #w = widget #widget["KFileDialog::mainWidget"]
 #print dir(w)

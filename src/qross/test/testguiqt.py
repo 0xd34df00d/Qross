@@ -1,4 +1,4 @@
-#!/usr/bin/env krosstest
+#!/usr/bin/env qrosstest
 
 #import qt
 #class Button(qt.QPushButton):

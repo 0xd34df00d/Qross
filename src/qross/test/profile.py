@@ -1,8 +1,8 @@
-#!/usr/bin/env kross
+#!/usr/bin/env qross
 
 """
   This Python script is used as performance-tester and profiler
-  for the Kross scripting framework.
+  for the Qross scripting framework.
 """
 
 def runner():
