@@ -1,0 +1,32 @@
+/** @section core The core of Qross
+ *
+ * The core of Qross provides the framework to deal transparently
+ * with interpreter-backends and offers abstract functionality
+ * to deal with scripts.
+ *
+ * The @a Qross::Manager class is a singleton that provides the
+ * main entry point to deal with the Qross Scripting Framework.
+ *
+ * The @a Qross::Interpreter class is the base for interpreter
+ * implementations. Each scripting backend needs to inheritate
+ * it's own interpreter and implement it.
+ * The @a Qross::InterpreterInfo class provides abstract information
+ * about a \a Interpreter before the interpreter-backend itself is
+ * loaded.
+ *
+ * The @a Qross::Action class is an abstract container to deal with
+ * scripts like a single standalone scriptfile. Each action holds
+ * a reference to by the matching @a Qross::Interpreter created
+ * @a Qross::Script instance.
+ *
+ * The @a Qross::GuiClient class implements a KXMLGUIClient to provide
+ * abstract access to the Qross Scripting Framework to an application.
+ *
+ * The @a Qross::ActionCollectionProxyModel class implements a
+ * QSortFilterProxyModel for a @a Qross::ActionCollectionModel instance
+ * which implements QAbstractItemModel to provide a model for views
+ * on a @a Qross::ActionCollection instance.
+ *
+ * The @a Qross::ActionCollection class manages collections of
+ * @a Qross::Action instances.
+ */
