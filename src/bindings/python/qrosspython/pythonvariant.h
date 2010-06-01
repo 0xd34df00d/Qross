@@ -17,12 +17,12 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_PYTHONVARIANT_H
-#define KROSS_PYTHONVARIANT_H
+#ifndef QROSS_PYTHONVARIANT_H
+#define QROSS_PYTHONVARIANT_H
 
 #include "pythonconfig.h"
 #include "pythonobject.h"
-#include <kross/core/metatype.h>
+#include <qross/core/metatype.h>
 
 #include <QString>
 #include <QStringList>
@@ -39,7 +39,7 @@
 
 #include <typeinfo>
 
-namespace Kross {
+namespace Qross {
 
     /**
      * The PythonType helper classes used to cast between QVariant

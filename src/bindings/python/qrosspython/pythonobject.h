@@ -17,22 +17,22 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_PYTHON_OBJECT_H
-#define KROSS_PYTHON_OBJECT_H
+#ifndef QROSS_PYTHON_OBJECT_H
+#define QROSS_PYTHON_OBJECT_H
 
 #include "pythonconfig.h"
 #include "pythonextension.h"
-#include <kross/core/object.h>
+#include <qross/core/object.h>
 
 #include <QString>
 #include <QStringList>
 
-namespace Kross {
+namespace Qross {
     /**
      * The PythonObject class is used for Instances of Python
      * Classes by the \a PythonExtension class.
      */
-    class PythonObject : public Kross::Object
+    class PythonObject : public Qross::Object
     {
         public:
 

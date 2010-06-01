@@ -28,8 +28,7 @@ QT4_WRAP_CPP (qrosscore_LIB_MOC_SRCS ${qrosscore_LIB_HEADERS})
 add_library(qrosscore SHARED ${qrosscore_LIB_SRCS} ${qrosscore_LIB_MOC_SRCS})
 target_link_libraries(qrosscore ${QT_LIBRARIES})
 
-# TODO: DESTINATION
-#install(TARGETS qrosscore)
+install(TARGETS qrosscore DESTINATION lib)
 
 install(FILES
 	qross_export.h
@@ -45,4 +44,4 @@ install(FILES
     actioncollection.h
     manager.h
     object.h
-    DESTINATION ${INCLUDE_INSTALL_DIR}/qross/core COMPONENT Devel)
+    DESTINATION include/qross/core COMPONENT Devel)

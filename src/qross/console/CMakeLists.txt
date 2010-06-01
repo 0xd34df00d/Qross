@@ -7,5 +7,4 @@ set(qross_SRCS main.cpp)
 add_executable(qross ${qross_SRCS})
 
 target_link_libraries(qross ${QT_LIBRARIES} qrosscore)
-# TODO: DESTINATION
-#install(TARGETS qross)
+install(TARGETS qross DESTINATION bin)

@@ -10,7 +10,7 @@ set(qrossqtsplugin_LIB_SRCS plugin.cpp)
 add_library(qrossqtsplugin SHARED ${qrossqtsplugin_LIB_SRCS})
 
 target_link_libraries(qrossqtsplugin ${QT_LIBRARIES} qrosscore)
-install(TARGETS qrossqtsplugin DESTINATION ${PLUGIN_INSTALL_DIR}/plugins/script)
+install(TARGETS qrossqtsplugin DESTINATION ${QT_PLUGINS_DIR}/script)
 
 ########### next target ###############
 
@@ -29,8 +29,9 @@ target_link_libraries(qrossqtstest ${QT_LIBRARIES})
 
 #include_directories(${CMAKE_SOURCE_DIR}/qross ${KDE4_KJS_INCLUDES} ${CMAKE_SOURCE_DIR}/kjsembed ${KDE4_KDECORE_INCLUDES} ${KDE4_KDEUI_INCLUDES} ${KDE4_KIO_INCLUDES})
 set(qrossqts_PART_SRCS interpreter.cpp script.cpp)
-# TODO: add_plugin?
-#add_plugin(qrossqts ${qrossqts_PART_SRCS})
-#target_link_libraries(qrossqts ${QT_LIBRARIES} qrosscore)
-#
-#install(TARGETS qrossqts DESTINATION ${PLUGIN_INSTALL_DIR})
+set(qrossqts_PART_HEADERS script.h)
+QT4_WRAP_CPP (qrossqts_PART_MOC_SRCS ${qrossqts_PART_HEADERS})
+add_library(qrossqts MODULE ${qrossqts_PART_SRCS} ${qrossqts_PART_MOC_SRCS})
+set_target_properties(qrossqts PROPERTIES PREFIX "")
+target_link_libraries(qrossqts ${QT_LIBRARIES} qrosscore)
+install(TARGETS qrossqts DESTINATION lib)

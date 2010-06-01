@@ -17,18 +17,18 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_PYTHONINTERPRETER_H
-#define KROSS_PYTHONINTERPRETER_H
+#ifndef QROSS_PYTHONINTERPRETER_H
+#define QROSS_PYTHONINTERPRETER_H
 
 #include "pythonconfig.h"
-#include <kross/core/krossconfig.h>
-#include <kross/core/interpreter.h>
-#include <kross/core/action.h>
-#include <kross/core/manager.h>
+#include <qross/core/qrossconfig.h>
+#include <qross/core/interpreter.h>
+#include <qross/core/action.h>
+#include <qross/core/manager.h>
 
 #include <QString>
 
-namespace Kross {
+namespace Qross {
 
     // Forward declarations.
     class PythonScript;
@@ -38,11 +38,11 @@ namespace Kross {
     /**
      * Python interpreter bridge.
      *
-     * Implements the \a Kross::Interpreter for the python interpreter
-     * backend and provides with the \a Kross::PythonInterpreter::createScript
-     * a factory method to create \a Kross::PythonScript instances.
+     * Implements the \a Qross::Interpreter for the python interpreter
+     * backend and provides with the \a Qross::PythonInterpreter::createScript
+     * a factory method to create \a Qross::PythonScript instances.
      */
-    class PythonInterpreter : public Kross::Interpreter
+    class PythonInterpreter : public Qross::Interpreter
     {
             friend class PythonScript;
         public:
@@ -50,11 +50,11 @@ namespace Kross {
             /**
              * Constructor.
              *
-             * \param info The \a Kross::InterpreterInfo instance
+             * \param info The \a Qross::InterpreterInfo instance
              *        which describes the \a PythonInterpreter for
-             *        applications using Kross.
+             *        applications using Qross.
              */
-            explicit PythonInterpreter(Kross::InterpreterInfo* info);
+            explicit PythonInterpreter(Qross::InterpreterInfo* info);
 
             /**
              * Destructor.
@@ -64,7 +64,7 @@ namespace Kross {
             /**
              * \return a \a PythonScript instance.
              */
-            virtual Kross::Script* createScript(Kross::Action* Action);
+            virtual Qross::Script* createScript(Qross::Action* Action);
 
             /**
              * Extract the current exception and fill the passed \p errorlist with

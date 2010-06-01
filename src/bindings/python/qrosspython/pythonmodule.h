@@ -17,15 +17,15 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_PYTHONMODULE_H
-#define KROSS_PYTHONMODULE_H
+#ifndef QROSS_PYTHONMODULE_H
+#define QROSS_PYTHONMODULE_H
 
 #include "pythonconfig.h"
 #include "pythonextension.h"
 
 #include <QString>
 
-namespace Kross {
+namespace Qross {
 
     // Forward declaration.
     class PythonInterpreter;
@@ -35,7 +35,7 @@ namespace Kross {
      * The PythonModule is the __main__ python environment
      * used as global object namespace.
      *
-     * The module also spends access to the whole Kross
+     * The module also spends access to the whole Qross
      * functionality and manages all the PythonExtension
      * modules.
      */
@@ -65,7 +65,7 @@ namespace Kross {
             /// Internal d-pointer class.
             PythonModulePrivate * const d;
 
-            /// Import hook used to load external kross libs on demand.
+            /// Import hook used to load external qross libs on demand.
             Py::Object import(const Py::Tuple&);
     };
 

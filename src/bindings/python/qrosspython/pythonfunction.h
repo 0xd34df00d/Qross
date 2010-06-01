@@ -20,19 +20,19 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_PYTHONFUNCTION_H
-#define KROSS_PYTHONFUNCTION_H
+#ifndef QROSS_PYTHONFUNCTION_H
+#define QROSS_PYTHONFUNCTION_H
 
 #include "pythonconfig.h"
-#include <kross/core/krossconfig.h>
-#include <kross/core/metafunction.h>
+#include <qross/core/qrossconfig.h>
+#include <qross/core/metafunction.h>
 
 #include <QObject>
 #include <QMetaObject>
 #include <QMetaMethod>
 #include <QByteArray>
 
-namespace Kross {
+namespace Qross {
 
     /**
      * The PythonFunction class implements a QObject to provide
@@ -53,9 +53,9 @@ namespace Kross {
             PythonFunction(QObject* sender, const QByteArray& signal, const Py::Callable& callable)
                 : MetaFunction(sender, signal), m_callable(callable)
             {
-                #ifdef KROSS_PYTHON_FUNCTION_DEBUG
+                #ifdef QROSS_PYTHON_FUNCTION_DEBUG
                     m_debuginfo = QString("sender=%1 [%2] signal=%3").arg(sender->objectName()).arg(sender->metaObject()->className()).arg(signal.constData());
-                    krossdebug( QString("PythonFunction::Constructor: %1").arg(m_debuginfo) );
+                    qrossdebug( QString("PythonFunction::Constructor: %1").arg(m_debuginfo) );
                 #endif
             }
 
@@ -64,8 +64,8 @@ namespace Kross {
             */
             virtual ~PythonFunction()
             {
-                #ifdef KROSS_PYTHON_FUNCTION_DEBUG
-                    krossdebug( QString("PythonFunction::Destructor: %1").arg(m_debuginfo) );
+                #ifdef QROSS_PYTHON_FUNCTION_DEBUG
+                    qrossdebug( QString("PythonFunction::Destructor: %1").arg(m_debuginfo) );
                 #endif
             }
 
@@ -76,7 +76,7 @@ namespace Kross {
             int qt_metacall(QMetaObject::Call _c, int _id, void **_a)
             {
                 _id = QObject::qt_metacall(_c, _id, _a);
-                //krossdebug(QString("PythonFunction::qt_metacall id=%1").arg(_id));
+                //qrossdebug(QString("PythonFunction::qt_metacall id=%1").arg(_id));
                 if(_id >= 0 && _c == QMetaObject::InvokeMetaMethod) {
                     switch(_id) {
                         case 0: {
@@ -92,8 +92,8 @@ namespace Kross {
                                     case QVariant::Invalid: // fall through
                                     case QVariant::UserType: {
                                         tp = QMetaType::type( param.constData() );
-                                        #ifdef KROSS_PYTHON_FUNCTION_DEBUG
-                                            krossdebug( QString("PythonFunction::qt_metacall: param=%1 metatypeId=%2").arg(param.constData()).arg(tp) );
+                                        #ifdef QROSS_PYTHON_FUNCTION_DEBUG
+                                            qrossdebug( QString("PythonFunction::qt_metacall: param=%1 metatypeId=%2").arg(param.constData()).arg(tp) );
                                         #endif
                                         switch( tp ) {
                                             case QMetaType::QObjectStar: {
@@ -115,15 +115,15 @@ namespace Kross {
                                     default: {
                                         QVariant v(tp, _a[idx]);
 
-                                        if( ! Kross::Manager::self().strictTypesEnabled() ) {
+                                        if( ! Qross::Manager::self().strictTypesEnabled() ) {
                                             if( v.type() == QVariant::Invalid && QByteArray(param.constData()).endsWith("*") ) {
                                                 QObject* obj = (*reinterpret_cast< QObject*(*)>( _a[idx] ));
                                                 v.setValue( (QObject*) obj );
                                             }
                                         }
 
-                                        #ifdef KROSS_PYTHON_FUNCTION_DEBUG
-                                            krossdebug( QString("PythonFunction::qt_metacall argument param=%1 typeId=%2").arg(param.constData()).arg(tp) );
+                                        #ifdef QROSS_PYTHON_FUNCTION_DEBUG
+                                            qrossdebug( QString("PythonFunction::qt_metacall argument param=%1 typeId=%2").arg(param.constData()).arg(tp) );
                                         #endif
                                         args[idx-1] = PythonType<QVariant>::toPyObject(v);
                                     } break;
@@ -141,14 +141,14 @@ namespace Kross {
                                 QStringList trace;
                                 int lineno;
                                 PythonInterpreter::extractException(trace, lineno);
-                                #ifdef KROSS_PYTHON_FUNCTION_DEBUG
-                                    krosswarning( QString("PythonFunction::qt_metacall exception on line %1:\n%2 \n%3").arg(lineno).arg(Py::value(e).as_string().c_str()).arg(trace.join("\n")) );
+                                #ifdef QROSS_PYTHON_FUNCTION_DEBUG
+                                    qrosswarning( QString("PythonFunction::qt_metacall exception on line %1:\n%2 \n%3").arg(lineno).arg(Py::value(e).as_string().c_str()).arg(trace.join("\n")) );
                                 #endif
                                 PyErr_Print(); //e.clear();
                                 return -1;
                             }
 
-                            //_a[0] = Kross::MetaTypeVariant<QVariant>(d->tmpResult).toVoidStar();
+                            //_a[0] = Qross::MetaTypeVariant<QVariant>(d->tmpResult).toVoidStar();
                             _a[0] = &(m_tmpResult);
                         } break;
                     }
@@ -161,7 +161,7 @@ namespace Kross {
             Py::Callable m_callable;
             QVariant m_tmpResult;
 
-            #ifdef KROSS_PYTHON_FUNCTION_DEBUG
+            #ifdef QROSS_PYTHON_FUNCTION_DEBUG
                 QString m_debuginfo;
             #endif
     };

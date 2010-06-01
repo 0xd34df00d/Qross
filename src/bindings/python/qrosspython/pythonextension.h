@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_PYTHONEXTENSION_H
-#define KROSS_PYTHONEXTENSION_H
+#ifndef QROSS_PYTHONEXTENSION_H
+#define QROSS_PYTHONEXTENSION_H
 
 #include "pythonconfig.h"
 
@@ -29,7 +29,7 @@
 #include <QVariant>
 #include <QPointer>
 
-namespace Kross {
+namespace Qross {
 
     // Forward declaration.
     class PythonExtension;

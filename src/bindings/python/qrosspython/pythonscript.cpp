@@ -22,16 +22,16 @@
 #include "pythoninterpreter.h"
 #include "pythonextension.h"
 #include "pythonvariant.h"
-#include <kross/core/action.h>
+#include <qross/core/action.h>
 
 //TODO move that functionality to PythonExtension!
 #include <QMetaObject>
 #include <QMetaMethod>
 #include "pythonfunction.h"
 
-using namespace Kross;
+using namespace Qross;
 
-namespace Kross {
+namespace Qross {
 
     /// \internal
     class PythonScriptPrivate
@@ -73,19 +73,19 @@ namespace Kross {
 
 }
 
-PythonScript::PythonScript(Kross::Interpreter* interpreter, Kross::Action* action)
-    : Kross::Script(interpreter, action)
+PythonScript::PythonScript(Qross::Interpreter* interpreter, Qross::Action* action)
+    : Qross::Script(interpreter, action)
     , d(new PythonScriptPrivate())
 {
-    #ifdef KROSS_PYTHON_SCRIPT_CTOR_DEBUG
-        krossdebug("PythonScript::Constructor.");
+    #ifdef QROSS_PYTHON_SCRIPT_CTOR_DEBUG
+        qrossdebug("PythonScript::Constructor.");
     #endif
 }
 
 PythonScript::~PythonScript()
 {
-    #ifdef KROSS_PYTHON_SCRIPT_DTOR_DEBUG
-        krossdebug("PythonScript::Destructor.");
+    #ifdef QROSS_PYTHON_SCRIPT_DTOR_DEBUG
+        qrossdebug("PythonScript::Destructor.");
     #endif
     qDeleteAll( d->m_functions );
 
@@ -105,8 +105,8 @@ Py::Dict PythonScript::moduleDict() const
 
 bool PythonScript::initialize()
 {
-    #ifdef KROSS_PYTHON_SCRIPT_INIT_DEBUG
-        krossdebug( QString("PythonScript::initialize") );
+    #ifdef QROSS_PYTHON_SCRIPT_INIT_DEBUG
+        qrossdebug( QString("PythonScript::initialize") );
     #endif
 
     finalize(); // finalize before initialize
@@ -153,8 +153,8 @@ bool PythonScript::initialize()
             */
         }
 
-        #ifdef KROSS_PYTHON_SCRIPT_INIT_DEBUG
-            krossdebug( QString("PythonScript::initialize() module='%1' refcount='%2'").arg(d->m_module->as_string().c_str()).arg(d->m_module->reference_count()) );
+        #ifdef QROSS_PYTHON_SCRIPT_INIT_DEBUG
+            qrossdebug( QString("PythonScript::initialize() module='%1' refcount='%2'").arg(d->m_module->as_string().c_str()).arg(d->m_module->reference_count()) );
         #endif
 
         { // Add additional stuff to the modules dictonary of this PythonScript.
@@ -224,8 +224,8 @@ bool PythonScript::initialize()
         }
 
 
-        #ifdef KROSS_PYTHON_SCRIPT_INIT_DEBUG
-            krossdebug( QString("PythonScript::initialize() name=%1").arg(action()->objectName()) );
+        #ifdef QROSS_PYTHON_SCRIPT_INIT_DEBUG
+            qrossdebug( QString("PythonScript::initialize() name=%1").arg(action()->objectName()) );
         #endif
 
         { // Compile the python script code. It will be later on request executed. That way we cache the compiled code.
@@ -258,8 +258,8 @@ bool PythonScript::initialize()
 
 void PythonScript::finalize()
 {
-    #ifdef KROSS_PYTHON_SCRIPT_FINALIZE_DEBUG
-        krossdebug( QString("PythonScript::finalize() module=%1").arg(d->m_module ? d->m_module->as_string().c_str() : "NULL") );
+    #ifdef QROSS_PYTHON_SCRIPT_FINALIZE_DEBUG
+        qrossdebug( QString("PythonScript::finalize() module=%1").arg(d->m_module ? d->m_module->as_string().c_str() : "NULL") );
     #endif
 
     PyErr_Clear();
@@ -275,13 +275,13 @@ void PythonScript::finalize()
 
 void PythonScript::execute()
 {
-    #ifdef KROSS_PYTHON_SCRIPT_EXEC_DEBUG
-        krossdebug( QString("PythonScript::execute") );
+    #ifdef QROSS_PYTHON_SCRIPT_EXEC_DEBUG
+        qrossdebug( QString("PythonScript::execute") );
     #endif
 
     if( hadError() ) {
-        #ifdef KROSS_PYTHON_SCRIPT_EXEC_DEBUG
-            krosswarning( QString("PythonScript::execute Abort cause of prev error: %1\n%2").arg(errorMessage()).arg(errorTrace()) );
+        #ifdef QROSS_PYTHON_SCRIPT_EXEC_DEBUG
+            qrosswarning( QString("PythonScript::execute Abort cause of prev error: %1\n%2").arg(errorMessage()).arg(errorTrace()) );
         #endif
         Py::AttributeError(errorMessage());
         return;
@@ -348,8 +348,8 @@ void PythonScript::execute()
         // while valgrind complains, it's ok to shape references to code here
         //Q_ASSERT( d->m_code->reference_count() == 1 );
 
-        #ifdef KROSS_PYTHON_SCRIPT_EXEC_DEBUG
-            krossdebug( QString("PythonScript::execute result=%1").arg(result.as_string().c_str()) );
+        #ifdef QROSS_PYTHON_SCRIPT_EXEC_DEBUG
+            qrossdebug( QString("PythonScript::execute result=%1").arg(result.as_string().c_str()) );
         #endif
 
         // try to autoconnect
@@ -370,14 +370,14 @@ void PythonScript::execute()
                         QByteArray sendersignal = QString("2%1").arg(signature).toLatin1();
                         QByteArray receiverslot = QString("1%1").arg(signature).toLatin1();
                         if( QObject::connect(obj, sendersignal, function, receiverslot) ) {
-                            #ifdef KROSS_PYTHON_SCRIPT_AUTOCONNECT_DEBUG
-                                krossdebug( QString("PythonScript::execute connect object=%1 signal=%2 with pythonfunction=%3").arg(obj->objectName()).arg(signature).arg(name.constData()) );
+                            #ifdef QROSS_PYTHON_SCRIPT_AUTOCONNECT_DEBUG
+                                qrossdebug( QString("PythonScript::execute connect object=%1 signal=%2 with pythonfunction=%3").arg(obj->objectName()).arg(signature).arg(name.constData()) );
                             #endif
                             d->m_functions.append(function);
                         }
                         else {
-                            #ifdef KROSS_PYTHON_SCRIPT_AUTOCONNECT_DEBUG
-                                krossdebug( QString("PythonScript::execute failed to connect object=%1 signal=%2 with pythonfunction=%3").arg(obj->objectName()).arg(signature).arg(name.constData()) );
+                            #ifdef QROSS_PYTHON_SCRIPT_AUTOCONNECT_DEBUG
+                                qrossdebug( QString("PythonScript::execute failed to connect object=%1 signal=%2 with pythonfunction=%3").arg(obj->objectName()).arg(signature).arg(name.constData()) );
                             #endif
                             delete function;
                         }
@@ -420,16 +420,16 @@ QVariant PythonScript::callFunction(const QString& name, const QVariantList& arg
 {
     //TODO do we need to acquire interpreter lock here?
 
-    #ifdef KROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
+    #ifdef QROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
         QString s;
         foreach(QVariant v, args)
             s += v.toString() + ',';
-        krossdebug( QString("PythonScript::callFunction() name=%1 args=[%2]").arg(name).arg(s) );
+        qrossdebug( QString("PythonScript::callFunction() name=%1 args=[%2]").arg(name).arg(s) );
     #endif
 
     if( hadError() ) {
-        #ifdef KROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
-            krosswarning( QString("PythonScript::callFunction() Abort cause of prev error: %1\n%2").arg(errorMessage()).arg(errorTrace()) );
+        #ifdef QROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
+            qrosswarning( QString("PythonScript::callFunction() Abort cause of prev error: %1\n%2").arg(errorMessage()).arg(errorTrace()) );
         #endif
         Py::AttributeError( errorMessage() );
         return QVariant();
@@ -470,15 +470,15 @@ QVariant PythonScript::callFunction(const QString& name, const QVariantList& arg
         // Finally call the function.
         Py::Object pyresult = funcobject.apply( PythonType<QVariantList,Py::Tuple>::toPyObject(args) );
         QVariant result = PythonType<QVariant>::toVariant(pyresult);
-        #ifdef KROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
-            krossdebug( QString("PythonScript::callFunction() result=%1 variant.toString=%2 variant.typeName=%3").arg(pyresult.as_string().c_str()).arg(result.toString()).arg(result.typeName()) );
+        #ifdef QROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
+            qrossdebug( QString("PythonScript::callFunction() result=%1 variant.toString=%2 variant.typeName=%3").arg(pyresult.as_string().c_str()).arg(result.toString()).arg(result.typeName()) );
         #endif
         //finalize();
         return result;
     }
     catch(Py::Exception& e) {
-        #ifdef KROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
-            krosswarning( QString("PythonScript::callFunction() Exception: %1").arg(Py::value(e).as_string().c_str()) );
+        #ifdef QROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
+            qrosswarning( QString("PythonScript::callFunction() Exception: %1").arg(Py::value(e).as_string().c_str()) );
         #endif
         Py::Object err = Py::value(e);
         if(err.ptr() == Py_None) err = Py::type(e); // e.g. string-exceptions have there errormessage in the type-object
@@ -519,35 +519,35 @@ const QStringList& PythonScript::getClassNames()
     if(! d->m_module) if(! initialize()) return false; //TODO catch exception
     return d->m_classes;
 }
-Kross::Object::Ptr PythonScript::classInstance(const QString& name)
+Qross::Object::Ptr PythonScript::classInstance(const QString& name)
 {
-    if(hadException()) return Kross::Object::Ptr(0); // abort if we had an unresolved exception.
+    if(hadException()) return Qross::Object::Ptr(0); // abort if we had an unresolved exception.
     if(! d->m_module) {
-        setException( new Kross::Exception(QString("Script not initialized.")) );
-        return Kross::Object::Ptr(0);
+        setException( new Qross::Exception(QString("Script not initialized.")) );
+        return Qross::Object::Ptr(0);
     }
     try {
         Py::Dict moduledict = d->m_module->getDict();
         // Try to determinate the class.
         PyObject* pyclass = PyDict_GetItemString(moduledict.ptr(), name.toLatin1().data());
-        if( (! d->m_classes.contains(name)) || (! pyclass) ) throw Kross::Exception::Ptr( new Kross::Exception(QString("No such class '%1'.").arg(name)) );
+        if( (! d->m_classes.contains(name)) || (! pyclass) ) throw Qross::Exception::Ptr( new Qross::Exception(QString("No such class '%1'.").arg(name)) );
         PyObject *pyobj = PyInstance_New(pyclass, 0, 0);//aclarg, 0);
-        if(! pyobj) throw Kross::Exception::Ptr( new Kross::Exception(QString("Failed to create instance of class '%1'.").arg(name)) );
+        if(! pyobj) throw Qross::Exception::Ptr( new Qross::Exception(QString("Failed to create instance of class '%1'.").arg(name)) );
         Py::Object classobject(pyobj, true);
-        #ifdef KROSS_PYTHON_SCRIPT_CLASSINSTANCE_DEBUG
-            krossdebug( QString("PythonScript::classInstance() inst='%1'").arg(classobject.as_string().c_str()) );
+        #ifdef QROSS_PYTHON_SCRIPT_CLASSINSTANCE_DEBUG
+            qrossdebug( QString("PythonScript::classInstance() inst='%1'").arg(classobject.as_string().c_str()) );
         #endif
-        return Kross::Object::Ptr( PythonExtension::toObject(classobject) );
+        return Qross::Object::Ptr( PythonExtension::toObject(classobject) );
     }
     catch(Py::Exception& e) {
         QString err = Py::value(e).as_string().c_str();
         e.clear(); // exception is handled. clear it now.
-        setException( new Kross::Exception(err) );
+        setException( new Qross::Exception(err) );
     }
-    catch(Kross::Exception::Ptr e) {
+    catch(Qross::Exception::Ptr e) {
         setException(e.data());
     }
-    return Kross::Object::Ptr(0); // return nothing if exception got thrown.
+    return Qross::Object::Ptr(0); // return nothing if exception got thrown.
 }
 #endif
 

@@ -22,7 +22,7 @@
 #include "pythonvariant.h"
 #include "pythoninterpreter.h"
 
-using namespace Kross;
+using namespace Qross;
 
 class PythonObject::Private
 {
@@ -34,17 +34,17 @@ public:
 };
 
 PythonObject::PythonObject()
-    : Kross::Object()
+    : Qross::Object()
     , d(new Private)
 {
 }
 
 PythonObject::PythonObject(const Py::Object& object)
-    : Kross::Object()
+    : Qross::Object()
     , d(new Private(object))
 {
-    #ifdef KROSS_PYTHON_FUNCTION_DEBUG
-        krossdebug( QString("PythonObject::PythonObject() constructor") );
+    #ifdef QROSS_PYTHON_FUNCTION_DEBUG
+        qrossdebug( QString("PythonObject::PythonObject() constructor") );
     #endif
 
     Py::List x( object.dir() );
@@ -56,7 +56,7 @@ PythonObject::PythonObject(const Py::Object& object)
         //if(! m_pyobject.hasAttr( (*i).str() )) continue;
         Py::Object o = d->m_pyobject.getAttr(s);
 
-        #ifdef KROSS_PYTHON_FUNCTION_DEBUG
+        #ifdef QROSS_PYTHON_FUNCTION_DEBUG
             QString t;
             if(o.isCallable()) t += "isCallable ";
             if(o.isDict()) t += "isDict ";
@@ -66,7 +66,7 @@ PythonObject::PythonObject(const Py::Object& object)
             if(o.isSequence()) t += "isSequence ";
             if(o.isTrue()) t += "isTrue ";
             if(o.isInstance()) t += "isInstance ";
-            krossdebug( QString("PythonObject::PythonObject() method '%1' (%2)").arg( (*i).str().as_string().c_str() ).arg(t) );
+            qrossdebug( QString("PythonObject::PythonObject() method '%1' (%2)").arg( (*i).str().as_string().c_str() ).arg(t) );
         #endif
 
         if(o.isCallable())
@@ -76,35 +76,35 @@ PythonObject::PythonObject(const Py::Object& object)
 
 PythonObject::~PythonObject()
 {
-    #ifdef KROSS_PYTHON_FUNCTION_DEBUG
-        krossdebug( QString("PythonObject::~PythonObject() destructor") );
+    #ifdef QROSS_PYTHON_FUNCTION_DEBUG
+        qrossdebug( QString("PythonObject::~PythonObject() destructor") );
     #endif
     delete d;
 }
 
 QVariant PythonObject::callMethod(const QString& name, const QVariantList& args)
 {
-    #ifdef KROSS_PYTHON_FUNCTION_DEBUG
-        krossdebug( QString("PythonObject(%1)::call(%2) isInstance=%3").arg(d->m_pyobject.as_string().c_str()).arg(name).arg(d->m_pyobject.isInstance()) );
+    #ifdef QROSS_PYTHON_FUNCTION_DEBUG
+        qrossdebug( QString("PythonObject(%1)::call(%2) isInstance=%3").arg(d->m_pyobject.as_string().c_str()).arg(name).arg(d->m_pyobject.isInstance()) );
     #endif
 
     //if(d->m_pyobject.isInstance()) { // if it inherits a PyQt4 QObject/QWidget then it's not counted as instance
         try {
             Py::Callable method = d->m_pyobject.getAttr(name.toLatin1().data());
             if (!method.isCallable()) {
-                krossdebug( QString("%1 is not callable (%2).").arg(name).arg(method.str().as_string().c_str()) );
+                qrossdebug( QString("%1 is not callable (%2).").arg(name).arg(method.str().as_string().c_str()) );
                 return QVariant();
             }
             Py::Object pyresult = method.apply( PythonType<QVariantList,Py::Tuple>::toPyObject(args) );
             QVariant result = PythonType<QVariant>::toVariant(pyresult);
-            #ifdef KROSS_PYTHON_FUNCTION_DEBUG
-                krossdebug( QString("PythonScript::callFunction() result=%1 variant.toString=%2 variant.typeName=%3").arg(pyresult.as_string().c_str()).arg(result.toString()).arg(result.typeName()) );
+            #ifdef QROSS_PYTHON_FUNCTION_DEBUG
+                qrossdebug( QString("PythonScript::callFunction() result=%1 variant.toString=%2 variant.typeName=%3").arg(pyresult.as_string().c_str()).arg(result.toString()).arg(result.typeName()) );
             #endif
             return result;
         }
         catch(Py::Exception& e) {
-            //#ifdef KROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
-                krosswarning( QString("PythonScript::callFunction() Exception: %1").arg(Py::value(e).as_string().c_str()) );
+            //#ifdef QROSS_PYTHON_SCRIPT_CALLFUNC_DEBUG
+                qrosswarning( QString("PythonScript::callFunction() Exception: %1").arg(Py::value(e).as_string().c_str()) );
             //#endif
             Py::Object err = Py::value(e);
             if(err.ptr() == Py_None) err = Py::type(e); // e.g. string-exceptions have there errormessage in the type-object

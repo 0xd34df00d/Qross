@@ -31,13 +31,13 @@
   #define PYPATHDELIMITER ":"
 #endif
 
-// The in krossconfig.h defined KROSS_EXPORT_INTERPRETER macro defines an
-// exported C function used as factory for Kross::PythonInterpreter instances.
-KROSS_EXPORT_INTERPRETER( Kross::PythonInterpreter )
+// The in qrossconfig.h defined QROSS_EXPORT_INTERPRETER macro defines an
+// exported C function used as factory for Qross::PythonInterpreter instances.
+QROSS_EXPORT_INTERPRETER( Qross::PythonInterpreter )
 
-using namespace Kross;
+using namespace Qross;
 
-namespace Kross {
+namespace Qross {
 
     /// \internal
     class PythonInterpreterPrivate
@@ -51,20 +51,20 @@ namespace Kross {
 
 }
 
-PythonInterpreter::PythonInterpreter(Kross::InterpreterInfo* info)
-    : Kross::Interpreter(info)
+PythonInterpreter::PythonInterpreter(Qross::InterpreterInfo* info)
+    : Qross::Interpreter(info)
     , d(new PythonInterpreterPrivate())
 {
     // Initialize the python interpreter.
     initialize();
 
     // Set name of the program.
-    Py_SetProgramName(const_cast<char*>("Kross"));
+    Py_SetProgramName(const_cast<char*>("Qross"));
 
     /*
     // Set arguments.
     //char* comm[0];
-    const char* comm = const_cast<char*>("kross"); // name.
+    const char* comm = const_cast<char*>("qross"); // name.
     PySys_SetArgv(1, comm);
     */
 
@@ -90,12 +90,12 @@ PythonInterpreter::PythonInterpreter(Kross::InterpreterInfo* info)
 
 #if 0
     // Determinate additional module-paths we like to add.
-    // First add the global Kross modules-path.
-    QStringList krossdirs = KGlobal::dirs()->findDirs("data", "kross/python");
-    for(QStringList::Iterator krossit = krossdirs.begin(); krossit != krossdirs.end(); ++krossit)
-        path.append(*krossit + PYPATHDELIMITER);
+    // First add the global Qross modules-path.
+    QStringList qrossdirs = KGlobal::dirs()->findDirs("data", "qross/python");
+    for(QStringList::Iterator qrossit = qrossdirs.begin(); qrossit != qrossdirs.end(); ++qrossit)
+        path.append(*qrossit + PYPATHDELIMITER);
     // Then add the application modules-path.
-    QStringList appdirs = KGlobal::dirs()->findDirs("appdata", "kross/python");
+    QStringList appdirs = KGlobal::dirs()->findDirs("appdata", "qross/python");
     for(QStringList::Iterator appit = appdirs.begin(); appit != appdirs.end(); ++appit)
         path.append(*appit + PYPATHDELIMITER);
 #endif
@@ -103,15 +103,15 @@ PythonInterpreter::PythonInterpreter(Kross::InterpreterInfo* info)
     // Set the extended sys.path.
     PySys_SetPath( (char*) path.toLatin1().data() );
 
-    #ifdef KROSS_PYTHON_INTERPRETER_DEBUG
-        krossdebug(QString("Python ProgramName: %1").arg(Py_GetProgramName()));
-        krossdebug(QString("Python ProgramFullPath: %1").arg(Py_GetProgramFullPath()));
-        krossdebug(QString("Python Version: %1").arg(Py_GetVersion()));
-        krossdebug(QString("Python Platform: %1").arg(Py_GetPlatform()));
-        krossdebug(QString("Python Prefix: %1").arg(Py_GetPrefix()));
-        krossdebug(QString("Python ExecPrefix: %1").arg(Py_GetExecPrefix()));
-        //krossdebug(QString("Python Path: %1").arg(Py_GetPath()));
-        //krossdebug(QString("Python System Path: %1").arg(path));
+    #ifdef QROSS_PYTHON_INTERPRETER_DEBUG
+        qrossdebug(QString("Python ProgramName: %1").arg(Py_GetProgramName()));
+        qrossdebug(QString("Python ProgramFullPath: %1").arg(Py_GetProgramFullPath()));
+        qrossdebug(QString("Python Version: %1").arg(Py_GetVersion()));
+        qrossdebug(QString("Python Platform: %1").arg(Py_GetPlatform()));
+        qrossdebug(QString("Python Prefix: %1").arg(Py_GetPrefix()));
+        qrossdebug(QString("Python ExecPrefix: %1").arg(Py_GetExecPrefix()));
+        //qrossdebug(QString("Python Path: %1").arg(Py_GetPath()));
+        //qrossdebug(QString("Python System Path: %1").arg(path));
     #endif
 
     // Initialize the main module.
@@ -119,7 +119,7 @@ PythonInterpreter::PythonInterpreter(Kross::InterpreterInfo* info)
 
     // The main dictonary.
     Py::Dict moduledict = d->mainmodule->getDict();
-    //TODO moduledict["KrossPythonVersion"] = Py::Int(KROSS_PYTHON_VERSION);
+    //TODO moduledict["QrossPythonVersion"] = Py::Int(QROSS_PYTHON_VERSION);
 
     // Prepare the interpreter.
     QString s =
@@ -291,7 +291,7 @@ void PythonInterpreter::finalize()
     Py_Finalize();
 }
 
-Kross::Script* PythonInterpreter::createScript(Kross::Action* Action)
+Qross::Script* PythonInterpreter::createScript(Qross::Action* Action)
 {
     //if(hadError()) return 0;
     return new PythonScript(this, Action);
@@ -327,8 +327,8 @@ void PythonInterpreter::extractException(QStringList& errorlist, int& lineno)
         catch(Py::Exception& e) {
             QString err = Py::value(e).as_string().c_str();
             e.clear(); // exception is handled. clear it now.
-            #ifdef KROSS_PYTHON_EXCEPTION_DEBUG
-                krosswarning( QString("Kross::PythonScript::toException() Failed to fetch a traceback: %1").arg(err) );
+            #ifdef QROSS_PYTHON_EXCEPTION_DEBUG
+                qrosswarning( QString("Qross::PythonScript::toException() Failed to fetch a traceback: %1").arg(err) );
             #endif
         }
 
@@ -367,9 +367,9 @@ void PythonInterpreter::extractException(QStringList& errorlist, int& lineno)
         }
     }
 
-    #ifdef KROSS_PYTHON_EXCEPTION_DEBUG
-        //krossdebug( QString("PythonInterpreter::extractException: %1").arg( Py::Object(value).as_string().c_str() ) );
-        krossdebug( QString("PythonInterpreter::extractException:\n%1").arg( errorlist.join("\n") ) );
+    #ifdef QROSS_PYTHON_EXCEPTION_DEBUG
+        //qrossdebug( QString("PythonInterpreter::extractException: %1").arg( Py::Object(value).as_string().c_str() ) );
+        qrossdebug( QString("PythonInterpreter::extractException:\n%1").arg( errorlist.join("\n") ) );
     #endif
     PyErr_Restore(type, value, traceback);
 }

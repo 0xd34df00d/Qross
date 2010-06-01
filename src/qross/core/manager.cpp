@@ -72,6 +72,8 @@ Manager& Manager::self()
     return *_self();
 }
 
+#include <QtDebug>
+
 void* loadLibrary(const char* libname, const char* functionname)
 {
     QLibrary lib(libname);
@@ -89,16 +91,19 @@ void* loadLibrary(const char* libname, const char* functionname)
         }
         */
 
-        /*
         if( ! lib.isLoaded() ) {
-            foreach(const QString& path, QCoreApplication::instance()->libraryPaths()) {
+        	QStringList paths = QCoreApplication::instance()->libraryPaths();
+#ifdef Q_WS_X11
+        	paths += "/usr/local/lib";
+        	paths += "/usr/lib";
+#endif
+            foreach(const QString& path, paths) {
                 lib.setFileName( QFileInfo(path, libname).filePath() );
                 lib.setLoadHints( QLibrary::ExportExternalSymbolsHint );
                 if( lib.load() )
                     break;
             }
         }
-        */
 
         if( ! lib.isLoaded() ) {
             #ifdef QROSS_INTERPRETER_DEBUG

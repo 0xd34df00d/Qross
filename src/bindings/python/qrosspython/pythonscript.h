@@ -17,13 +17,13 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_PYTHONSCRIPT_H
-#define KROSS_PYTHONSCRIPT_H
+#ifndef QROSS_PYTHONSCRIPT_H
+#define QROSS_PYTHONSCRIPT_H
 
 #include "pythonconfig.h"
-#include <kross/core/script.h>
+#include <qross/core/script.h>
 
-namespace Kross {
+namespace Qross {
 
     // Forward declarations.
     class PythonPyQtExtension;
@@ -32,11 +32,11 @@ namespace Kross {
     /**
      * Python script.
      *
-     * The PythonScript class implements @a Kross::Script for the
+     * The PythonScript class implements @a Qross::Script for the
      * python backend to provide the functionality to execute
      * python code within a script-container.
      */
-    class PythonScript : public Kross::Script
+    class PythonScript : public Qross::Script
     {
             friend class PythonPyQtExtension;
 
@@ -45,13 +45,13 @@ namespace Kross {
             /**
              * Constructor.
              *
-             * \param interpreter The \a Kross::Python::PythonInterpreter used
+             * \param interpreter The \a Qross::Python::PythonInterpreter used
              *       to create this PythonScript instance.
              * \param action The with this PythonScript associated
-             *       \a Kross::Action instance that spends us
+             *       \a Qross::Action instance that spends us
              *       e.g. the python scripting code.
              */
-            explicit PythonScript(Kross::Interpreter* interpreter, Kross::Action* action);
+            explicit PythonScript(Qross::Interpreter* interpreter, Qross::Action* action);
 
             /**
              * Destructor.
@@ -96,7 +96,7 @@ namespace Kross {
             /// Finalize and cleanup the script.
             void finalize();
 
-            /// \return a \a Kross::Exception instance.
+            /// \return a \a Qross::Exception instance.
             //void setErrorFromException(const QString& error);
     };
 
