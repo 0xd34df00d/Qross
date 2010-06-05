@@ -279,8 +279,7 @@ QVariant PythonType<QVariant>::toVariant(const Py::Object& obj)
     #endif
     //return new PythonType(object);
     QVariant result;
-    Qross::Object::Ptr p;
-    p.attach(new Qross::PythonObject(obj));
+    Qross::Object::Ptr p(new Qross::PythonObject(obj));
     result.setValue(p);
     return result;
 }
