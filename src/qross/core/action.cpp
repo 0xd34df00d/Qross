@@ -132,7 +132,9 @@ Action::Action(QObject* parent, const QUrl& url)
     init(this,url.path(),Enable);
     QFileInfo fi( url.toLocalFile() );
     setText( fi.fileName() );
+#if QT_VERSION >= 0x040700
     setIconName( QFileIconProvider().icon(QFileInfo (url.toLocalFile())).name () );
+#endif
     setFile( url.toLocalFile() );
 }
 
@@ -185,8 +187,10 @@ void Action::fromDomElement(const QDomElement& element, const QStringList& searc
     setEnabled( QVariant(element.attribute("enabled","true")).toBool() && isEnabled() );
 
     QString icon = element.attribute("icon");
+#if QT_VERSION >= 0x040700
     if( icon.isEmpty() && ! d->scriptfile.isNull() )
         icon = QFileIconProvider().icon(QFileInfo (d->scriptfile)).name ();
+#endif
     setIconName( icon );
 
     const QString code = element.attribute("code");
