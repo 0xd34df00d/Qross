@@ -24,8 +24,6 @@
 #include <QScriptEngine>
 #include <QScriptValueIterator>
 
-#include <kapplication.h>
-
 using namespace Qross;
 
 namespace Qross {
