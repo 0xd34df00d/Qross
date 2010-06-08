@@ -340,6 +340,14 @@ QColor PythonType<QColor>::toVariant(const Py::Object& obj)
 }
 #endif
 
+class MetaTypeNoDoubleVoidStar : public MetaTypeVoidStar
+{
+	public:
+		MetaTypeNoDoubleVoidStar(int typeId, void* ptr, bool owner) : MetaTypeVoidStar(typeId, ptr, owner) {
+		}
+		virtual void* toVoidStar() { return m_ptr; }
+};
+
 MetaType* PythonMetaTypeFactory::create(const char* typeName, const Py::Object& object, bool owner)
 {
     int typeId = QVariant::nameToType(typeName);
@@ -414,7 +422,7 @@ MetaType* PythonMetaTypeFactory::create(const char* typeName, const Py::Object& 
                 if( ! obj )
                     throw Py::RuntimeError( QString("Underlying QObject instance of the PythonExtension was removed.").toLatin1().constData() );
                 if( WrapperInterface* wrapper = dynamic_cast<WrapperInterface*>(obj) )
-                    return new MetaTypeVoidStar( typeId, wrapper->wrappedObject(), owner );
+                    return new MetaTypeNoDoubleVoidStar( typeId, wrapper->wrappedObject(), owner );
                 return new MetaTypeVoidStar( typeId, obj, owner );
             }
 
