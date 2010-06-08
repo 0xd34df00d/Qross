@@ -123,7 +123,7 @@ namespace Qross {
             virtual int typeId() { return m_typeId; }
             virtual void* toVoidStar() { return (void*) &m_ptr; /*return m_ptr;*/ }
 
-        private:
+        protected:
             int m_typeId;
             void* m_ptr;
             bool m_owner;
