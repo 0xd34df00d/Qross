@@ -20,10 +20,14 @@
 #include "pythonvariant.h"
 #include "pythonextension.h"
 
+#include <cstring>
+#include <string>
+
 #include <qross/core/manager.h>
 #include <qross/core/wrapperinterface.h>
 
 #include <QWidget>
+#include <QtDebug>
 
 using namespace Qross;
 
@@ -263,6 +267,28 @@ QVariant PythonType<QVariant>::toVariant(const Py::Object& obj)
                 qrossdebug( QString("PythonType<QVariant>::toVariant The PythonExtension object does not have a valid QObject") );
         #endif
         return variant;
+    }
+
+    try {
+    	// get the void* pointer
+        Py::Module mainmod( PyImport_AddModule( (char*)"sip" ) );
+        Py::Callable func = mainmod.getDict().getItem("unwrapinstance");
+        Py::Tuple arguments(1);
+        arguments[0] = obj; //pyqtobject pointer
+        Py::Object result = func.apply(arguments); // call the sip.unwrapinstance function
+        void* ptr = PyLong_AsVoidPtr( result.ptr() );
+
+        // get the metatype id
+        QString typeString = QString::fromUtf8( Py::Object(PyObject_Type(obj.ptr()),true).repr().as_string().c_str() );
+        int pos = typeString.indexOf('.', std::strlen("<class 'PyQt4.") );
+        QString type = typeString.mid( pos + 1, typeString.size() - pos - 3 );
+        int metaid = QMetaType::type( type.toLatin1() );
+
+        if (metaid > 0)
+        	return QVariant (metaid, ptr);
+    }
+    catch(Py::Exception& e) {
+    	qrosswarning (QString ("PythonType<QVariant>::toVariant() EXCEPTION: %1").arg (Py::value(e).as_string().c_str()));
     }
 
     // This is a bit messy. We are only interested in instances here but newer Python versions don't care
