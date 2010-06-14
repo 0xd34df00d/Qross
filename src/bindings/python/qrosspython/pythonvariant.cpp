@@ -73,47 +73,12 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
             return PythonType<uint>::toPyObject(v.toUInt());
         case QVariant::Double:
             return PythonType<double>::toPyObject(v.toDouble());
-        case QVariant::ByteArray:
-            return PythonType<QByteArray>::toPyObject(v.toByteArray());
-        case QVariant::String:
-            return PythonType<QString>::toPyObject(v.toString());
         case QVariant::Bool:
             return PythonType<bool>::toPyObject(v.toBool());
-        case QVariant::StringList:
-            return PythonType<QStringList>::toPyObject(v.toStringList());
-        case QVariant::Map:
-            return PythonType<QVariantMap>::toPyObject(v.toMap());
-        case QVariant::List:
-            return PythonType<QVariantList>::toPyObject(v.toList());
         case QVariant::LongLong:
             return PythonType<qlonglong>::toPyObject(v.toLongLong());
         case QVariant::ULongLong:
             return PythonType<qlonglong>::toPyObject(v.toULongLong());
-
-        case QVariant::Size:
-            return PythonType<QSize>::toPyObject(v.toSize());
-        case QVariant::SizeF:
-            return PythonType<QSizeF>::toPyObject(v.toSizeF());
-        case QVariant::Point:
-            return PythonType<QPoint>::toPyObject(v.toPoint());
-        case QVariant::PointF:
-            return PythonType<QPointF>::toPyObject(v.toPointF());
-        case QVariant::Rect:
-            return PythonType<QRect>::toPyObject(v.toRect());
-        case QVariant::RectF:
-            return PythonType<QRectF>::toPyObject(v.toRectF());
-
-        case QVariant::Color:
-            return PythonType<QColor>::toPyObject(v.value<QColor>());
-        case QVariant::Url:
-            return PythonType<QUrl>::toPyObject(v.toUrl());
-
-        case QVariant::Date:
-            return PythonType<QDate>::toPyObject( v.value<QDate>() );
-        case QVariant::Time:
-            return PythonType<QTime>::toPyObject( v.value<QTime>() );
-        case QVariant::DateTime:
-            return PythonType<QDateTime>::toPyObject( v.value<QDateTime>() );
 
         case QVariant::Invalid: {
             #ifdef QROSS_PYTHON_VARIANT_DEBUG
