@@ -22,9 +22,11 @@
 
 #include <cstring>
 #include <string>
+#include <stdexcept>
 
 #include <qross/core/manager.h>
 #include <qross/core/wrapperinterface.h>
+#include <sip.h>
 
 #include <QWidget>
 #include <QtDebug>
@@ -162,6 +164,45 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
                     return Py::None();
                 }
                 return Py::asObject(new PythonExtension(obj));
+            }
+
+            try {
+                PyObject *sip_module;
+                PyObject *sip_module_dict;
+                PyObject *c_api;
+                sip_module = PyImport_ImportModule("sip");
+                if (sip_module == NULL)
+                    throw std::runtime_error ("Could not import sip module.");
+                sip_module_dict = PyModule_GetDict(sip_module);
+                c_api = PyDict_GetItemString(sip_module_dict, "_C_API");
+                if (c_api == NULL)
+                    throw std::runtime_error ("Could not get C API.");
+                if (!PyCObject_Check(c_api))
+                    throw std::runtime_error ("Sanity checks for C API failed.");
+                const sipAPIDef *sipApi = (const sipAPIDef *)PyCObject_AsVoidPtr(c_api);
+
+                if (!sipApi)
+                	qrosswarning ("PythonType<QVariant>::toPyObject() could not get C API");
+                else
+                {
+                	QByteArray typeName (v.typeName ());
+                	void *data = const_cast<void*>( v.data () );
+                	if (typeName.endsWith ('*'))
+                	{
+                		data = *reinterpret_cast<void**> (data);
+                		typeName.chop (1);
+                	}
+                	const sipTypeDef *type = sipApi->api_find_type( typeName.constData() );
+					Py::Object result( sipApi->api_convert_from_type( data, type, NULL ) );
+					if (result != Py::None())
+						return result;
+                }
+            }
+            catch(Py::Exception& e) {
+            	qrosswarning (QString ("PythonType<QVariant>::toPyObject() EXCEPTION: %1").arg (Py::value(e).as_string().c_str()));
+            }
+            catch(const std::exception& e) {
+            	qrosswarning (QString ("PythonType<QVariant>::toPyObject() STD EXCEPTION: %1").arg (e.what ()));
             }
 
             if( qVariantCanConvert< void* >(v) ) {
