@@ -22,7 +22,7 @@
 #define QROSS_EXPORT_H
 
 #ifndef QROSS_EXPORT
-# if defined(MAKE_QROSS_LIB)
+# if defined(qross_EXPORTS)
    /* We are building this library */
 #  define QROSS_EXPORT Q_DECL_EXPORT
 # else
@@ -32,7 +32,7 @@
 #endif
 
 #ifndef QROSSCORE_EXPORT
-# if defined(MAKE_QROSSCORE_LIB)
+# if defined(qrosscore_EXPORTS)
    /* We are building this library */
 #  define QROSSCORE_EXPORT Q_DECL_EXPORT
 # else
@@ -42,7 +42,7 @@
 #endif
 
 #ifndef QROSSUI_EXPORT
-# if defined(MAKE_QROSSUI_LIB)
+# if defined(qrossui_EXPORTS)
    /* We are building this library */
 #  define QROSSUI_EXPORT Q_DECL_EXPORT
 # else
