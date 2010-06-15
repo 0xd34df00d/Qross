@@ -234,9 +234,7 @@ Manager::Manager()
 
 Manager::~Manager()
 {
-    qDeleteAll(d->wrappers);
-    qDeleteAll(d->interpreterinfos);
-    qDeleteAll(d->modules);
+	finalize();
     delete d->collection;
     delete d;
 }
@@ -279,6 +277,18 @@ Interpreter* Manager::interpreter(const QString& interpretername) const
         return 0;
     }
     return d->interpreterinfos[interpretername]->interpreter();
+}
+
+void Manager::finalize()
+{
+    qDeleteAll(d->wrappers);
+    d->wrappers.clear();
+
+    qDeleteAll(d->interpreterinfos);
+    d->interpreterinfos.clear();
+
+    qDeleteAll(d->modules);
+    d->modules.clear();
 }
 
 QStringList Manager::interpreters() const

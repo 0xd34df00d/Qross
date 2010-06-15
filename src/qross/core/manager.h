@@ -104,6 +104,12 @@ namespace Qross {
             Interpreter* interpreter(const QString& interpretername) const;
 
             /**
+             * Allows to free and finalize the interpreters before
+             * static cleanup of singleton instances takes place.
+             */
+            void finalize();
+
+            /**
              * \return the root \a ActionCollection instance. Each collection
              * could have children of other collections and/or
              * \a Action instances.
