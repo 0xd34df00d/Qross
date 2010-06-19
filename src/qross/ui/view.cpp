@@ -21,10 +21,10 @@
 #include "view.h"
 #include "model.h"
 
-#include <qross/core/manager.h>
-#include <qross/core/action.h>
-#include <qross/core/actioncollection.h>
-#include <qross/core/interpreter.h>
+#include "../core/manager.h"
+#include "../core/action.h"
+#include "../core/actioncollection.h"
+#include "../core/interpreter.h"
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>

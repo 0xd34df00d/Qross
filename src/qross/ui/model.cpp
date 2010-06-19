@@ -19,9 +19,9 @@
 
 #include "model.h"
 
-#include <qross/core/action.h>
-#include <qross/core/actioncollection.h>
-#include <qross/core/manager.h>
+#include "../core/action.h"
+#include "../core/actioncollection.h"
+#include "../core/manager.h"
 
 #include <QtCore/QEvent>
 #include <QtCore/QMimeData>

@@ -20,10 +20,10 @@
 #ifndef QROSS_QTS_INTERPRETER_H
 #define QROSS_QTS_INTERPRETER_H
 
-#include <qross/core/qrossconfig.h>
-#include <qross/core/interpreter.h>
-#include <qross/core/script.h>
-#include <qross/core/action.h>
+#include "../core/qrossconfig.h"
+#include "../core/interpreter.h"
+#include "../core/script.h"
+#include "../core/action.h"
 
 namespace Qross {
 

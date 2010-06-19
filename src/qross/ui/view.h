@@ -21,7 +21,7 @@
 #ifndef QROSS_VIEW_H
 #define QROSS_VIEW_H
 
-#include <qross/core/qrossconfig.h>
+#include "../core/qrossconfig.h"
 
 #include <QtCore/QObject>
 #include <QtGui/QWidget>

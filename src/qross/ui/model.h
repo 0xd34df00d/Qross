@@ -20,7 +20,7 @@
 #ifndef QROSS_MODEL_H
 #define QROSS_MODEL_H
 
-#include <qross/core/qrossconfig.h>
+#include "../core/qrossconfig.h"
 
 #include <QtCore/QModelIndex>
 #include <QtGui/QSortFilterProxyModel>
