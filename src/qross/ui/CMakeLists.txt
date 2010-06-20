@@ -17,6 +17,7 @@ QT4_WRAP_CPP (qrossui_LIB_MOC_SRCS ${qrossui_LIB_HEADERS})
 
 add_library(qrossui SHARED ${qrossui_LIB_SRCS} ${qrossui_LIB_MOC_SRCS})
 target_link_libraries(qrossui qrosscore ${QT_LIBRARIES})
+set_property(TARGET qrossui PROPERTY VERSION "0.1")
 
 # TODO: DESTINATION
 install(TARGETS qrossui DESTINATION lib)

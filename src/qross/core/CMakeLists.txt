@@ -27,6 +27,7 @@ QT4_WRAP_CPP (qrosscore_LIB_MOC_SRCS ${qrosscore_LIB_HEADERS})
 
 add_library(qrosscore SHARED ${qrosscore_LIB_SRCS} ${qrosscore_LIB_MOC_SRCS})
 target_link_libraries(qrosscore ${QT_LIBRARIES})
+set_property(TARGET qrosscore PROPERTY VERSION "0.1")
 
 install(TARGETS qrosscore DESTINATION lib)
 
