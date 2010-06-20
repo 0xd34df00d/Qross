@@ -38,6 +38,7 @@ set(qrosspython_PART_SRCS ${libqrosspythoncxx_SRCS}
 
 add_library(qrosspython MODULE ${qrosspython_PART_SRCS})
 set_target_properties(qrosspython PROPERTIES PREFIX "")
+set_property(TARGET qrosspython PROPERTY VERSION "0.1")
 
 # -ldl seems to be needed (on Linux at least).
 # see http://lists.kde.org/?l=koffice-devel&m=116333261328694&w=2
