@@ -194,9 +194,12 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
                 	}
                 	const sipTypeDef *type = sipApi->api_find_type( typeName.constData() );
                 	qrossdebug( QString( "PythonType<QVariant>::toPyObject(): converting with SIP %1 (siptypedef %2)" ).arg( typeName.constData() ).arg( (long) type ) );
-					Py::Object result( sipApi->api_convert_from_type( data, type, NULL ) );
-					if (result != Py::None())
-						return result;
+                	if (type)
+                	{
+						Py::Object result( sipApi->api_convert_from_type( data, type, NULL ) );
+						if (result != Py::None())
+							return result;
+                	}
                 }
             }
             catch(Py::Exception& e) {
