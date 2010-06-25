@@ -471,6 +471,29 @@ MetaType* PythonMetaTypeFactory::create(const char* typeName, const Py::Object& 
             }
             */
 
+            // handle custom types within a QList by converting the list of pointers into a QList<void*>
+            QByteArray tn(typeName);
+            if( tn.startsWith("QList<") && tn.endsWith("*>") ) {
+                QByteArray itemTypeName = tn.mid(6, tn.length()-7);
+                #ifdef QROSS_PYTHON_VARIANT_DEBUG
+                    qrosswarning( QString("PythonMetaTypeFactory::create Convert Py::Object '%1' to QList<void*> with typeName='%2' and itemTypeName='%3'").arg(object.as_string().c_str()).arg(typeName).arg(itemTypeName.constData()) );
+                #endif
+                QList<void*> list;
+                if( object.isTuple() ) {
+                    Py::Tuple t(object);
+                    for(uint i = 0; i < t.size(); ++i)
+                        if( void *ptr = VoidList::extractVoidStar(t[i]) )
+                            list << ptr;
+                }
+                else if( object.isList() ) {
+                    Py::List l(object);
+                    for(uint i = 0; i < l.length(); ++i)
+                        if( void *ptr = VoidList::extractVoidStar(l[i]) )
+                            list << ptr;
+                }
+                return new Qross::MetaTypeImpl< VoidList >(VoidList(list, itemTypeName));
+            }
+
             int metaid = QMetaType::type(typeName);
             if( metaid > 0 ) {
                 switch(metaid) {
@@ -524,6 +547,7 @@ MetaType* PythonMetaTypeFactory::create(const char* typeName, const Py::Object& 
                         return new MetaTypeVoidStar( metaid, ptr, false /*owner*/ );
                     } break;
                     default:
+                    	return new MetaTypeVoidStar( metaid, QMetaType::construct( metaid ), false );
                         break;
                 }
 
@@ -536,29 +560,6 @@ MetaType* PythonMetaTypeFactory::create(const char* typeName, const Py::Object& 
                 if( strcmp(typeName,"KUrl") == 0 ) {
                     return new PythonMetaTypeVariant<QUrl>(object);
                 }
-            }
-
-            // handle custom types within a QList by converting the list of pointers into a QList<void*>
-            QByteArray tn(typeName);
-            if( tn.startsWith("QList<") && tn.endsWith("*>") ) {
-                QByteArray itemTypeName = tn.mid(6, tn.length()-7);
-                #ifdef QROSS_PYTHON_VARIANT_DEBUG
-                    qrosswarning( QString("PythonMetaTypeFactory::create Convert Py::Object '%1' to QList<void*> with typeName='%2' and itemTypeName='%3'").arg(object.as_string().c_str()).arg(typeName).arg(itemTypeName.constData()) );
-                #endif
-                QList<void*> list;
-                if( object.isTuple() ) {
-                    Py::Tuple t(object);
-                    for(uint i = 0; i < t.size(); ++i)
-                        if( void *ptr = VoidList::extractVoidStar(t[i]) )
-                            list << ptr;
-                }
-                else if( object.isList() ) {
-                    Py::List l(object);
-                    for(uint i = 0; i < l.length(); ++i)
-                        if( void *ptr = VoidList::extractVoidStar(l[i]) )
-                            list << ptr;
-                }
-                return new Qross::MetaTypeImpl< VoidList >(VoidList(list, itemTypeName));
             }
 
             // still no success. So, let's try to guess the content...
