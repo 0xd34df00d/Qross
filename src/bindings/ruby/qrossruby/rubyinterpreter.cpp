@@ -23,20 +23,20 @@
 #include "rubymodule.h"
 #include "rubyscript.h"
 
-#include <kross/core/manager.h>
-#include <kross/core/action.h>
+#include <qross/core/manager.h>
+#include <qross/core/action.h>
 
 #include <map>
 
 #include <QRegExp>
 
-// The in krossconfig.h defined KROSS_EXPORT_INTERPRETER macro defines an
-// exported C function used as factory for Kross::RubyInterpreter instances.
-KROSS_EXPORT_INTERPRETER( Kross::RubyInterpreter )
+// The in qrossconfig.h defined QROSS_EXPORT_INTERPRETER macro defines an
+// exported C function used as factory for Qross::RubyInterpreter instances.
+QROSS_EXPORT_INTERPRETER( Qross::RubyInterpreter )
 
-using namespace Kross;
+using namespace Qross;
 
-namespace Kross {
+namespace Qross {
 
     //typedef std::map<QString, VALUE> mStrVALUE;
     //typedef mStrVALUE::iterator mStrVALUE_it;
@@ -46,18 +46,18 @@ namespace Kross {
     class RubyInterpreterPrivate {
         friend class RubyInterpreter;
         QHash<QString, QPointer<RubyModule> > modules;
-        static VALUE s_krossModule;
+        static VALUE s_qrossModule;
     };
 }
 
 RubyInterpreterPrivate* RubyInterpreter::d = 0;
-VALUE RubyInterpreterPrivate::s_krossModule = 0;
+VALUE RubyInterpreterPrivate::s_qrossModule = 0;
 
-RubyInterpreter::RubyInterpreter(Kross::InterpreterInfo* info)
-    : Kross::Interpreter(info)
+RubyInterpreter::RubyInterpreter(Qross::InterpreterInfo* info)
+    : Qross::Interpreter(info)
 {
-#ifdef KROSS_RUBY_INTERPRETER_CTORDTOR_DEBUG
-    krossdebug("RubyInterpreter Ctor");
+#ifdef QROSS_RUBY_INTERPRETER_CTORDTOR_DEBUG
+    qrossdebug("RubyInterpreter Ctor");
 #endif
 
     if(d == 0)
@@ -71,8 +71,8 @@ RubyInterpreter::RubyInterpreter(Kross::InterpreterInfo* info)
 
 RubyInterpreter::~RubyInterpreter()
 {
-#ifdef KROSS_RUBY_INTERPRETER_CTORDTOR_DEBUG
-    krossdebug("RubyInterpreter Dtor");
+#ifdef QROSS_RUBY_INTERPRETER_CTORDTOR_DEBUG
+    qrossdebug("RubyInterpreter Dtor");
 #endif
     finalizeRuby();
 }
@@ -82,15 +82,15 @@ QHash<QString, QPointer<RubyModule> > RubyInterpreter::modules() const
     return d->modules;
 }
 
-Kross::Script* RubyInterpreter::createScript(Kross::Action* action)
+Qross::Script* RubyInterpreter::createScript(Qross::Action* action)
 {
     return new RubyScript(this, action);
 }
 
 void RubyInterpreter::initRuby()
 {
-    #ifdef KROSS_RUBY_INTERPRETER_DEBUG
-        krossdebug( QString("RubyInterpreter::initRuby()") );
+    #ifdef QROSS_RUBY_INTERPRETER_DEBUG
+        qrossdebug( QString("RubyInterpreter::initRuby()") );
     #endif
 
     d = new RubyInterpreterPrivate();
@@ -100,24 +100,24 @@ void RubyInterpreter::initRuby()
     ruby_init();
     ruby_init_loadpath();
     rb_define_global_function("require", (VALUE (*)(...))RubyInterpreter::require, 1);
-    if( ! RubyInterpreterPrivate::s_krossModule )
+    if( ! RubyInterpreterPrivate::s_qrossModule )
     {
-      RubyInterpreterPrivate::s_krossModule = rb_define_module("Kross");
+      RubyInterpreterPrivate::s_qrossModule = rb_define_module("Qross");
       RubyExtension::init();
     }
 }
 
-VALUE RubyInterpreter::krossModule()
+VALUE RubyInterpreter::qrossModule()
 {
-    Q_ASSERT(RubyInterpreterPrivate::s_krossModule);
-    return RubyInterpreterPrivate::s_krossModule;
+    Q_ASSERT(RubyInterpreterPrivate::s_qrossModule);
+    return RubyInterpreterPrivate::s_qrossModule;
 }
 
 
 void RubyInterpreter::finalizeRuby()
 {
-    #ifdef KROSS_RUBY_INTERPRETER_DEBUG
-        krossdebug( QString("RubyInterpreter::finalizeRuby()") );
+    #ifdef QROSS_RUBY_INTERPRETER_DEBUG
+        qrossdebug( QString("RubyInterpreter::finalizeRuby()") );
     #endif
 
     if(d) {
@@ -128,15 +128,15 @@ void RubyInterpreter::finalizeRuby()
     delete d;
     d = 0;
 
-    #ifdef KROSS_RUBY_FINALIZE
+    #ifdef QROSS_RUBY_FINALIZE
         ruby_finalize();
     #endif
 }
 
 VALUE RubyInterpreter::require (VALUE self, VALUE name)
 {
-    #ifdef KROSS_RUBY_INTERPRETER_DEBUG
-        krossdebug( QString("RubyInterpreter::require self=%1 name=%2").arg(STR2CSTR(rb_inspect(self))).arg(STR2CSTR(rb_inspect(name))) );
+    #ifdef QROSS_RUBY_INTERPRETER_DEBUG
+        qrossdebug( QString("RubyInterpreter::require self=%1 name=%2").arg(STR2CSTR(rb_inspect(self))).arg(STR2CSTR(rb_inspect(name))) );
     #endif
 
     QString modname = StringValuePtr(name);
@@ -150,8 +150,8 @@ VALUE RubyInterpreter::require (VALUE self, VALUE name)
         Q_ASSERT(action);
 
         if( action->hasObject(modname) ) {
-            #ifdef KROSS_RUBY_INTERPRETER_DEBUG
-                krossdebug( QString("RubyInterpreter::require() module=%1 is internal local child").arg(modname) );
+            #ifdef QROSS_RUBY_INTERPRETER_DEBUG
+                qrossdebug( QString("RubyInterpreter::require() module=%1 is internal local child").arg(modname) );
             #endif
             QObject* object = action->object(modname);
             Q_ASSERT(object);
@@ -159,15 +159,15 @@ VALUE RubyInterpreter::require (VALUE self, VALUE name)
             Q_ASSERT(module);
             return Qtrue;
         } else {
-            #ifdef KROSS_RUBY_INTERPRETER_DEBUG
-                krossdebug(QString("RubyInterpreter::require() module=%1 is not an internal local child").arg(modname));
+            #ifdef QROSS_RUBY_INTERPRETER_DEBUG
+                qrossdebug(QString("RubyInterpreter::require() module=%1 is not an internal local child").arg(modname));
             #endif
         }
-        if( Kross::Manager::self().hasObject(modname) ) {
-            #ifdef KROSS_RUBY_INTERPRETER_DEBUG
-                krossdebug( QString("RubyInterpreter::require() module=%1 is internal global child").arg(modname) );
+        if( Qross::Manager::self().hasObject(modname) ) {
+            #ifdef QROSS_RUBY_INTERPRETER_DEBUG
+                qrossdebug( QString("RubyInterpreter::require() module=%1 is internal global child").arg(modname) );
             #endif
-            QObject* object = Kross::Manager::self().object(modname);
+            QObject* object = Qross::Manager::self().object(modname);
             Q_ASSERT(object);
             RubyModule* module = d->modules.contains(modname) ? d->modules[modname] : 0;
             if( ! module ) {
@@ -181,13 +181,13 @@ VALUE RubyInterpreter::require (VALUE self, VALUE name)
             Q_ASSERT(module);
             return Qtrue;
         } else {
-            #ifdef KROSS_RUBY_INTERPRETER_DEBUG
-                krossdebug(QString("RubyInterpreter::require() module=%1 is not an internal global child").arg(modname));
+            #ifdef QROSS_RUBY_INTERPRETER_DEBUG
+                qrossdebug(QString("RubyInterpreter::require() module=%1 is not an internal global child").arg(modname));
             #endif
         }
     } else {
-        #ifdef KROSS_RUBY_INTERPRETER_DEBUG
-            krossdebug("Self is not a ruby script, using ruby's require");
+        #ifdef QROSS_RUBY_INTERPRETER_DEBUG
+            qrossdebug("Self is not a ruby script, using ruby's require");
         #endif
     }
 

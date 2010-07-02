@@ -18,14 +18,14 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_RUBYRUBYSCRIPT_H
-#define KROSS_RUBYRUBYSCRIPT_H
+#ifndef QROSS_RUBYRUBYSCRIPT_H
+#define QROSS_RUBYRUBYSCRIPT_H
 
 #include "rubyconfig.h"
-#include <kross/core/krossconfig.h>
-#include <kross/core/script.h>
+#include <qross/core/qrossconfig.h>
+#include <qross/core/script.h>
 
-namespace Kross {
+namespace Qross {
 
     class RubyModule;
     class RubyFunction;
@@ -33,10 +33,10 @@ namespace Kross {
 
     /**
     *  Handle ruby scripts. This class implements
-    * \a Kross::Script for ruby.
+    * \a Qross::Script for ruby.
     * @author Cyrille Berger
     */
-    class RubyScript : public Kross::Script
+    class RubyScript : public Qross::Script
     {
             friend class RubyScriptPrivate;
         public:
@@ -46,11 +46,11 @@ namespace Kross {
             *
             * @param interpreter The @a RubyInterpreter instance used to
             *        create this script.
-            * @param action The @a Kross::Action
+            * @param action The @a Qross::Action
             *        instance this @a RubyScript does handle the
             *        backend-work for.
             */
-            RubyScript(Kross::Interpreter* interpreter, Kross::Action* action);
+            RubyScript(Qross::Interpreter* interpreter, Qross::Action* action);
 
             /**
             * Destructor.
@@ -105,7 +105,7 @@ namespace Kross {
             /**
              * Create and return a new class instance.
              */
-            virtual Kross::Object::Ptr classInstance(const QString& name);
+            virtual Qross::Object::Ptr classInstance(const QString& name);
             #endif
 
             /**

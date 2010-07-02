@@ -27,5 +27,5 @@ set(qrossruby_PART_SRCS
 add_library(qrossruby MODULE ${qrossruby_PART_SRCS})
 set_target_properties(qrossruby PROPERTIES PREFIX "")
 target_link_libraries(qrossruby ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY}
-	${KDE4_KROSSCORE_LIBS} ${RUBY_LIBRARY} qrosscore)
+	${KDE4_QROSSCORE_LIBS} ${RUBY_LIBRARY} qrosscore)
 install(TARGETS qrossruby DESTINATION lib)
