@@ -4,7 +4,10 @@ cmake_minimum_required(VERSION 2.8)
 find_package(Qt4 REQUIRED)
 include(${QT_USE_FILE})
 
-set(RUBY_LIBRARY /usr/lib/libruby.so.1.8)
+if(NOT DEFINED RUBY_LIBRARY)
+	set(RUBY_LIBRARY /usr/lib/libruby.so.1.8)
+endif(NOT DEFINED RUBY_LIBRARY)
+
 find_package(Ruby REQUIRED)
 
 include_directories( ${RUBY_INCLUDE_PATH}
