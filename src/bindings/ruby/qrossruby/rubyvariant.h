@@ -18,11 +18,11 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_RUBYVARIANT_H
-#define KROSS_RUBYVARIANT_H
+#ifndef QROSS_RUBYVARIANT_H
+#define QROSS_RUBYVARIANT_H
 
 #include "rubyconfig.h"
-#include <kross/core/metatype.h>
+#include <qross/core/metatype.h>
 
 #include <QString>
 #include <QStringList>
@@ -37,7 +37,7 @@
 #include <QDateTime>
 #include <QColor>
 
-namespace Kross {
+namespace Qross {
 
     /**
      * The RubyType helper classes used to cast between QVariant

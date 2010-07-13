@@ -18,18 +18,18 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_RUBYRUBYMODULE_H
-#define KROSS_RUBYRUBYMODULE_H
+#ifndef QROSS_RUBYRUBYMODULE_H
+#define QROSS_RUBYRUBYMODULE_H
 
 #include "rubyconfig.h"
-#include <kross/core/krossconfig.h>
+#include <qross/core/qrossconfig.h>
 //#include "../core/object.h"
 //#include "../core/module.h"
 
 #include <QString>
 #include <QObject>
 
-namespace Kross {
+namespace Qross {
 
     class RubyExtension;
     class RubyModulePrivate;

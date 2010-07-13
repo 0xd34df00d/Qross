@@ -21,14 +21,14 @@
 #include "rubyvariant.h"
 #include "rubyinterpreter.h"
 
-#include <kross/core/manager.h>
-#include <kross/core/metatype.h>
+#include <qross/core/manager.h>
+#include <qross/core/metatype.h>
 
 #include <QVariant>
 #include <QMetaObject>
 #include <QMetaMethod>
 
-namespace Kross {
+namespace Qross {
 
     struct RubyCallCachePrivate
     {
@@ -43,7 +43,7 @@ namespace Kross {
         QVarLengthArray<int> types, metatypes;
         static VALUE s_rccObject;
 
-        #ifdef KROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
+        #ifdef QROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
             /// \internal string for debugging.
             QString debuginfo;
         #endif
@@ -56,16 +56,16 @@ namespace Kross {
     {
         Q_ASSERT(object);
         d->metamethod = d->object->metaObject()->method(d->methodindex);
-        #ifdef KROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
+        #ifdef QROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
             d->debuginfo = QString("name=%1 class=%2 methodindex=%3 signature=%4").arg(object->objectName()).arg(object->metaObject()->className()).arg(d->methodindex).arg(d->metamethod.signature());
-            krossdebug( QString("RubyCallCache Ctor %1 ").arg(d->debuginfo) );
+            qrossdebug( QString("RubyCallCache Ctor %1 ").arg(d->debuginfo) );
         #endif
     }
 
     RubyCallCache::~RubyCallCache()
     {
-        #ifdef KROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
-            krossdebug( QString("RubyCallCache Dtor %1 ").arg(d->debuginfo) );
+        #ifdef QROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
+            qrossdebug( QString("RubyCallCache Dtor %1 ").arg(d->debuginfo) );
         #endif
         delete d;
     }
@@ -76,10 +76,10 @@ namespace Kross {
         QVarLengthArray<MetaType*> variantargs( typelistcount );
         QVarLengthArray<void*> voidstarargs( typelistcount );
 
-        #ifdef KROSS_RUBY_CALLCACHE_DEBUG
-            krossdebug( QString("RubyCallCache::execfunction signature=%1 typeName=%2 argc=%3 typelistcount=%4").arg(d->metamethod.signature()).arg(d->metamethod.typeName()).arg(argc).arg(typelistcount) );
+        #ifdef QROSS_RUBY_CALLCACHE_DEBUG
+            qrossdebug( QString("RubyCallCache::execfunction signature=%1 typeName=%2 argc=%3 typelistcount=%4").arg(d->metamethod.signature()).arg(d->metamethod.typeName()).arg(argc).arg(typelistcount) );
             for(int i = 0; i < d->types.count(); ++i)
-                krossdebug( QString("  argument index=%1 typeId=%2 typeName=%3 metaTypeId=%4").arg(i).arg(d->types[i]).arg(QVariant::typeToName( (QVariant::Type)d->types[i] )).arg(d->metatypes[i]) );
+                qrossdebug( QString("  argument index=%1 typeId=%2 typeName=%3 metaTypeId=%4").arg(i).arg(d->types[i]).arg(QVariant::typeToName( (QVariant::Type)d->types[i] )).arg(d->metatypes[i]) );
         #endif
 
         Q_ASSERT(argc >= typelistcount);
@@ -87,7 +87,7 @@ namespace Kross {
         // set the return value
         if(d->hasreturnvalue)
         {
-            //krossdebug( QString("RubyCallCache::execfunction argv[1]=%1").arg(argc > 1 ? STR2CSTR(rb_inspect(argv[1])) : "") );
+            //qrossdebug( QString("RubyCallCache::execfunction argv[1]=%1").arg(argc > 1 ? STR2CSTR(rb_inspect(argv[1])) : "") );
             MetaType* returntype = RubyMetaTypeFactory::create( d->metamethod.typeName(), d->types[0], d->metatypes[0] );
             //MetaType* returntype = RubyMetaTypeFactory::create( d->types[0], d->metatypes[0], argc > 1 ? argv[1] : Qnil );
             variantargs[0] = returntype;
@@ -103,13 +103,13 @@ namespace Kross {
         QList<QByteArray> typelist = d->metamethod.parameterTypes();
         for(int idx = 1; idx < typelistcount; ++idx)
         {
-            #ifdef KROSS_RUBY_CALLCACHE_DEBUG
-                krossdebug( QString("RubyCallCache::execfunction param idx=%1 inspect=%2 QVariantType=%3 QMetaType=%4").arg(idx).arg(STR2CSTR(rb_inspect(argv[idx]))).arg(QVariant::typeToName((QVariant::Type)d->types[idx])).arg(QMetaType::typeName(d->metatypes[idx])) );
+            #ifdef QROSS_RUBY_CALLCACHE_DEBUG
+                qrossdebug( QString("RubyCallCache::execfunction param idx=%1 inspect=%2 QVariantType=%3 QMetaType=%4").arg(idx).arg(STR2CSTR(rb_inspect(argv[idx]))).arg(QVariant::typeToName((QVariant::Type)d->types[idx])).arg(QMetaType::typeName(d->metatypes[idx])) );
             #endif
 
             MetaType* metatype = RubyMetaTypeFactory::create( typelist[idx-1], d->types[idx], d->metatypes[idx], argv[idx] );
             if(! metatype) { // Seems RubyMetaTypeFactory::create returned an invalid RubyType.
-                krosswarning( QString("RubyCallCache::execfunction Aborting cause RubyMetaTypeFactory::create returned NULL.") );
+                qrosswarning( QString("RubyCallCache::execfunction Aborting cause RubyMetaTypeFactory::create returned NULL.") );
                 for(int i = 0; i < idx; ++i) // Clear already allocated instances.
                     delete variantargs[i];
                 return Qfalse; // abort execution.
@@ -120,8 +120,8 @@ namespace Kross {
 
         // call the method now
         int r = d->object->qt_metacall(QMetaObject::InvokeMetaMethod, d->methodindex, &voidstarargs[0]);
-        #ifdef KROSS_RUBY_CALLCACHE_DEBUG
-            krossdebug( QString("RESULT nr=%1").arg(r) );
+        #ifdef QROSS_RUBY_CALLCACHE_DEBUG
+            qrossdebug( QString("RESULT nr=%1").arg(r) );
         #else
             Q_UNUSED(r);
         #endif
@@ -134,9 +134,9 @@ namespace Kross {
         {
             QVariant result;
 
-            if( Kross::MetaTypeHandler* handler = Kross::Manager::self().metaTypeHandler(d->metamethod.typeName()) ) {
-                #ifdef KROSS_RUBY_CALLCACHE_DEBUG
-                    krossdebug( QString("Returnvalue of type '%2' has a handler").arg(d->metamethod.typeName()) );
+            if( Qross::MetaTypeHandler* handler = Qross::Manager::self().metaTypeHandler(d->metamethod.typeName()) ) {
+                #ifdef QROSS_RUBY_CALLCACHE_DEBUG
+                    qrossdebug( QString("Returnvalue of type '%2' has a handler").arg(d->metamethod.typeName()) );
                 #endif
                 void *ptr = (*reinterpret_cast<void*(*)>( variantargs[0]->toVoidStar() ));
                 result = handler->callHandler(ptr);
@@ -144,10 +144,10 @@ namespace Kross {
             else {
                 result = QVariant(variantargs[0]->typeId(), variantargs[0]->toVoidStar());
 
-                if( ! Kross::Manager::self().strictTypesEnabled() ) {
+                if( ! Qross::Manager::self().strictTypesEnabled() ) {
                     if( result.type() == QVariant::Invalid && QByteArray(d->metamethod.typeName()).endsWith("*") ) {
-                        //#ifdef KROSS_RUBY_CALLCACHE_DEBUG
-                            krossdebug( QString("Returnvalue of type '%2' will be reinterpret_cast<QObject*>").arg(d->metamethod.typeName()) );
+                        //#ifdef QROSS_RUBY_CALLCACHE_DEBUG
+                            qrossdebug( QString("Returnvalue of type '%2' will be reinterpret_cast<QObject*>").arg(d->metamethod.typeName()) );
                         //#endif
                         QObject* obj = (*reinterpret_cast<QObject*(*)>( variantargs[0]->toVoidStar() ));
                         result.setValue( (QObject*) obj );
@@ -155,8 +155,8 @@ namespace Kross {
                 }
             }
 
-            #ifdef KROSS_RUBY_CALLCACHE_DEBUG
-                krossdebug( QString("RubyCallCache::execfunction Returnvalue typeId=%1 metamethod.typename=%2 variant.toString=%3 variant.typeName=%4").arg(variantargs[0]->typeId()).arg(d->metamethod.typeName()).arg(result.toString()).arg(result.typeName()) );
+            #ifdef QROSS_RUBY_CALLCACHE_DEBUG
+                qrossdebug( QString("RubyCallCache::execfunction Returnvalue typeId=%1 metamethod.typename=%2 variant.toString=%3 variant.typeName=%4").arg(variantargs[0]->typeId()).arg(d->metamethod.typeName()).arg(result.toString()).arg(result.typeName()) );
             #endif
 
             // set the return value
@@ -174,8 +174,8 @@ namespace Kross {
 
     void RubyCallCache::delete_object(void* object)
     {
-        #ifdef KROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
-            krossdebug("RubyCallCache::delete_object");
+        #ifdef QROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
+            qrossdebug("RubyCallCache::delete_object");
         #endif
         RubyCallCache* callcache = static_cast< RubyCallCache* >(object);
         delete callcache;
@@ -184,8 +184,8 @@ namespace Kross {
 
     VALUE RubyCallCache::method_cacheexec(int argc, VALUE *argv, VALUE self)
     {
-        #ifdef KROSS_RUBY_CALLCACHE_DEBUG
-            krossdebug("RubyCallCache::method_cacheexec");
+        #ifdef QROSS_RUBY_CALLCACHE_DEBUG
+            qrossdebug("RubyCallCache::method_cacheexec");
         #endif
         RubyCallCache* callcache;
         Data_Get_Struct(self, RubyCallCache, callcache);
@@ -198,7 +198,7 @@ namespace Kross {
         {
             if(RubyCallCachePrivate::s_rccObject  == 0)
             {
-                RubyCallCachePrivate::s_rccObject = rb_define_class_under(RubyInterpreter::krossModule(), "CallCache", rb_cObject);
+                RubyCallCachePrivate::s_rccObject = rb_define_class_under(RubyInterpreter::qrossModule(), "CallCache", rb_cObject);
                 rb_define_method(RubyCallCachePrivate::s_rccObject, "cacheexec",  (VALUE (*)(...))RubyCallCache::method_cacheexec, -1);
             }
             m_self = Data_Wrap_Struct(RubyCallCachePrivate::s_rccObject, 0, RubyCallCache::delete_object, this);

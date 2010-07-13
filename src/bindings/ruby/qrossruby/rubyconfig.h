@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_RUBY_CONFIG_H
-#define KROSS_RUBY_CONFIG_H
+#ifndef QROSS_RUBY_CONFIG_H
+#define QROSS_RUBY_CONFIG_H
 
 #include <ruby.h>
 #include <env.h>
@@ -29,7 +29,7 @@
 #include <st.h>
 //#include <typeinfo>
 
-#include <kross/core/krossconfig.h>
+#include <qross/core/qrossconfig.h>
 
 // ruby_finalize() in rubyinterpreter.cpp may trigger a crash on exit when
 // using QtRuby, since for some reason, smoke static objects are deleted
@@ -39,42 +39,42 @@
 // just introduced via this switch a way to allow to enable/disable the
 // finalize and work that way around the crash-on-exit. For sure the
 // proper way would be to gain a useful backtrace and fix it ;)
-//#define KROSS_RUBY_FINALIZE
+//#define QROSS_RUBY_FINALIZE
 
 // If this is defined we call explicit rb_gc() manualy on many places. This is
 // normaly not needed and Ruby will handle the garbage collection for you. So,
 // while it's probably better/faster to don't rb_gc() manualy it's still useful
 // for debugging to detect and catch problems faster.
 // With ruby 1.8.7 calling the garbage collector outside of a script always crashes, so don't ever do EXPLICIT_GC with 1.8.7
-// #define KROSS_RUBY_EXPLICIT_GC
+// #define QROSS_RUBY_EXPLICIT_GC
 
 // Following defines are for debugging only. If defined, we are more verbose.
-//#define KROSS_RUBY_SCRIPT_CTORDTOR_DEBUG
-//#define KROSS_RUBY_SCRIPT_CONNECTFUNCTION_DEBUG
-//#define KROSS_RUBY_SCRIPT_CALLFUNCTION_DEBUG
-//#define KROSS_RUBY_SCRIPT_FUNCTIONNAMES_DEBUG
-//#define KROSS_RUBY_SCRIPT_EXECUTE_DEBUG
-//#define KROSS_RUBY_SCRIPT_METHODADDED_DEBUG
-//#define KROSS_RUBY_SCRIPT_DEBUG
+//#define QROSS_RUBY_SCRIPT_CTORDTOR_DEBUG
+//#define QROSS_RUBY_SCRIPT_CONNECTFUNCTION_DEBUG
+//#define QROSS_RUBY_SCRIPT_CALLFUNCTION_DEBUG
+//#define QROSS_RUBY_SCRIPT_FUNCTIONNAMES_DEBUG
+//#define QROSS_RUBY_SCRIPT_EXECUTE_DEBUG
+//#define QROSS_RUBY_SCRIPT_METHODADDED_DEBUG
+//#define QROSS_RUBY_SCRIPT_DEBUG
 
-//#define KROSS_RUBY_INTERPRETER_CTORDTOR_DEBUG
-//#define KROSS_RUBY_INTERPRETER_DEBUG
+//#define QROSS_RUBY_INTERPRETER_CTORDTOR_DEBUG
+//#define QROSS_RUBY_INTERPRETER_DEBUG
 
-//#define KROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
-//#define KROSS_RUBY_EXTENSION_CALLCONNECT_DEBUG
-//#define KROSS_RUBY_EXTENSION_DEBUG
+//#define QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
+//#define QROSS_RUBY_EXTENSION_CALLCONNECT_DEBUG
+//#define QROSS_RUBY_EXTENSION_DEBUG
 
-//#define KROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
-//#define KROSS_RUBY_CALLCACHE_DEBUG
+//#define QROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
+//#define QROSS_RUBY_CALLCACHE_DEBUG
 
-//#define KROSS_RUBY_MODULE_CTORDTOR_DEBUG
-//#define KROSS_RUBY_MODULE_DEBUG
+//#define QROSS_RUBY_MODULE_CTORDTOR_DEBUG
+//#define QROSS_RUBY_MODULE_DEBUG
 
-//#define KROSS_RUBY_VARIANT_DEBUG
+//#define QROSS_RUBY_VARIANT_DEBUG
 
-//#define KROSS_RUBY_FUNCTION_CTORDTOR_DEBUG
-//#define KROSS_RUBY_FUNCTION_DEBUG
+//#define QROSS_RUBY_FUNCTION_CTORDTOR_DEBUG
+//#define QROSS_RUBY_FUNCTION_DEBUG
 
-//#define KROSS_RUBY_OBJECT_DEBUG
+//#define QROSS_RUBY_OBJECT_DEBUG
 
 #endif

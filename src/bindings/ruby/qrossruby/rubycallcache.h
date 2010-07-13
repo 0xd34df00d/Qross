@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_RUBYCALLCACHE_H
-#define KROSS_RUBYCALLCACHE_H
+#ifndef QROSS_RUBYCALLCACHE_H
+#define QROSS_RUBYCALLCACHE_H
 
 #include "rubyconfig.h"
 
@@ -26,7 +26,7 @@
 class QObject;
 class QVariant;
 
-namespace Kross {
+namespace Qross {
 
     struct RubyCallCachePrivate;
 

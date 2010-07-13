@@ -17,22 +17,22 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_RUBY_OBJECT_H
-#define KROSS_RUBY_OBJECT_H
+#ifndef QROSS_RUBY_OBJECT_H
+#define QROSS_RUBY_OBJECT_H
 
 #include "rubyconfig.h"
-#include <kross/core/object.h>
+#include <qross/core/object.h>
 
 #include <QString>
 #include <QStringList>
 
-namespace Kross {
+namespace Qross {
 
     /**
      * The RubyObject class is used for Instances of Ruby
      * Classes by the \a RubyExtension class.
      */
-    class RubyObject : public Kross::Object
+    class RubyObject : public Qross::Object
     {
         public:
 

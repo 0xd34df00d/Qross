@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef KROSS_RUBYRUBYEXTENSION_H
-#define KROSS_RUBYRUBYEXTENSION_H
+#ifndef QROSS_RUBYRUBYEXTENSION_H
+#define QROSS_RUBYRUBYEXTENSION_H
 
 #include "rubyconfig.h"
 
@@ -27,7 +27,7 @@
 #include <QVariant>
 #include <QObject>
 
-namespace Kross {
+namespace Qross {
 
     class RubyFunction;
     class RubyExtensionPrivate;
@@ -177,11 +177,11 @@ namespace Kross {
             * Convert a ruby object to the exception type.
             * @return 0 if the object wasn't an exception.
             */
-            static Kross::Exception* convertToException(VALUE obj);
+            static Qross::Exception* convertToException(VALUE obj);
             /**
             * Wrap an exception in a ruby object.
             */
-            static VALUE convertFromException(Kross::Exception::Ptr exc);
+            static VALUE convertFromException(Qross::Exception::Ptr exc);
 #endif
 
             /**
