@@ -31,6 +31,9 @@ set_property(TARGET qrosscore PROPERTY VERSION "0.1")
 
 install(TARGETS qrosscore DESTINATION lib)
 
+install(FILES FindQrosscore.cmake DESTINATION share/cmake/Modules)
+install(FILES FindQrosscore.cmake DESTINATION share/leechcraft/cmake)
+
 install(FILES
 	qross_export.h
     qrossconfig.h
