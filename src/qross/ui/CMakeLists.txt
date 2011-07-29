@@ -20,7 +20,7 @@ target_link_libraries(qrossui qrosscore ${QT_LIBRARIES})
 set_property(TARGET qrossui PROPERTY VERSION "0.1")
 
 # TODO: DESTINATION
-install(TARGETS qrossui DESTINATION lib)
+install(TARGETS qrossui DESTINATION ${LIB_DIR})
 
 ########### install files ###############
 
