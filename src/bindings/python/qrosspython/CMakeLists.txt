@@ -47,4 +47,4 @@ set_property(TARGET qrosspython PROPERTY VERSION "0.1")
 target_link_libraries(qrosspython ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY}
 	qrosscore ${PYTHON_LIBRARIES} ${CMAKE_DL_LIBS})
 
-install(TARGETS qrosspython DESTINATION lib)
+install(TARGETS qrosspython DESTINATION lib${LIB_SUFFIX})
