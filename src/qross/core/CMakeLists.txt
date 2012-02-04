@@ -29,7 +29,7 @@ add_library(qrosscore SHARED ${qrosscore_LIB_SRCS} ${qrosscore_LIB_MOC_SRCS})
 target_link_libraries(qrosscore ${QT_LIBRARIES})
 set_property(TARGET qrosscore PROPERTY VERSION "0.1")
 
-install(TARGETS qrosscore DESTINATION lib)
+install(TARGETS qrosscore DESTINATION lib${LIB_SUFFIX})
 
 install(FILES FindQrosscore.cmake DESTINATION share/cmake/Modules)
 install(FILES FindQrosscore.cmake DESTINATION share/leechcraft/cmake)
