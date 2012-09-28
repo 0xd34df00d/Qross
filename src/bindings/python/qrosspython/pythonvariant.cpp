@@ -81,6 +81,8 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
             return PythonType<qlonglong>::toPyObject(v.toLongLong());
         case QVariant::ULongLong:
             return PythonType<qlonglong>::toPyObject(v.toULongLong());
+        case QVariant::String:
+            return PythonType<QString>::toPyObject(v.toString());
 
         case QVariant::Invalid: {
             #ifdef QROSS_PYTHON_VARIANT_DEBUG
