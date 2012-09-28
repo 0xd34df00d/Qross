@@ -169,6 +169,9 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
             }
 
             try {
+#if defined(SIP_USE_PYCAPSULE)
+                const sipAPIDef *sipApi = (const sipAPIDef *)PyCapsule_Import("sip._C_API", 0);
+#else
                 PyObject *sip_module;
                 PyObject *sip_module_dict;
                 PyObject *c_api;
@@ -182,6 +185,7 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
                 if (!PyCObject_Check(c_api))
                     throw std::runtime_error ("Sanity checks for C API failed.");
                 const sipAPIDef *sipApi = (const sipAPIDef *)PyCObject_AsVoidPtr(c_api);
+#endif
 
                 if (!sipApi)
                 	qrosswarning ("PythonType<QVariant>::toPyObject() could not get C API");
