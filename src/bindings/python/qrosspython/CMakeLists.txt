@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 2.8)
 find_package(Qt4 REQUIRED)
 set(QT_USE_QTTEST TRUE)
 include(${QT_USE_FILE})
+
+set (PythonLibs_FIND_VERSION 2.7)
 find_package(PythonLibs REQUIRED)
 
 include_directories(
