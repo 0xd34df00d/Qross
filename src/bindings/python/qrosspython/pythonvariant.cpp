@@ -83,6 +83,10 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
             return PythonType<qlonglong>::toPyObject(v.toULongLong());
         case QVariant::String:
             return PythonType<QString>::toPyObject(v.toString());
+        case QVariant::List:
+            return PythonType<QVariantList>::toPyObject(v.toList());
+        case QVariant::Map:
+            return PythonType<QVariantMap>::toPyObject(v.toMap());
 
         case QVariant::Invalid: {
             #ifdef QROSS_PYTHON_VARIANT_DEBUG
