@@ -5,8 +5,12 @@ find_package(Qt4 REQUIRED)
 set(QT_USE_QTTEST TRUE)
 include(${QT_USE_FILE})
 
-set (PythonLibs_FIND_VERSION 2.7)
-find_package(PythonLibs REQUIRED)
+if (${CMAKE_MAJOR_VERSION} EQUAL 2)
+	set (PythonLibs_FIND_VERSION 2.7)
+	find_package(PythonLibs REQUIRED)
+else ()
+	find_package(PythonLibs "2.7" REQUIRED)
+endif ()
 
 include_directories(
     ${PYTHON_INCLUDE_PATH}
