@@ -251,7 +251,19 @@ namespace Qross {
 				Py::List list(obj);
 				const uint length = list.length();
 				for(uint i = 0; i < length; i++)
-					l.append( Py::String(list[i]).as_string().c_str() );
+				{
+					const Py::Object& listElem = list[i];
+					if (listElem.isString())
+						l.append(Py::String(listElem).as_string().c_str());
+					else
+					{
+						QVariant var = PythonType<QVariant>::toVariant(listElem);
+						if (var.type() == QVariant::String)
+							l << var.toString();
+						else
+							throw Py::TypeError ("cannot convert Python object to QString, Python type: " + listElem.type_as_string());
+					}
+				}
 				return l;
 			}
 			else
