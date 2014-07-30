@@ -245,12 +245,22 @@ namespace Qross {
             return l;
         }
         inline static QStringList toVariant(const Py::Object& obj) {
-            Py::List list(obj);
-            QStringList l;
-            const uint length = list.length();
-            for(uint i = 0; i < length; i++)
-                l.append( Py::String(list[i]).as_string().c_str() );
-            return l;
+			if (obj.isList())
+			{
+				QStringList l;
+				Py::List list(obj);
+				const uint length = list.length();
+				for(uint i = 0; i < length; i++)
+					l.append( Py::String(list[i]).as_string().c_str() );
+				return l;
+			}
+			else
+			{
+				QVariant var = PythonType<QVariant>::toVariant(obj);
+				if (var.type() == QVariant::StringList)
+					return var.toStringList();
+			}
+			throw Py::TypeError ("cannot convert Python object to QStringList, Python type: " + obj.type_as_string());
         }
     };
 
