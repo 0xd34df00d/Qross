@@ -22,9 +22,9 @@
 
 // Qt
 
-#include <QtCore/QFile>
-#include <QtGui/QApplication>
-#include <QtCore/QUrl>
+#include <QFile>
+#include <QApplication>
+#include <QUrl>
 
 // Qross
 #include "../core/manager.h"

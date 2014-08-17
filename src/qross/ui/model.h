@@ -22,8 +22,8 @@
 
 #include "../core/qrossconfig.h"
 
-#include <QtCore/QModelIndex>
-#include <QtGui/QSortFilterProxyModel>
+#include <QModelIndex>
+#include <QSortFilterProxyModel>
 
 namespace Qross {
 

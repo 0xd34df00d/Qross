@@ -20,16 +20,17 @@
 #ifndef QROSS_ACTION_H
 #define QROSS_ACTION_H
 
-#include <QtCore/QVariant>
-#include <QtCore/QObject>
-#include <QtCore/QDir>
-#include <QtCore/QUrl>
-#include <QtGui/QAction>
-#include <QtXml/QDomAttr>
-#include <QtScript/QScriptable>
+#include <QVariant>
+#include <QObject>
+#include <QDir>
+#include <QUrl>
+#include <QAction>
+#include <QScriptable>
 
 #include "errorinterface.h"
 #include "childreninterface.h"
+
+class QDomElement;
 
 namespace Qross {
 

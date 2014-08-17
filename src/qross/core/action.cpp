@@ -24,11 +24,13 @@
 #include "manager.h"
 #include "wrapperinterface.h"
 
-#include <QtCore/QFile>
-#include <QtCore/QFileInfo>
+#include <QFile>
+#include <QFileInfo>
 
-#include <QtCore/QLocale>
-#include <QtGui/QIcon>
+#include <QLocale>
+#include <QIcon>
+
+#include <QDomElement>
 
 using namespace Qross;
 

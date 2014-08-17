@@ -27,10 +27,10 @@
 
 // Qt
 
-#include <QtCore/QFile>
-#include <QtCore/QArgument>
-#include <QtCore/QMetaEnum>
-#include <QtGui/QApplication>
+#include <QFile>
+#include <QArgument>
+#include <QMetaEnum>
+#include <QApplication>
 
 // for std namespace
 #include <string>

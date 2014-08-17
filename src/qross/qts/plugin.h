@@ -43,6 +43,9 @@ namespace Qross {
     */
     class QROSSQTSPLUGIN_EXPORT EcmaPlugin : public QScriptExtensionPlugin
     {
+#if QT_VERSION >= 0x050000
+			Q_PLUGIN_METADATA("org.Qross.EcmaPlugin")
+#endif
         public:
 
             /**

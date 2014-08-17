@@ -117,7 +117,11 @@ void* loadLibrary(const char* libname, const char* functionname)
             return 0;
         }
     }
+#if QT_VERSION < 0x050000
     void* funcPtr = lib.resolve(functionname);
+#else
+    void* funcPtr = reinterpret_cast<void*> (lib.resolve(functionname));
+#endif
     Q_ASSERT(funcPtr);
     return funcPtr;
 }
