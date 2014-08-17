@@ -19,7 +19,7 @@ else ()
 endif ()
    
 add_executable(qrosstest ${qrosstest_SRCS} ${qrosstest_LIB_MOC_SRCS})
-target_link_libraries(qrosstest ${QT_LIBRARIES} qrosscore)
+target_link_libraries(qrosstest ${QT_LIBRARIES} qrosscore${SHLIB_SUFFIX})
 
 if (USE_QT5)
 	QT5_USE_MODULES (qrosstest Script Widgets)

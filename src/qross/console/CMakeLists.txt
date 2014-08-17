@@ -8,11 +8,12 @@ else ()
 endif ()
 
 set(qross_SRCS main.cpp)
-add_executable(qross ${qross_SRCS})
+add_executable(qross${SHLIB_SUFFIX} ${qross_SRCS})
 
-target_link_libraries(qross ${QT_LIBRARIES} qrosscore)
-install(TARGETS qross DESTINATION bin)
+target_link_libraries(qross${SHLIB_SUFFIX} ${QT_LIBRARIES}
+	qrosscore${SHLIB_SUFFIX})
+install(TARGETS qross${SHLIB_SUFFIX} DESTINATION bin)
 
 if (USE_QT5)
-	QT5_USE_MODULES (qross Script Widgets)
+	QT5_USE_MODULES (qross${SHLIB_SUFFIX} Script Widgets)
 endif ()

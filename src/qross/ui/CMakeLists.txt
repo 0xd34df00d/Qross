@@ -23,15 +23,15 @@ else ()
 	QT4_WRAP_CPP (qrossui_LIB_MOC_SRCS ${qrossui_LIB_HEADERS})
 endif ()
 
-add_library(qrossui SHARED ${qrossui_LIB_SRCS} ${qrossui_LIB_MOC_SRCS})
-target_link_libraries(qrossui qrosscore ${QT_LIBRARIES})
-set_property(TARGET qrossui PROPERTY VERSION "0.1")
+add_library(qrossui${SHLIB_SUFFIX} SHARED ${qrossui_LIB_SRCS} ${qrossui_LIB_MOC_SRCS})
+target_link_libraries(qrossui${SHLIB_SUFFIX} qrosscore${SHLIB_SUFFIX} ${QT_LIBRARIES})
+set_property(TARGET qrossui${SHLIB_SUFFIX} PROPERTY VERSION "0.1")
 
 # TODO: DESTINATION
-install(TARGETS qrossui DESTINATION lib${LIB_SUFFIX})
+install(TARGETS qrossui${SHLIB_SUFFIX} DESTINATION lib${LIB_SUFFIX})
 
 if (USE_QT5)
-	QT5_USE_MODULES (qrossui Script Widgets)
+	QT5_USE_MODULES (qrossui${SHLIB_SUFFIX} Script Widgets)
 endif ()
 
 ########### install files ###############

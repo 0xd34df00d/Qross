@@ -14,7 +14,21 @@ set(qrossqtsplugin_LIB_SRCS plugin.cpp)
 add_library(qrossqtsplugin SHARED ${qrossqtsplugin_LIB_SRCS})
 set_property(TARGET qrossqtsplugin PROPERTY VERSION "0.1")
 
-target_link_libraries(qrossqtsplugin ${QT_LIBRARIES} qrosscore)
+target_link_libraries(qrossqtsplugin ${QT_LIBRARIES} qrosscore${SHLIB_SUFFIX})
+
+if (USE_QT5)
+	get_target_property(QMAKE_EXECUTABLE Qt5::qmake LOCATION)
+	function(QUERY_QMAKE VAR RESULT)
+	exec_program(${QMAKE_EXECUTABLE} ARGS "-query ${VAR}" RETURN_VALUE return_code OUTPUT_VARIABLE output )
+	if (NOT return_code)
+		file(TO_CMAKE_PATH "${output}" output)
+		set(${RESULT} ${output} PARENT_SCOPE)
+	endif ()
+	endfunction(QUERY_QMAKE)
+
+	query_qmake(QT_INSTALL_PLUGINS QT_PLUGINS_DIR)
+endif ()
+
 install(TARGETS qrossqtsplugin DESTINATION ${QT_PLUGINS_DIR}/script)
 
 if (USE_QT5)
@@ -50,12 +64,13 @@ else ()
 	QT4_WRAP_CPP (qrossqts_PART_MOC_SRCS ${qrossqts_PART_HEADERS})
 endif ()
 
-add_library(qrossqts MODULE ${qrossqts_PART_SRCS} ${qrossqts_PART_MOC_SRCS})
-set_target_properties(qrossqts PROPERTIES PREFIX "")
-set_property(TARGET qrossqts PROPERTY VERSION "0.1")
-target_link_libraries(qrossqts ${QT_LIBRARIES} qrosscore)
-install(TARGETS qrossqts DESTINATION lib${LIB_SUFFIX})
+add_library(qrossqts${SHLIB_SUFFIX} MODULE ${qrossqts_PART_SRCS} ${qrossqts_PART_MOC_SRCS})
+set_target_properties(qrossqts${SHLIB_SUFFIX} PROPERTIES PREFIX "")
+set_property(TARGET qrossqts${SHLIB_SUFFIX} PROPERTY VERSION "0.1")
+target_link_libraries(qrossqts${SHLIB_SUFFIX} ${QT_LIBRARIES}
+	qrosscore${SHLIB_SUFFIX})
+install(TARGETS qrossqts${SHLIB_SUFFIX} DESTINATION lib${LIB_SUFFIX})
 
 if (USE_QT5)
-	QT5_USE_MODULES (qrossqts Core) 
+	QT5_USE_MODULES (qrossqts${SHLIB_SUFFIX} Script Widgets) 
 endif ()
