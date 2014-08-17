@@ -93,7 +93,7 @@ void* loadLibrary(const char* libname, const char* functionname)
 
         if( ! lib.isLoaded() ) {
         	QStringList paths = QCoreApplication::instance()->libraryPaths();
-#ifdef Q_WS_X11
+#ifdef Q_OS_UNIX
         	paths += "/usr/local/lib";
         	paths += "/usr/lib";
 #endif
