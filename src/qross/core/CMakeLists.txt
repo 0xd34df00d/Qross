@@ -1,9 +1,13 @@
 include_directories(${CMAKE_SOURCE_DIR}/..)
 
-FIND_PACKAGE (Qt4 REQUIRED)
-SET (QT_USE_QTSCRIPT TRUE)
-SET (QT_USE_QTXML TRUE)
-INCLUDE (${QT_USE_FILE})
+if (USE_QT5)
+	find_package (Qt5Core REQUIRED)
+else ()
+	find_package (Qt4 REQUIRED)
+	set (QT_USE_QTSCRIPT TRUE)
+	set (QT_USE_QTXML TRUE)
+	include (${QT_USE_FILE})
+endif ()
 
 set(qrosscore_LIB_SRCS
    qrossconfig.cpp
@@ -23,7 +27,11 @@ set(qrosscore_LIB_HEADERS
 	script.h
 )
 
-QT4_WRAP_CPP (qrosscore_LIB_MOC_SRCS ${qrosscore_LIB_HEADERS})
+if (USE_QT5)
+	QT5_WRAP_CPP (qrosscore_LIB_MOC_SRCS ${qrosscore_LIB_HEADERS})
+else ()
+	QT4_WRAP_CPP (qrosscore_LIB_MOC_SRCS ${qrosscore_LIB_HEADERS})
+endif ()
 
 add_library(qrosscore SHARED ${qrosscore_LIB_SRCS} ${qrosscore_LIB_MOC_SRCS})
 target_link_libraries(qrosscore ${QT_LIBRARIES})
@@ -49,3 +57,7 @@ install(FILES
     manager.h
     object.h
     DESTINATION include/qross/core COMPONENT Devel)
+
+if (USE_QT5)
+	QT5_USE_MODULES (qrosscore Script Xml Widgets)
+endif ()

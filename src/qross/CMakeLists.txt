@@ -1,5 +1,7 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
+option (USE_QT5 "Build with Qt5 support" OFF)
+
 # the core library
 add_subdirectory( core )
 # the ui library
