@@ -7,6 +7,8 @@ if (USE_QT5)
 	set (SHLIB_SUFFIX "-qt5")
 endif ()
 
+add_definitions(-DSHLIB_SUFFIX="${SHLIB_SUFFIX}")
+
 # the core library
 add_subdirectory( core )
 # the ui library
