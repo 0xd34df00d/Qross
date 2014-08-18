@@ -29,6 +29,7 @@
 #include <sip.h>
 
 #include <QWidget>
+#include <QVariant>
 #include <QtDebug>
 
 using namespace Qross;
@@ -45,7 +46,7 @@ namespace Qross {
             static void* extractVoidStar(const Py::Object& object)
             {
                 QVariant v = PythonType<QVariant>::toVariant(object);
-                if( QObject* obj = qVariantCanConvert< QWidget* >(v) ? qvariant_cast< QWidget* >(v) : qVariantCanConvert< QObject* >(v) ? qvariant_cast< QObject* >(v) : 0 ) {
+                if( QObject* obj = v.canConvert<QWidget*>() ? v.value<QWidget*>() : v.canConvert<QObject*>() ? v.value<QObject*>() : 0 ) {
                     if( WrapperInterface* wrapper = dynamic_cast<WrapperInterface*>(obj) )
                         return wrapper->wrappedObject();
                     return obj;
@@ -129,7 +130,7 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
                 return PythonType<QVariantList>::toPyObject(l);
             }
 
-            if( qVariantCanConvert< Qross::Object::Ptr >(v) ) {
+            if( v.canConvert<Qross::Object::Ptr>() ) {
                 #ifdef QROSS_PYTHON_VARIANT_DEBUG
                     qrossdebug( QString("PythonType<QVariant>::toPyObject Casting '%1' to Qross::Object::Ptr").arg(v.typeName()) );
                 #endif
@@ -144,7 +145,7 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
                 return pyobj->pyObject();
             }
 
-            if( qVariantCanConvert< QWidget* >(v) ) {
+            if( v.canConvert<QWidget*>() ) {
                 #ifdef QROSS_PYTHON_VARIANT_DEBUG
                     qrossdebug( QString("PythonType<QVariant>::toPyObject Casting '%1' to QWidget").arg(v.typeName()) );
                 #endif
@@ -158,7 +159,7 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
                 return Py::asObject(new PythonExtension(widget));
             }
 
-            if( qVariantCanConvert< QObject* >(v) ) {
+            if( v.canConvert<QObject*>() ) {
                 #ifdef QROSS_PYTHON_VARIANT_DEBUG
                     qrossdebug( QString("PythonType<QVariant>::toPyObject Casting '%1' to QObject").arg(v.typeName()) );
                 #endif
@@ -218,7 +219,7 @@ Py::Object PythonType<QVariant>::toPyObject(const QVariant& v)
             	qrosswarning (QString ("PythonType<QVariant>::toPyObject() STD EXCEPTION: %1").arg (e.what ()));
             }
 
-            if( qVariantCanConvert< void* >(v) ) {
+            if( v.canConvert<void*>() ) {
                 #ifdef QROSS_PYTHON_VARIANT_DEBUG
                     qrossdebug( QString("PythonType<QVariant>::toPyObject Casting '%1' to VoidStar").arg(v.typeName()) );
                 #endif
@@ -506,59 +507,51 @@ MetaType* PythonMetaTypeFactory::create(const char* typeName, const Py::Object& 
 
             int metaid = QMetaType::type(typeName);
             if( metaid > 0 ) {
-                switch(metaid) {
-                    case QMetaType::QObjectStar: // fall through
-                    case QMetaType::QWidgetStar: {
-                        #ifdef QROSS_PYTHON_VARIANT_DEBUG
-                            Py::Object pyobjtype( PyObject_Type(object.ptr()), true /* owner */ );
-                            const QString pyobjtypename( pyobjtype.repr().as_string().c_str() );
-                            qrossdebug( QString("PythonMetaTypeFactory::create Py::Object is %1").arg(pyobjtypename) );
-                        #endif
-                        if( object.hasAttr("metaObject") ) {
-                            // It seems the best way to determinate a PyQt4/PyKDE4 QObject/QWidget is by
-                            // just looking if the passed in PyObject has a metaObject-attribute. That
-                            // way we are sure to also catch classes that inheritate from such PyQt
-                            // widgets. So, if the PyObject has such an attribute we try to use the
-                            // with PyQt together delivered sip.unwrapinstance() function to fetch
-                            // the QObject/QWidget-pointer.
-                            try {
-                                Py::Module mainmod( PyImport_AddModule( (char*)"sip" ) );
-                                Py::Callable func = mainmod.getDict().getItem("unwrapinstance");
-                                Py::Tuple arguments(1);
-                                arguments[0] = object; //pyqtobject pointer
-                                Py::Object result = func.apply(arguments); // call the sip.unwrapinstance function
-                                void* ptr = PyLong_AsVoidPtr( result.ptr() ); // the result is a void* pointer to our QObject/QWidget instance
-                                QObject* obj = 0;
-                                switch(metaid) {
-                                    case QMetaType::QObjectStar: {
-                                        obj = static_cast<QObject*>(ptr);
-                                    } break;
-                                    case QMetaType::QWidgetStar: {
-                                        obj = static_cast<QWidget*>(ptr);
-                                    } break;
-                                    default:
-                                        break;
-                                }
-                                #ifdef QROSS_PYTHON_VARIANT_DEBUG
-                                    qrossdebug(QString("PythonMetaTypeFactory::create class=%1 ptr=%2").arg(obj ? obj->metaObject()->className() : "NULL").arg(long(ptr)));
-                                #endif
-                                return new MetaTypeVoidStar( metaid, obj, false /*owner*/ );
-                            }
-                            catch(Py::Exception& e) {
-                                #ifdef QROSS_PYTHON_VARIANT_DEBUG
-                                    qrossdebug(QString("PythonMetaTypeFactory::create EXCEPTION %1").arg(Py::value(e).as_string().c_str()));
-                                #endif
-                            }
+                if (metaid == qMetaTypeId<QObject*>() || metaid == qMetaTypeId<QWidget*>()) {
+                    #ifdef QROSS_PYTHON_VARIANT_DEBUG
+                        Py::Object pyobjtype( PyObject_Type(object.ptr()), true /* owner */ );
+                        const QString pyobjtypename( pyobjtype.repr().as_string().c_str() );
+                        qrossdebug( QString("PythonMetaTypeFactory::create Py::Object is %1").arg(pyobjtypename) );
+                    #endif
+                    if( object.hasAttr("metaObject") ) {
+                        // It seems the best way to determinate a PyQt4/PyKDE4 QObject/QWidget is by
+                        // just looking if the passed in PyObject has a metaObject-attribute. That
+                        // way we are sure to also catch classes that inheritate from such PyQt
+                        // widgets. So, if the PyObject has such an attribute we try to use the
+                        // with PyQt together delivered sip.unwrapinstance() function to fetch
+                        // the QObject/QWidget-pointer.
+                        try {
+                            Py::Module mainmod( PyImport_AddModule( (char*)"sip" ) );
+                            Py::Callable func = mainmod.getDict().getItem("unwrapinstance");
+                            Py::Tuple arguments(1);
+                            arguments[0] = object; //pyqtobject pointer
+                            Py::Object result = func.apply(arguments); // call the sip.unwrapinstance function
+                            void* ptr = PyLong_AsVoidPtr( result.ptr() ); // the result is a void* pointer to our QObject/QWidget instance
+                            QObject* obj = static_cast<QObject*>(ptr);
+                            #ifdef QROSS_PYTHON_VARIANT_DEBUG
+                                qrossdebug(QString("PythonMetaTypeFactory::create class=%1 ptr=%2").arg(obj ? obj->metaObject()->className() : "NULL").arg(long(ptr)));
+                            #endif
+                            return new MetaTypeVoidStar( metaid, obj, false /*owner*/ );
                         }
-                        #ifdef QROSS_PYTHON_VARIANT_DEBUG
-                            qrossdebug( QString("PythonMetaTypeFactory::create Py::Object isNone. Create empty type '%1'").arg(metaid) );
-                        #endif
-                        void* ptr = 0; //QMetaType::construct(metaid, 0);
-                        return new MetaTypeVoidStar( metaid, ptr, false /*owner*/ );
-                    } break;
-                    default:
-                    	return new MetaTypeVoidStar( metaid, QMetaType::construct( metaid ), false );
-                        break;
+                        catch(Py::Exception& e) {
+                            #ifdef QROSS_PYTHON_VARIANT_DEBUG
+                                qrossdebug(QString("PythonMetaTypeFactory::create EXCEPTION %1").arg(Py::value(e).as_string().c_str()));
+                            #endif
+                        }
+                    }
+                    #ifdef QROSS_PYTHON_VARIANT_DEBUG
+                        qrossdebug( QString("PythonMetaTypeFactory::create Py::Object isNone. Create empty type '%1'").arg(metaid) );
+                    #endif
+                    void* ptr = 0; //QMetaType::construct(metaid, 0);
+                    return new MetaTypeVoidStar( metaid, ptr, false /*owner*/ );
+                } else {
+#if QT_VERSION < 0x050000
+                    void* obj = QMetaType::construct( metaid );
+#else
+                    void* obj = QMetaType::create( metaid );
+#endif
+                    return new MetaTypeVoidStar( metaid, obj, false );
+                    break;
                 }
 
                 #ifdef QROSS_PYTHON_VARIANT_DEBUG
@@ -574,7 +567,7 @@ MetaType* PythonMetaTypeFactory::create(const char* typeName, const Py::Object& 
 
             // still no success. So, let's try to guess the content...
             QVariant v = PythonType<QVariant>::toVariant(object);
-            if( qVariantCanConvert< Qross::Object::Ptr >(v) ) {
+            if( v.canConvert<Qross::Object::Ptr>() ) {
                 #ifdef QROSS_PYTHON_VARIANT_DEBUG
                     qrossdebug( QString("PythonType<QVariant>::toPyObject Casting '%1' to Qross::Object::Ptr").arg(v.typeName()) );
                 #endif

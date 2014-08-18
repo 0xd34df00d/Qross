@@ -360,13 +360,17 @@ void PythonScript::execute()
             for(int i = 0; i < count; ++i) {
                 QMetaMethod metamethod = metaobject->method(i);
                 if( metamethod.methodType() == QMetaMethod::Signal ) {
+#if QT_VERSION < 0x050000
                     const QString signature = metamethod.signature();
+#else
+                    const QString signature = metamethod.methodSignature();
+#endif
                     const QByteArray name = signature.left(signature.indexOf('(')).toLatin1();
 
                     PyObject* pyfunc = PyDict_GetItemString(moduledict.ptr(), name.constData());
                     if( pyfunc ) {
                         Py::Callable callable(pyfunc);
-                        PythonFunction* function = new PythonFunction(obj, metamethod.signature(), callable);
+                        PythonFunction* function = new PythonFunction(obj, signature.toLatin1(), callable);
                         QByteArray sendersignal = QString("2%1").arg(signature).toLatin1();
                         QByteArray receiverslot = QString("1%1").arg(signature).toLatin1();
                         if( QObject::connect(obj, sendersignal, function, receiverslot) ) {

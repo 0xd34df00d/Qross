@@ -95,21 +95,9 @@ namespace Qross {
                                         #ifdef QROSS_PYTHON_FUNCTION_DEBUG
                                             qrossdebug( QString("PythonFunction::qt_metacall: param=%1 metatypeId=%2").arg(param.constData()).arg(tp) );
                                         #endif
-                                        switch( tp ) {
-                                            case QMetaType::QObjectStar: {
-                                                QObject* obj = (*reinterpret_cast< QObject*(*)>( _a[idx] ));
-                                                //args[idx-1] = Py::asObject(new PythonExtension(obj, false));
-                                                args[idx-1] = Py::asObject(new PythonExtension(obj));
-                                                continue;
-                                            } break;
-                                            case QMetaType::QWidgetStar: {
-                                                QWidget* obj = (*reinterpret_cast< QWidget*(*)>( _a[idx] ));
-                                                //args[idx-1] = Py::asObject(new PythonExtension(obj, false));
-                                                args[idx-1] = Py::asObject(new PythonExtension(obj));
-                                                continue;
-                                            } break;
-                                            default:
-                                                break;
+                                        if (tp == qMetaTypeId<QObject*>() || tp == qMetaTypeId<QWidget*>()) {
+                                            QObject* obj = (*reinterpret_cast< QObject*(*)>( _a[idx] ));
+                                            args[idx-1] = Py::asObject(new PythonExtension(obj));
                                         }
                                     } // fall through
                                     default: {

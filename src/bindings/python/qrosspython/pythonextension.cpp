@@ -124,7 +124,11 @@ PythonExtension::PythonExtension(QObject* object, bool owner)
             const int count = metaobject->methodCount();
             for(int i = 0; i < count; ++i) {
                 QMetaMethod member = metaobject->method(i);
+#if QT_VERSION < 0x050000
                 const QString signature = member.signature();
+#else
+                const QString signature = member.methodSignature();
+#endif
                 const QByteArray name = signature.left(signature.indexOf('(')).toLatin1();
                 if(! d->methods.contains(name)) {
                     d->methods.insert(name, Py::Int(i));
@@ -323,7 +327,14 @@ Py::Object PythonExtension::getSignalNames(const Py::Tuple&)
     for(int i = 0; i < count; ++i) {
         QMetaMethod m = metaobject->method(i);
         if( m.methodType() == QMetaMethod::Signal)
-            list.append( Py::String(m.signature()) );
+        {
+#if QT_VERSION < 0x050000
+            const QByteArray signature = m.signature();
+#else
+            const QByteArray signature = m.methodSignature();
+#endif
+            list.append( Py::String(signature) );
+        }
     }
     return list;
 }
@@ -336,7 +347,14 @@ Py::Object PythonExtension::getSlotNames(const Py::Tuple&)
     for(int i = 0; i < count; ++i) {
         QMetaMethod m = metaobject->method(i);
         if( m.methodType() == QMetaMethod::Slot)
-            list.append( Py::String(m.signature()) );
+        {
+#if QT_VERSION < 0x050000
+            const QByteArray signature = m.signature();
+#else
+            const QByteArray signature = m.methodSignature();
+#endif
+            list.append( Py::String(signature) );
+        }
     }
     return list;
 }
@@ -543,7 +561,11 @@ PyObject* PythonExtension::proxyhandler(PyObject *_self_and_name_tuple, PyObject
             const int count = self->d->object->metaObject()->methodCount();
             for(++methodindex; methodindex < count; ++methodindex) {
                 metamethod = self->d->object->metaObject()->method( methodindex );
+#if QT_VERSION < 0x050000
                 const QString signature = metamethod.signature();
+#else
+                const QString signature = metamethod.methodSignature();
+#endif
                 const QByteArray name = signature.left(signature.indexOf('(')).toLatin1();
                 if(name == methodname) {
                     if(metamethod.parameterTypes().size() == argssize) {
