@@ -73,6 +73,7 @@ namespace Qross {
              */
             static void extractException(QStringList& errorlist, int& lineno);
 
+			static void setImportException(const QString&);
         private:
             /// \internal d-pointer instance.
             PythonInterpreterPrivate * const d;

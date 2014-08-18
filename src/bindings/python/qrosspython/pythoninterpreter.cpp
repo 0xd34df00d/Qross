@@ -373,3 +373,9 @@ void PythonInterpreter::extractException(QStringList& errorlist, int& lineno)
     #endif
     PyErr_Restore(type, value, traceback);
 }
+
+void PythonInterpreter::setImportException (const QString& str)
+{
+	qrossdebug(str);
+	PyErr_SetString (PyExc_ImportError, str.toUtf8 ().constData ());
+}
