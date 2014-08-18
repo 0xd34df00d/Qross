@@ -80,6 +80,14 @@ Py::Object PythonModule::import(const Py::Tuple& args)
     if(args.size() >= 2) {
         QString modname = args[1].as_string().c_str();
 
+#if QT_VERSION < 0x050000
+		if (modname.contains ("Qt5"))
+			d->m_interpreter->setImportException("Qt5 is unavailable, host process is running with Qt4.");
+#else
+		if (modname.contains ("Qt4"))
+			d->m_interpreter->setImportException("Qt4 is unavailable, host process is running with Qt5.");
+#endif
+
         Py::ExtensionObject<PythonExtension> extobj( args[0] );
         PythonExtension* extension = extobj.extensionObject();
         Action* action = dynamic_cast< Action* >( extension->object() );
