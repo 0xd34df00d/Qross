@@ -59,8 +59,7 @@ target_link_libraries(qrosspython${SHLIB_SUFFIX} ${QT_LIBRARIES}
 
 install(TARGETS qrosspython${SHLIB_SUFFIX} DESTINATION lib${LIB_SUFFIX})
 
-QT5_USE_MODULES (qrosspython${SHLIB_SUFFIX} Script Test Xml Widgets)
-
 if (USE_QT5)
+	QT5_USE_MODULES (qrosspython${SHLIB_SUFFIX} Script Test Xml Widgets)
 	include_directories (${Qt5Core_PRIVATE_INCLUDE_DIRS})
 endif ()
