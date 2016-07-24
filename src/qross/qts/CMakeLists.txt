@@ -14,7 +14,6 @@ set(qrossqtsplugin_LIB_SRCS plugin.cpp)
 add_library(qrossqtsplugin SHARED ${qrossqtsplugin_LIB_SRCS})
 set_property(TARGET qrossqtsplugin PROPERTY VERSION "0.1")
 
-target_link_libraries(qrossqtsplugin ${QT_LIBRARIES} qrosscore${SHLIB_SUFFIX})
 
 if (USE_QT5)
 	get_target_property(QMAKE_EXECUTABLE Qt5::qmake LOCATION)
@@ -27,12 +26,14 @@ if (USE_QT5)
 	endfunction(QUERY_QMAKE)
 
 	query_qmake(QT_INSTALL_PLUGINS QT_PLUGINS_DIR)
+else ()
+	target_link_libraries(qrossqtsplugin ${QT_LIBRARIES} qrosscore${SHLIB_SUFFIX})
 endif ()
 
 install(TARGETS qrossqtsplugin DESTINATION ${QT_PLUGINS_DIR}/script)
 
 if (USE_QT5)
-	QT5_USE_MODULES (qrossqtsplugin UiTools Widgets)
+	QT5_USE_MODULES (qrossqtsplugin Script UiTools Widgets)
 endif ()
 
 ########### next target ###############
