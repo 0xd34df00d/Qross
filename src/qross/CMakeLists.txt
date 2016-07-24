@@ -8,6 +8,8 @@ if (USE_QT5)
 endif ()
 
 set (CMAKE_AUTOMOC TRUE)
+set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_EXTENSIONS OFF)
 
 add_definitions(-DSHLIB_SUFFIX="${SHLIB_SUFFIX}")
 
