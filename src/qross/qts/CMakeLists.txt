@@ -58,13 +58,7 @@ endif ()
 set(qrossqts_PART_SRCS interpreter.cpp script.cpp)
 set(qrossqts_PART_HEADERS script.h)
 
-if (USE_QT5)
-	QT5_WRAP_CPP (qrossqts_PART_MOC_SRCS ${qrossqts_PART_HEADERS})
-else ()
-	QT4_WRAP_CPP (qrossqts_PART_MOC_SRCS ${qrossqts_PART_HEADERS})
-endif ()
-
-add_library(qrossqts${SHLIB_SUFFIX} MODULE ${qrossqts_PART_SRCS} ${qrossqts_PART_MOC_SRCS})
+add_library(qrossqts${SHLIB_SUFFIX} MODULE ${qrossqts_PART_SRCS})
 set_target_properties(qrossqts${SHLIB_SUFFIX} PROPERTIES PREFIX "")
 set_property(TARGET qrossqts${SHLIB_SUFFIX} PROPERTY VERSION "0.1")
 target_link_libraries(qrossqts${SHLIB_SUFFIX} ${QT_LIBRARIES}

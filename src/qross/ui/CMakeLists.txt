@@ -16,14 +16,8 @@ set(qrossui_LIB_SRCS
 set(qrossui_LIB_HEADERS
 	model.h
 	)
-	
-if (USE_QT5)
-	QT5_WRAP_CPP (qrossui_LIB_MOC_SRCS ${qrossui_LIB_HEADERS})
-else ()
-	QT4_WRAP_CPP (qrossui_LIB_MOC_SRCS ${qrossui_LIB_HEADERS})
-endif ()
 
-add_library(qrossui${SHLIB_SUFFIX} SHARED ${qrossui_LIB_SRCS} ${qrossui_LIB_MOC_SRCS})
+add_library(qrossui${SHLIB_SUFFIX} SHARED ${qrossui_LIB_SRCS})
 target_link_libraries(qrossui${SHLIB_SUFFIX} qrosscore${SHLIB_SUFFIX} ${QT_LIBRARIES})
 set_property(TARGET qrossui${SHLIB_SUFFIX} PROPERTY VERSION "0.1")
 

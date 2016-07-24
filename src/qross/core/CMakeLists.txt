@@ -27,13 +27,7 @@ set(qrosscore_LIB_HEADERS
 	script.h
 )
 
-if (USE_QT5)
-	QT5_WRAP_CPP (qrosscore_LIB_MOC_SRCS ${qrosscore_LIB_HEADERS})
-else ()
-	QT4_WRAP_CPP (qrosscore_LIB_MOC_SRCS ${qrosscore_LIB_HEADERS})
-endif ()
-
-add_library(qrosscore${SHLIB_SUFFIX} SHARED ${qrosscore_LIB_SRCS} ${qrosscore_LIB_MOC_SRCS})
+add_library(qrosscore${SHLIB_SUFFIX} SHARED ${qrosscore_LIB_SRCS})
 target_link_libraries(qrosscore${SHLIB_SUFFIX} ${QT_LIBRARIES})
 set_property(TARGET qrosscore${SHLIB_SUFFIX} PROPERTY VERSION "0.1")
 
