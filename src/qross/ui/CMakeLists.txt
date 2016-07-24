@@ -12,7 +12,7 @@ endif ()
 set(qrossui_LIB_SRCS
    model.cpp
    )
-   
+
 set(qrossui_LIB_HEADERS
 	model.h
 	)

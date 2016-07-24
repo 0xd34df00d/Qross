@@ -67,5 +67,5 @@ target_link_libraries(qrossqts${SHLIB_SUFFIX} ${QT_LIBRARIES}
 install(TARGETS qrossqts${SHLIB_SUFFIX} DESTINATION lib${LIB_SUFFIX})
 
 if (USE_QT5)
-	QT5_USE_MODULES (qrossqts${SHLIB_SUFFIX} Script Widgets) 
+	QT5_USE_MODULES (qrossqts${SHLIB_SUFFIX} Script Widgets)
 endif ()

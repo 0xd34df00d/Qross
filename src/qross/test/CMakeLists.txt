@@ -7,8 +7,8 @@ else ()
 	include (${QT_USE_FILE})
 endif ()
 
-set(qrosstest_SRCS 
-   testobject.cpp 
+set(qrosstest_SRCS
+   testobject.cpp
    main.cpp
    )
 
