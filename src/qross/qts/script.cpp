@@ -113,7 +113,7 @@ namespace Qross {
                 Q_ASSERT( m_engine );
                 Q_ASSERT( ! m_engine->hasUncaughtException() );
                 QScriptValue global = m_engine->globalObject();
-                QScriptValue value = m_engine->newQObject(object);
+                QScriptValue value = m_engine->newQObject(object, QScriptEngine::AutoOwnership);
                 global.setProperty(name.isEmpty() ? object->objectName() : name, value);
             }
 
