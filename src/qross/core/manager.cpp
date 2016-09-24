@@ -97,7 +97,7 @@ void* loadLibrary(const char* libname, const char* functionname)
         	paths += "/usr/local/lib";
         	paths += "/usr/lib";
 #endif
-            foreach(const QString& path, paths) {
+            for(const auto& path : paths) {
                 lib.setFileName( QFileInfo(path, libname).filePath() );
                 lib.setLoadHints( QLibrary::ExportExternalSymbolsHint );
                 if( lib.load() )
