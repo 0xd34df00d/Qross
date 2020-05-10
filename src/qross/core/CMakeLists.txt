@@ -1,7 +1,5 @@
 include_directories(${CMAKE_SOURCE_DIR}/..)
 
-find_package (Qt5Core REQUIRED)
-
 set(qrosscore_LIB_SRCS
    qrossconfig.cpp
    interpreter.cpp
@@ -21,7 +19,7 @@ set(qrosscore_LIB_HEADERS
 )
 
 add_library(qrosscore${SHLIB_SUFFIX} SHARED ${qrosscore_LIB_SRCS})
-target_link_libraries(qrosscore${SHLIB_SUFFIX} ${QT_LIBRARIES})
+target_link_libraries(qrosscore${SHLIB_SUFFIX} Qt5::Script Qt5::Xml Qt5::Widgets)
 set_property(TARGET qrosscore${SHLIB_SUFFIX} PROPERTY VERSION "0.1")
 
 install(TARGETS qrosscore${SHLIB_SUFFIX} DESTINATION lib${LIB_SUFFIX})
@@ -44,5 +42,3 @@ install(FILES
     manager.h
     object.h
     DESTINATION include/qross/core COMPONENT Devel)
-
-QT5_USE_MODULES (qrosscore${SHLIB_SUFFIX} Script Xml Widgets)

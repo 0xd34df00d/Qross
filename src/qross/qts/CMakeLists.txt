@@ -1,11 +1,12 @@
 include_directories(${CMAKE_SOURCE_DIR}/..)
 
-find_package (Qt5Core REQUIRED)
+find_package (Qt5 COMPONENTS UiTools)
 
 ########### next target ###############
 set(qrossqtsplugin_LIB_SRCS plugin.cpp)
 add_library(qrossqtsplugin SHARED ${qrossqtsplugin_LIB_SRCS})
 set_property(TARGET qrossqtsplugin PROPERTY VERSION "0.1")
+target_link_libraries(qrossqtsplugin Qt5::Script Qt5::UiTools Qt5::Widgets)
 
 
 get_target_property(QMAKE_EXECUTABLE Qt5::qmake LOCATION)
@@ -21,8 +22,6 @@ query_qmake(QT_INSTALL_PLUGINS QT_PLUGINS_DIR)
 
 install(TARGETS qrossqtsplugin DESTINATION ${QT_PLUGINS_DIR}/script)
 
-QT5_USE_MODULES (qrossqtsplugin Script UiTools Widgets)
-
 ########### next target ###############
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -30,9 +29,8 @@ include_directories(${CMAKE_SOURCE_DIR}/qross)
 set(qrossqtstest_SRCS main.cpp)
 add_executable(qrossqtstest ${qrossqtstest_SRCS})
 
-target_link_libraries(qrossqtstest ${QT_LIBRARIES})
+target_link_libraries(qrossqtstest Qt5::Gui Qt5::Script Qt5::Widgets)
 
-QT5_USE_MODULES (qrossqtstest Gui Script Widgets)
 # set(qrossqtsplugintest_SRCS main.cpp)
 # target_link_libraries(qrossqtsplugintest ${KDE4_KDECORE_LIBS} )
 # kde4_add_executable(qrossqtsplugintest ${qrossqtsplugintest_SRCS})
@@ -47,8 +45,5 @@ set(qrossqts_PART_HEADERS script.h)
 add_library(qrossqts${SHLIB_SUFFIX} MODULE ${qrossqts_PART_SRCS})
 set_target_properties(qrossqts${SHLIB_SUFFIX} PROPERTIES PREFIX "")
 set_property(TARGET qrossqts${SHLIB_SUFFIX} PROPERTY VERSION "0.1")
-target_link_libraries(qrossqts${SHLIB_SUFFIX} ${QT_LIBRARIES}
-	qrosscore${SHLIB_SUFFIX})
+target_link_libraries(qrossqts${SHLIB_SUFFIX} qrosscore${SHLIB_SUFFIX} Qt5::Script Qt5::Widgets)
 install(TARGETS qrossqts${SHLIB_SUFFIX} DESTINATION lib${LIB_SUFFIX})
-
-QT5_USE_MODULES (qrossqts${SHLIB_SUFFIX} Script Widgets)
