@@ -1,13 +1,6 @@
 include_directories(${CMAKE_SOURCE_DIR}/..)
 
-if (USE_QT5)
-	find_package (Qt5Core REQUIRED)
-else ()
-	find_package (Qt4 REQUIRED)
-	set (QT_USE_QTSCRIPT TRUE)
-	set (QT_USE_QTXML TRUE)
-	include (${QT_USE_FILE})
-endif ()
+find_package (Qt5Core REQUIRED)
 
 set(qrosscore_LIB_SRCS
    qrossconfig.cpp
@@ -52,6 +45,4 @@ install(FILES
     object.h
     DESTINATION include/qross/core COMPONENT Devel)
 
-if (USE_QT5)
-	QT5_USE_MODULES (qrosscore${SHLIB_SUFFIX} Script Xml Widgets)
-endif ()
+QT5_USE_MODULES (qrosscore${SHLIB_SUFFIX} Script Xml Widgets)

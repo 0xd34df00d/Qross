@@ -1,11 +1,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
-option (USE_QT5 "Build with Qt5 support" OFF)
-
-set (SHLIB_SUFFIX "")
-if (USE_QT5)
-	set (SHLIB_SUFFIX "-qt5")
-endif ()
+set (SHLIB_SUFFIX "-qt5")
 
 set (CMAKE_AUTOMOC TRUE)
 set (CMAKE_CXX_STANDARD 11)

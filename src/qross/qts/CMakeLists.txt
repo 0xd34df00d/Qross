@@ -1,13 +1,6 @@
 include_directories(${CMAKE_SOURCE_DIR}/..)
 
-if (USE_QT5)
-	find_package (Qt5Core REQUIRED)
-else ()
-	find_package (Qt4 REQUIRED)
-	set (QT_USE_QTUITOOLS TRUE)
-	set (QT_USE_QTSCRIPT TRUE)
-	include (${QT_USE_FILE})
-endif ()
+find_package (Qt5Core REQUIRED)
 
 ########### next target ###############
 set(qrossqtsplugin_LIB_SRCS plugin.cpp)
@@ -15,26 +8,20 @@ add_library(qrossqtsplugin SHARED ${qrossqtsplugin_LIB_SRCS})
 set_property(TARGET qrossqtsplugin PROPERTY VERSION "0.1")
 
 
-if (USE_QT5)
-	get_target_property(QMAKE_EXECUTABLE Qt5::qmake LOCATION)
-	function(QUERY_QMAKE VAR RESULT)
-	exec_program(${QMAKE_EXECUTABLE} ARGS "-query ${VAR}" RETURN_VALUE return_code OUTPUT_VARIABLE output )
-	if (NOT return_code)
-		file(TO_CMAKE_PATH "${output}" output)
-		set(${RESULT} ${output} PARENT_SCOPE)
-	endif ()
-	endfunction(QUERY_QMAKE)
-
-	query_qmake(QT_INSTALL_PLUGINS QT_PLUGINS_DIR)
-else ()
-	target_link_libraries(qrossqtsplugin ${QT_LIBRARIES} qrosscore${SHLIB_SUFFIX})
+get_target_property(QMAKE_EXECUTABLE Qt5::qmake LOCATION)
+function(QUERY_QMAKE VAR RESULT)
+exec_program(${QMAKE_EXECUTABLE} ARGS "-query ${VAR}" RETURN_VALUE return_code OUTPUT_VARIABLE output )
+if (NOT return_code)
+	file(TO_CMAKE_PATH "${output}" output)
+	set(${RESULT} ${output} PARENT_SCOPE)
 endif ()
+endfunction(QUERY_QMAKE)
+
+query_qmake(QT_INSTALL_PLUGINS QT_PLUGINS_DIR)
 
 install(TARGETS qrossqtsplugin DESTINATION ${QT_PLUGINS_DIR}/script)
 
-if (USE_QT5)
-	QT5_USE_MODULES (qrossqtsplugin Script UiTools Widgets)
-endif ()
+QT5_USE_MODULES (qrossqtsplugin Script UiTools Widgets)
 
 ########### next target ###############
 
@@ -45,9 +32,7 @@ add_executable(qrossqtstest ${qrossqtstest_SRCS})
 
 target_link_libraries(qrossqtstest ${QT_LIBRARIES})
 
-if (USE_QT5)
-	QT5_USE_MODULES (qrossqtstest Gui Script Widgets)
-endif ()
+QT5_USE_MODULES (qrossqtstest Gui Script Widgets)
 # set(qrossqtsplugintest_SRCS main.cpp)
 # target_link_libraries(qrossqtsplugintest ${KDE4_KDECORE_LIBS} )
 # kde4_add_executable(qrossqtsplugintest ${qrossqtsplugintest_SRCS})
@@ -66,6 +51,4 @@ target_link_libraries(qrossqts${SHLIB_SUFFIX} ${QT_LIBRARIES}
 	qrosscore${SHLIB_SUFFIX})
 install(TARGETS qrossqts${SHLIB_SUFFIX} DESTINATION lib${LIB_SUFFIX})
 
-if (USE_QT5)
-	QT5_USE_MODULES (qrossqts${SHLIB_SUFFIX} Script Widgets)
-endif ()
+QT5_USE_MODULES (qrossqts${SHLIB_SUFFIX} Script Widgets)
