@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 3.0)
+project(qross)
 
 set (SHLIB_SUFFIX "-qt5")
 
