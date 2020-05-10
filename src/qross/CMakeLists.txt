@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+cmake_minimum_required (VERSION 3.0)
 
 set (SHLIB_SUFFIX "-qt5")
 
@@ -7,6 +7,8 @@ set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_EXTENSIONS OFF)
 
 add_definitions(-DSHLIB_SUFFIX="${SHLIB_SUFFIX}")
+
+find_package (Qt5 COMPONENTS Core Script Widgets Xml)
 
 # the core library
 add_subdirectory( core )
