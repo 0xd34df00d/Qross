@@ -39,3 +39,7 @@ install(FILES
     manager.h
     object.h
     DESTINATION include/qross/core COMPONENT Devel)
+
+include(GNUInstallDirs)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/qrosscore.pc.in ${CMAKE_CURRENT_BINARY_DIR}/qrosscore.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qrosscore.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
