@@ -24,9 +24,6 @@ set_property(TARGET qrosscore${SHLIB_SUFFIX} PROPERTY VERSION "0.1")
 
 install(TARGETS qrosscore${SHLIB_SUFFIX} DESTINATION lib${LIB_SUFFIX})
 
-install(FILES FindQrosscore.cmake DESTINATION share/cmake/Modules)
-install(FILES FindQrosscore.cmake DESTINATION share/leechcraft/cmake)
-
 install(FILES
 	qross_export.h
     qrossconfig.h
