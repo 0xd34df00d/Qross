@@ -1,0 +1,18 @@
+# Build directories
+/build/
+/build-*/
+/cmake-build-*/
+/src/qrossbuild/
+
+# Editor and tooling state
+.cache/
+.vscode/
+.idea/
+*.user
+*.user.*
+compile_commands.json
+CMakeUserPresets.json
+
+# Python bytecode from test scripts
+__pycache__/
+*.pyc
