@@ -24,16 +24,17 @@
 
 using namespace Qross;
 
-namespace Qross {
+namespace Qross
+{
 
     /// \internal d-pointer class.
     class Script::Private
     {
-        public:
-            /// The \a Interpreter used to create this Script instance.
-            Interpreter* interpreter;
-            /// The \a Action associated with this Script.
-            Action* action;
+    public:
+        /// The \a Interpreter used to create this Script instance.
+        Interpreter* interpreter;
+        /// The \a Action associated with this Script.
+        Action* action;
     };
 
 }
@@ -41,9 +42,9 @@ namespace Qross {
 Script::Script(Interpreter* interpreter, Action* action)
     : QObject()
     , ErrorInterface()
-    , d( new Private() )
+    , d(new Private())
 {
-    //setObjectName( action->objectName() );
+    // setObjectName( action->objectName() );
     d->interpreter = interpreter;
     d->action = action;
 }

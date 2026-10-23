@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_OBJECT_H
-#define QROSS_OBJECT_H
+#pragma once
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -31,7 +30,8 @@
 
 #include <qsharedpointer.h>
 
-namespace Qross {
+namespace Qross
+{
 
     /**
      * The class Object does provide us scripting objects like
@@ -66,64 +66,61 @@ namespace Qross {
      *
      * \since 4.1
      */
-    class QROSSCORE_EXPORT Object : public QSharedData, public ErrorInterface
+    class QROSSCORE_EXPORT Object
+        : public QSharedData
+        , public ErrorInterface
     {
-        public:
+    public:
+        /**
+         * Shared pointer to implement reference-counting.
+         */
+        typedef QSharedPointer<Object> Ptr;
 
-            /**
-             * Shared pointer to implement reference-counting.
-             */
-            typedef QSharedPointer<Object> Ptr;
+        /**
+         * Default constructor.
+         */
+        explicit Object();
 
-            /**
-             * Default constructor.
-             */
-            explicit Object();
+        /**
+         * Copy constructor.
+         */
+        Object(const Object& other);
 
-            /**
-             * Copy constructor.
-             */
-            Object(const Object &other);
+        /**
+         * Destructor.
+         */
+        virtual ~Object();
 
-            /**
-             * Destructor.
-             */
-            virtual ~Object();
+        /**
+         * Pass a call to the object and evaluated it.
+         *
+         * \param name Each call has a name that says what
+         * should be called.
+         * \param args The optional list of arguments
+         * passed to the call.
+         * \return The call-result as QVariant.
+         */
+        virtual QVariant callMethod(const QString& name,
+            const QVariantList& args = QVariantList());
 
-            /**
-             * Pass a call to the object and evaluated it.
-             *
-             * \param name Each call has a name that says what
-             * should be called.
-             * \param args The optional list of arguments
-             * passed to the call.
-             * \return The call-result as QVariant.
-             */
-            virtual QVariant callMethod(const QString& name,
-                    const QVariantList& args = QVariantList());
+        /**
+         * Return a list of supported callable objects.
+         *
+         * \return List of supported calls.
+         */
+        virtual QStringList methodNames();
 
-            /**
-             * Return a list of supported callable objects.
-             *
-             * \return List of supported calls.
-             */
-            virtual QStringList methodNames();
-
-            /**
-             * \internal used virtual hook to easier the job to keep
-             * binary compatibility.
-             */
-            virtual void virtual_hook(int id, void* ptr);
-
-        private:
-            /// \internal d-pointer class.
-            class Private;
-            /// \internal d-pointer instance.
-            Private* const d;
+        /**
+         * \internal used virtual hook to easier the job to keep
+         * binary compatibility.
+         */
+        virtual void virtual_hook(int id, void* ptr);
+    private:
+        /// \internal d-pointer class.
+        class Private;
+        /// \internal d-pointer instance.
+        Private* const d;
     };
 }
 
 Q_DECLARE_METATYPE(Qross::Object::Ptr)
-
-#endif
-

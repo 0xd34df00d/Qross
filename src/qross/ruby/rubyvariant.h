@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_RUBYVARIANT_H
-#define QROSS_RUBYVARIANT_H
+#pragma once
 
 #include "rubyconfig.h"
 #include <qross/core/metatype.h>
@@ -37,7 +36,8 @@
 #include <QDateTime>
 #include <QColor>
 
-namespace Qross {
+namespace Qross
+{
 
     /**
      * The RubyType helper classes used to cast between QVariant
@@ -98,8 +98,8 @@ namespace Qross {
         // template-specialisations need to implement following both static
         // functions to translate between QVariant and Ruby's VALUE values.
 
-        //inline static RBTYPE toVALUE(const VARIANTTYPE&) { return Py::None(); }
-        //inline static QVARIANTTYPE toVariant(const VARIANTTYPE&) { return QVariant(); }
+        // inline static RBTYPE toVALUE(const VARIANTTYPE&) { return Py::None(); }
+        // inline static QVARIANTTYPE toVariant(const VARIANTTYPE&) { return QVariant(); }
     };
 
     /// \internal
@@ -114,19 +114,22 @@ namespace Qross {
     template<>
     struct RubyType<int>
     {
-        inline static VALUE toVALUE(int i) {
+        inline static VALUE toVALUE(int i)
+        {
             return INT2FIX(i);
         }
-        inline static int toVariant(VALUE value) {
-            switch( TYPE(value) ) {
-                case T_FIXNUM:
-                    return FIX2INT(value);
-                case T_BIGNUM:
-                    return rb_big2int(value);
-                case T_FLOAT:
-                    return (int)(RFLOAT(value)->value);
-                default:
-                    break;
+        inline static int toVariant(VALUE value)
+        {
+            switch (TYPE(value))
+            {
+            case T_FIXNUM:
+                return FIX2INT(value);
+            case T_BIGNUM:
+                return rb_big2int(value);
+            case T_FLOAT:
+                return (int)(RFLOAT(value)->value);
+            default:
+                break;
             }
             rb_raise(rb_eTypeError, "Integer must be a fixed number");
             return 0;
@@ -137,19 +140,22 @@ namespace Qross {
     template<>
     struct RubyType<uint>
     {
-        inline static VALUE toVALUE(uint i) {
+        inline static VALUE toVALUE(uint i)
+        {
             return UINT2NUM(i);
         }
-        inline static uint toVariant(VALUE value) {
-            switch( TYPE(value) ) {
-                case T_FIXNUM:
-                    return FIX2UINT(value);
-                case T_BIGNUM:
-                    return rb_big2uint(value);
-                case T_FLOAT:
-                    return (uint)(RFLOAT(value)->value);
-                default:
-                    break;
+        inline static uint toVariant(VALUE value)
+        {
+            switch (TYPE(value))
+            {
+            case T_FIXNUM:
+                return FIX2UINT(value);
+            case T_BIGNUM:
+                return rb_big2uint(value);
+            case T_FLOAT:
+                return (uint)(RFLOAT(value)->value);
+            default:
+                break;
             }
             rb_raise(rb_eTypeError, "Unsigned integer must be a fixed number");
             return 0;
@@ -160,10 +166,12 @@ namespace Qross {
     template<>
     struct RubyType<double>
     {
-        inline static VALUE toVALUE(double d) {
+        inline static VALUE toVALUE(double d)
+        {
             return rb_float_new(d);
         }
-        inline static double toVariant(VALUE value) {
+        inline static double toVariant(VALUE value)
+        {
             return NUM2DBL(value);
         }
     };
@@ -172,19 +180,23 @@ namespace Qross {
     template<>
     struct RubyType<bool>
     {
-        inline static VALUE toVALUE(bool b) {
+        inline static VALUE toVALUE(bool b)
+        {
             return b ? Qtrue : Qfalse;
         }
-        inline static bool toVariant(VALUE value) {
-            switch( TYPE(value) ) {
-                case T_TRUE:
-                    return true;
-                case T_FALSE:
-                    return false;
-                default: {
-                    rb_raise(rb_eTypeError, "Boolean value expected");
-                    return false;
-                } break;
+        inline static bool toVariant(VALUE value)
+        {
+            switch (TYPE(value))
+            {
+            case T_TRUE:
+                return true;
+            case T_FALSE:
+                return false;
+            default: {
+                rb_raise(rb_eTypeError, "Boolean value expected");
+                return false;
+            }
+            break;
             }
         }
     };
@@ -193,10 +205,12 @@ namespace Qross {
     template<>
     struct RubyType<qlonglong>
     {
-        inline static VALUE toVALUE(qlonglong l) {
+        inline static VALUE toVALUE(qlonglong l)
+        {
             return /*INT2NUM*/ LONG2NUM((long)l);
         }
-        inline static qlonglong toVariant(VALUE value) {
+        inline static qlonglong toVariant(VALUE value)
+        {
             return NUM2LONG(value);
         }
     };
@@ -205,10 +219,12 @@ namespace Qross {
     template<>
     struct RubyType<qulonglong>
     {
-        inline static VALUE toVALUE(qulonglong l) {
+        inline static VALUE toVALUE(qulonglong l)
+        {
             return UINT2NUM((unsigned long)l);
         }
-        inline static qulonglong toVariant(VALUE value) {
+        inline static qulonglong toVariant(VALUE value)
+        {
             return NUM2UINT(value);
         }
     };
@@ -217,17 +233,20 @@ namespace Qross {
     template<>
     struct RubyType<QByteArray>
     {
-        inline static VALUE toVALUE(const QByteArray& ba) {
+        inline static VALUE toVALUE(const QByteArray& ba)
+        {
             return rb_str_new(ba.constData(), ba.size());
         }
-        inline static QByteArray toVariant(VALUE value) {
-            if( TYPE(value) != T_STRING ) {
+        inline static QByteArray toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_STRING)
+            {
                 rb_raise(rb_eTypeError, "QByteArray must be a string");
-                //return STR2CSTR( rb_inspect(value) );
+                // return STR2CSTR( rb_inspect(value) );
                 return QByteArray("");
             }
-            long length = LONG2NUM( RSTRING(value)->len );
-            if( length < 0 )
+            long length = LONG2NUM(RSTRING(value)->len);
+            if (length < 0)
                 return QByteArray("");
             char* ca = rb_str2cstr(value, &length);
             return QByteArray(ca, length);
@@ -238,11 +257,14 @@ namespace Qross {
     template<>
     struct RubyType<QString>
     {
-        inline static VALUE toVALUE(const QString& s) {
+        inline static VALUE toVALUE(const QString& s)
+        {
             return s.isNull() ? rb_str_new2("") : rb_str_new2(s.toLatin1().data());
         }
-        inline static QString toVariant(VALUE value) {
-            if( TYPE(value) != T_STRING ) {
+        inline static QString toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_STRING)
+            {
                 rb_raise(rb_eTypeError, "QString must be a string");
                 return QString();
             }
@@ -254,18 +276,21 @@ namespace Qross {
     template<>
     struct RubyType<QSize>
     {
-        inline static VALUE toVALUE(const QSize& s) {
+        inline static VALUE toVALUE(const QSize& s)
+        {
             VALUE l = rb_ary_new();
             rb_ary_push(l, RubyType<int>::toVALUE(s.width()));
             rb_ary_push(l, RubyType<int>::toVALUE(s.height()));
             return l;
         }
-        inline static QSize toVariant(VALUE value) {
-            if( TYPE(value) != T_ARRAY || RARRAY(value)->len != 2 ) {
+        inline static QSize toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_ARRAY || RARRAY(value)->len != 2)
+            {
                 rb_raise(rb_eTypeError, "QSize must be an array with 2 elements");
                 return QSize();
             }
-            return QSize( RubyType<int>::toVariant( rb_ary_entry(value,0) ), RubyType<int>::toVariant( rb_ary_entry(value,1) ) );
+            return QSize(RubyType<int>::toVariant(rb_ary_entry(value, 0)), RubyType<int>::toVariant(rb_ary_entry(value, 1)));
         }
     };
 
@@ -273,19 +298,21 @@ namespace Qross {
     template<>
     struct RubyType<QSizeF>
     {
-        inline static VALUE toVALUE(const QSizeF& s) {
+        inline static VALUE toVALUE(const QSizeF& s)
+        {
             VALUE l = rb_ary_new();
             rb_ary_push(l, RubyType<double>::toVALUE(s.width()));
             rb_ary_push(l, RubyType<double>::toVALUE(s.height()));
             return l;
         }
-        inline static QSizeF toVariant(VALUE value) {
-            if( TYPE(value) != T_ARRAY || RARRAY(value)->len != 2 ) {
+        inline static QSizeF toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_ARRAY || RARRAY(value)->len != 2)
+            {
                 rb_raise(rb_eTypeError, "QSizeF must be an array with 2 elements");
                 return QSizeF();
             }
-            return QSizeF( RubyType<double>::toVariant( rb_ary_entry(value,0) ), RubyType<double>::toVariant( rb_ary_entry(value,1) ) );
-
+            return QSizeF(RubyType<double>::toVariant(rb_ary_entry(value, 0)), RubyType<double>::toVariant(rb_ary_entry(value, 1)));
         }
     };
 
@@ -293,18 +320,21 @@ namespace Qross {
     template<>
     struct RubyType<QPoint>
     {
-        inline static VALUE toVALUE(const QPoint& s) {
+        inline static VALUE toVALUE(const QPoint& s)
+        {
             VALUE l = rb_ary_new();
             rb_ary_push(l, RubyType<int>::toVALUE(s.x()));
             rb_ary_push(l, RubyType<int>::toVALUE(s.y()));
             return l;
         }
-        inline static QPoint toVariant(VALUE value) {
-            if( TYPE(value) != T_ARRAY || RARRAY(value)->len != 2 ) {
+        inline static QPoint toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_ARRAY || RARRAY(value)->len != 2)
+            {
                 rb_raise(rb_eTypeError, "QPoint must be an array with 2 elements");
                 return QPoint();
             }
-            return QPoint( RubyType<int>::toVariant( rb_ary_entry(value,0) ), RubyType<int>::toVariant( rb_ary_entry(value,1) ) );
+            return QPoint(RubyType<int>::toVariant(rb_ary_entry(value, 0)), RubyType<int>::toVariant(rb_ary_entry(value, 1)));
         }
     };
 
@@ -312,18 +342,21 @@ namespace Qross {
     template<>
     struct RubyType<QPointF>
     {
-        inline static VALUE toVALUE(const QPointF& s) {
+        inline static VALUE toVALUE(const QPointF& s)
+        {
             VALUE l = rb_ary_new();
             rb_ary_push(l, RubyType<double>::toVALUE(s.x()));
             rb_ary_push(l, RubyType<double>::toVALUE(s.y()));
             return l;
         }
-        inline static QPointF toVariant(VALUE value) {
-            if( TYPE(value) != T_ARRAY || RARRAY(value)->len != 2 ) {
+        inline static QPointF toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_ARRAY || RARRAY(value)->len != 2)
+            {
                 rb_raise(rb_eTypeError, "QPointF must be an array with 2 elements");
                 return QPointF();
             }
-            return QPointF( RubyType<double>::toVariant( rb_ary_entry(value,0) ), RubyType<double>::toVariant( rb_ary_entry(value,1) ) );
+            return QPointF(RubyType<double>::toVariant(rb_ary_entry(value, 0)), RubyType<double>::toVariant(rb_ary_entry(value, 1)));
         }
     };
 
@@ -331,7 +364,8 @@ namespace Qross {
     template<>
     struct RubyType<QRect>
     {
-        inline static VALUE toVALUE(const QRect& s) {
+        inline static VALUE toVALUE(const QRect& s)
+        {
             VALUE l = rb_ary_new();
             rb_ary_push(l, RubyType<int>::toVALUE(s.x()));
             rb_ary_push(l, RubyType<int>::toVALUE(s.y()));
@@ -339,13 +373,15 @@ namespace Qross {
             rb_ary_push(l, RubyType<int>::toVALUE(s.height()));
             return l;
         }
-        inline static QRect toVariant(VALUE value) {
-            if( TYPE(value) != T_ARRAY || RARRAY(value)->len != 4 ) {
+        inline static QRect toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_ARRAY || RARRAY(value)->len != 4)
+            {
                 rb_raise(rb_eTypeError, "QRect must be an array with 4 elements");
                 return QRect();
             }
-            return QRect( RubyType<int>::toVariant( rb_ary_entry(value,0) ), RubyType<int>::toVariant( rb_ary_entry(value,1) ),
-                           RubyType<int>::toVariant( rb_ary_entry(value,2) ), RubyType<int>::toVariant( rb_ary_entry(value,3) ) );
+            return QRect(RubyType<int>::toVariant(rb_ary_entry(value, 0)), RubyType<int>::toVariant(rb_ary_entry(value, 1)),
+                RubyType<int>::toVariant(rb_ary_entry(value, 2)), RubyType<int>::toVariant(rb_ary_entry(value, 3)));
         }
     };
 
@@ -353,7 +389,8 @@ namespace Qross {
     template<>
     struct RubyType<QRectF>
     {
-        inline static VALUE toVALUE(const QRectF& s) {
+        inline static VALUE toVALUE(const QRectF& s)
+        {
             VALUE l = rb_ary_new();
             rb_ary_push(l, RubyType<double>::toVALUE(s.x()));
             rb_ary_push(l, RubyType<double>::toVALUE(s.y()));
@@ -361,13 +398,15 @@ namespace Qross {
             rb_ary_push(l, RubyType<double>::toVALUE(s.height()));
             return l;
         }
-        inline static QRectF toVariant(VALUE value) {
-            if( TYPE(value) != T_ARRAY || RARRAY(value)->len != 4 ) {
+        inline static QRectF toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_ARRAY || RARRAY(value)->len != 4)
+            {
                 rb_raise(rb_eTypeError, "QRectF must be an array with 4 elements");
                 return QRectF();
             }
-            return QRectF( RubyType<double>::toVariant( rb_ary_entry(value,0) ), RubyType<double>::toVariant( rb_ary_entry(value,1) ),
-                           RubyType<double>::toVariant( rb_ary_entry(value,2) ), RubyType<double>::toVariant( rb_ary_entry(value,3) ) );
+            return QRectF(RubyType<double>::toVariant(rb_ary_entry(value, 0)), RubyType<double>::toVariant(rb_ary_entry(value, 1)),
+                RubyType<double>::toVariant(rb_ary_entry(value, 2)), RubyType<double>::toVariant(rb_ary_entry(value, 3)));
         }
     };
 
@@ -375,10 +414,12 @@ namespace Qross {
     template<>
     struct RubyType<QColor>
     {
-        inline static VALUE toVALUE(const QColor& color) {
+        inline static VALUE toVALUE(const QColor& color)
+        {
             return color.isValid() ? RubyType<QString>::toVALUE(color.name()) : Qnil;
         }
-        inline static QColor toVariant(VALUE value) {
+        inline static QColor toVariant(VALUE value)
+        {
             return (TYPE(value) == T_STRING) ? QColor(RubyType<QString>::toVariant(value)) : QColor();
         }
     };
@@ -387,11 +428,13 @@ namespace Qross {
     template<>
     struct RubyType<QUrl>
     {
-        inline static VALUE toVALUE(const QUrl& url) {
-            return RubyType<QString>::toVALUE( url.toString() );
+        inline static VALUE toVALUE(const QUrl& url)
+        {
+            return RubyType<QString>::toVALUE(url.toString());
         }
-        inline static QUrl toVariant(VALUE value) {
-            return QUrl( RubyType<QString>::toVariant(value) );
+        inline static QUrl toVariant(VALUE value)
+        {
+            return QUrl(RubyType<QString>::toVariant(value));
         }
     };
 
@@ -399,10 +442,12 @@ namespace Qross {
     template<>
     struct RubyType<QDateTime>
     {
-        inline static VALUE toVALUE(const QDateTime& datetime) {
-            return RubyType<QString>::toVALUE( datetime.toString(Qt::ISODate) );
+        inline static VALUE toVALUE(const QDateTime& datetime)
+        {
+            return RubyType<QString>::toVALUE(datetime.toString(Qt::ISODate));
         }
-        inline static QDateTime toVariant(VALUE value) {
+        inline static QDateTime toVariant(VALUE value)
+        {
             return QDateTime::fromString(RubyType<QString>::toVariant(value), Qt::ISODate);
         }
     };
@@ -411,10 +456,12 @@ namespace Qross {
     template<>
     struct RubyType<QTime>
     {
-        inline static VALUE toVALUE(const QTime& time) {
-            return RubyType<QString>::toVALUE( time.toString(Qt::ISODate) );
+        inline static VALUE toVALUE(const QTime& time)
+        {
+            return RubyType<QString>::toVALUE(time.toString(Qt::ISODate));
         }
-        inline static QTime toVariant(VALUE value) {
+        inline static QTime toVariant(VALUE value)
+        {
             return QTime::fromString(RubyType<QString>::toVariant(value), Qt::ISODate);
         }
     };
@@ -423,10 +470,12 @@ namespace Qross {
     template<>
     struct RubyType<QDate>
     {
-        inline static VALUE toVALUE(const QDate& date) {
-            return RubyType<QString>::toVALUE( date.toString(Qt::ISODate) );
+        inline static VALUE toVALUE(const QDate& date)
+        {
+            return RubyType<QString>::toVALUE(date.toString(Qt::ISODate));
         }
-        inline static QDate toVariant(VALUE value) {
+        inline static QDate toVariant(VALUE value)
+        {
             return QDate::fromString(RubyType<QString>::toVariant(value), Qt::ISODate);
         }
     };
@@ -435,20 +484,23 @@ namespace Qross {
     template<>
     struct RubyType<QStringList>
     {
-        inline static VALUE toVALUE(const QStringList& list) {
+        inline static VALUE toVALUE(const QStringList& list)
+        {
             VALUE l = rb_ary_new();
-            foreach(QString s, list)
+            foreach (QString s, list)
                 rb_ary_push(l, RubyType<QString>::toVALUE(s));
             return l;
         }
-        inline static QStringList toVariant(VALUE value) {
-            if( TYPE(value) != T_ARRAY ) {
+        inline static QStringList toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_ARRAY)
+            {
                 rb_raise(rb_eTypeError, "QStringList must be an array");
                 return QStringList();
             }
             QStringList l;
-            for(int i = 0; i < RARRAY(value)->len; i++)
-                l.append( RubyType<QString>::toVariant( rb_ary_entry(value, i) ) );
+            for (int i = 0; i < RARRAY(value)->len; i++)
+                l.append(RubyType<QString>::toVariant(rb_ary_entry(value, i)));
             return l;
         }
     };
@@ -457,20 +509,23 @@ namespace Qross {
     template<>
     struct RubyType<QVariantList>
     {
-        inline static VALUE toVALUE(const QVariantList& list) {
+        inline static VALUE toVALUE(const QVariantList& list)
+        {
             VALUE l = rb_ary_new();
-            foreach(QVariant v, list)
+            foreach (QVariant v, list)
                 rb_ary_push(l, RubyType<QVariant>::toVALUE(v));
             return l;
         }
-        inline static QVariantList toVariant(VALUE value) {
-            if( TYPE(value) != T_ARRAY ) {
+        inline static QVariantList toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_ARRAY)
+            {
                 rb_raise(rb_eTypeError, "QVariantList must be an array");
                 return QVariantList();
             }
             QVariantList l;
-            for(int i = 0; i < RARRAY(value)->len; i++)
-                l.append( RubyType<QVariant>::toVariant( rb_ary_entry(value, i) ) );
+            for (int i = 0; i < RARRAY(value)->len; i++)
+                l.append(RubyType<QVariant>::toVariant(rb_ary_entry(value, i)));
             return l;
         }
     };
@@ -479,27 +534,31 @@ namespace Qross {
     template<>
     struct RubyType<QVariantMap>
     {
-        inline static VALUE toVALUE(const QVariantMap& map) {
+        inline static VALUE toVALUE(const QVariantMap& map)
+        {
             VALUE h = rb_hash_new();
             QMap<QString, QVariant>::ConstIterator it(map.constBegin()), end(map.end());
-            for(; it != end; ++it)
-                rb_hash_aset(h, RubyType<QString>::toVALUE(it.key()), RubyType<QVariant>::toVALUE(it.value()) );
+            for (; it != end; ++it)
+                rb_hash_aset(h, RubyType<QString>::toVALUE(it.key()), RubyType<QVariant>::toVALUE(it.value()));
             return h;
         }
-        inline static int convertHash(VALUE key, VALUE value, VALUE  vmap) {
-            QVariantMap* map; 
+        inline static int convertHash(VALUE key, VALUE value, VALUE vmap)
+        {
+            QVariantMap* map;
             Data_Get_Struct(vmap, QVariantMap, map);
             if (key != Qundef)
                 map->insert(STR2CSTR(key), RubyType<QVariant>::toVariant(value));
             return ST_CONTINUE;
         }
-        inline static QVariantMap toVariant(VALUE value) {
-            if( TYPE(value) != T_HASH ) {
+        inline static QVariantMap toVariant(VALUE value)
+        {
+            if (TYPE(value) != T_HASH)
+            {
                 rb_raise(rb_eTypeError, "QVariantMap must be a hash");
                 return QVariantMap();
             }
             QVariantMap map;
-            VALUE vmap = Data_Wrap_Struct(rb_cObject, 0,0, &map);
+            VALUE vmap = Data_Wrap_Struct(rb_cObject, 0, 0, &map);
             rb_hash_foreach(value, (int (*)(...))convertHash, vmap);
             return map;
         }
@@ -512,25 +571,22 @@ namespace Qross {
      */
     class RubyMetaTypeFactory
     {
-        public:
-            static MetaType* create(const char* typeName, int typeId, int metaTypeId, VALUE value = Qnil);
+    public:
+        static MetaType* create(const char* typeName, int typeId, int metaTypeId, VALUE value = Qnil);
     };
 
     /// \internal
     template<typename VARIANTTYPE>
     class RubyMetaTypeVariant : public MetaTypeVariant<VARIANTTYPE>
     {
-        public:
-            RubyMetaTypeVariant(VALUE value)
-                : MetaTypeVariant<VARIANTTYPE>(
-                    (TYPE(value) == T_NIL)
-                        ? QVariant().value<VARIANTTYPE>()
-                        : RubyType<VARIANTTYPE>::toVariant(value)
-                ) {}
+    public:
+        RubyMetaTypeVariant(VALUE value)
+            : MetaTypeVariant<VARIANTTYPE>(
+                  (TYPE(value) == T_NIL) ? QVariant().value<VARIANTTYPE>() : RubyType<VARIANTTYPE>::toVariant(value))
+        {
+        }
 
-            virtual ~RubyMetaTypeVariant() {}
+        virtual ~RubyMetaTypeVariant() { }
     };
 
 }
-
-#endif

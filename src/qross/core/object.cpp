@@ -23,7 +23,7 @@ using namespace Qross;
 
 class Object::Private
 {
-    public:
+public:
 };
 
 Object::Object()
@@ -33,7 +33,7 @@ Object::Object()
 {
 }
 
-Object::Object(const Object &other)
+Object::Object(const Object& other)
     : QSharedData()
     , ErrorInterface()
     , d(new Private)

@@ -44,11 +44,13 @@ int runScriptFile(const QString& scriptfile)
 {
     // Read the scriptfile
     QFile f(scriptfile);
-    if(! f.exists()) {
+    if (!f.exists())
+    {
         std::cerr << "No such scriptfile: " << scriptfile.toLatin1().data() << std::endl;
         return ERROR_NOSUCHFILE;
     }
-    if(! f.open(QIODevice::ReadOnly)) {
+    if (!f.open(QIODevice::ReadOnly))
+    {
         std::cerr << "Failed to open scriptfile: " << scriptfile.toLatin1().data() << std::endl;
         return ERROR_OPENFAILED;
     }
@@ -56,8 +58,9 @@ int runScriptFile(const QString& scriptfile)
     f.close();
 
     // Determinate the matching interpreter
-    Qross::InterpreterInfo* interpreterinfo = Qross::Manager::self().interpreterInfo( Qross::Manager::self().interpreternameForFile(scriptfile) );
-    if(! interpreterinfo) {
+    Qross::InterpreterInfo* interpreterinfo = Qross::Manager::self().interpreterInfo(Qross::Manager::self().interpreternameForFile(scriptfile));
+    if (!interpreterinfo)
+    {
         std::cerr << "No interpreter for file: " << scriptfile.toLatin1().data() << std::endl;
         std::cerr << "Available interpreters: " << Qross::Manager::self().interpreters().join(", ").toLatin1().data() << std::endl;
         return ERROR_NOINTERPRETER;
@@ -65,13 +68,14 @@ int runScriptFile(const QString& scriptfile)
 
     // First we need a Action and fill it.
     Qross::Action* action = new Qross::Action(0 /*no parent*/, QUrl::fromLocalFile(scriptfile));
-    action->setInterpreter( interpreterinfo->interpreterName() );
+    action->setInterpreter(interpreterinfo->interpreterName());
     action->setCode(scriptcode);
 
     // Now execute the Action.
     action->trigger();
 
-    if(action->hadError()) {
+    if (action->hadError())
+    {
         // We had an exception.
         std::cerr << QString("%2\n%1").arg(action->errorTrace()).arg(action->errorMessage()).toLatin1().data() << std::endl;
         delete action;
@@ -82,13 +86,14 @@ int runScriptFile(const QString& scriptfile)
     return ERROR_OK;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     int result = ERROR_OK;
 
     // If no options are defined.
-    if(argc < 2) {
-        std::cout << "Syntax: " << argv [0] << " scriptfile1 [scriptfile2] [scriptfile3] ..." << std::endl;
+    if (argc < 2)
+    {
+        std::cout << "Syntax: " << argv[0] << " scriptfile1 [scriptfile2] [scriptfile3] ..." << std::endl;
         return ERROR_HELP;
     }
 
@@ -96,9 +101,10 @@ int main(int argc, char **argv)
     app = new QApplication(argc, argv);
 
     // Each argument is a scriptfile to open
-    for(int i = 1; i < argc; i++) {
-        result = runScriptFile(argv [i]);
-        if(result != ERROR_OK)
+    for (int i = 1; i < argc; i++)
+    {
+        result = runScriptFile(argv[i]);
+        if (result != ERROR_OK)
             break;
     }
 

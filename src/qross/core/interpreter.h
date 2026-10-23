@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_INTERPRETER_H
-#define QROSS_INTERPRETER_H
+#pragma once
 
 #include "errorinterface.h"
 
@@ -27,7 +26,8 @@
 #include <QtCore/QMap>
 #include <QtCore/QObject>
 
-namespace Qross {
+namespace Qross
+{
 
     // Forward declaration.
     class Manager;
@@ -42,126 +42,126 @@ namespace Qross {
      */
     class QROSSCORE_EXPORT InterpreterInfo
     {
+    public:
+        /**
+         * Each interpreter is able to define options we could
+         * use to manipulate the interpreter behaviour.
+         */
+        class Option
+        {
         public:
-
             /**
-             * Each interpreter is able to define options we could
-             * use to manipulate the interpreter behaviour.
+             * Map of options.
              */
-            class Option
-            {
-                public:
-
-                    /**
-                    * Map of options.
-                    */
-                    typedef QMap< QString, Option* > Map;
-
-                    /**
-                     * Constructor.
-                     *
-                     * \param comment A localized comment that describes
-                     * the option.
-                     * \param value The QVariant value this option has.
-                     */
-                    Option(const QString& comment, const QVariant& value)
-                        : comment(comment), value(value) {}
-
-                    /// A description of the option.
-                    QString comment;
-
-                    /// The value the option has.
-                    QVariant value;
-            };
+            typedef QMap<QString, Option*> Map;
 
             /**
              * Constructor.
              *
-             * \param interpretername The name of the interpreter. The name is
-             * used internaly as unique identifier for the interpreter and
-             * could be for example "python", "ruby" or "javascript".
-             * \param funcPtr A pointer to the entry function within the
-             * library. The entry function each interpreter-backend does
-             * provide looks like this;
-             * \code
-             * typedef void* (*def_interpreter_func)(int version, Qross::InterpreterInfo*);
-             * \endcode
-             * The def_interpreter_func function will be used by Qross to load
-             * the interpreter's library. The passed version is used to be able
-             * to versioning details and we use the QROSS_VERSION defined within
-             * the qrossconfig.h file here.
-             * \param wildcard File wildcard that identifies a by the interpreter
-             * supported scripting files. As example Python does define here
-             * "*.py" while Java does define "*.java *.class".
-             * \param mimetypes The file mimetype that identifies a by the interpreter
-             * supported scripting files. As example Python does define "text/x-python"
-             * here while Ruby defines "application/x-ruby" and Java "application/java".
-             * \param options The optional list of options supported by the interpreter
-             * to configure the backend.
+             * \param comment A localized comment that describes
+             * the option.
+             * \param value The QVariant value this option has.
              */
-            InterpreterInfo(const QString& interpretername, void* funcPtr, const QString& wildcard, const QStringList& mimetypes, const Option::Map& options = Option::Map());
+            Option(const QString& comment, const QVariant& value)
+                : comment(comment)
+                , value(value)
+            {
+            }
 
-            /**
-             * Destructor.
-             */
-            ~InterpreterInfo();
+            /// A description of the option.
+            QString comment;
 
-            /**
-             * \return the name of the interpreter. For example "python" or "kjs".
-             */
-            const QString interpreterName() const;
+            /// The value the option has.
+            QVariant value;
+        };
 
-            /**
-             * \return the file-wildcard used to determinate by this interpreter
-             * used scriptingfiles. Those filter will be used e.g. with
-             * KGlobal::dirs()->findAllResources() as filtermask. For example
-             * python just defines it as "*py".
-             */
-            const QString wildcard() const;
+        /**
+         * Constructor.
+         *
+         * \param interpretername The name of the interpreter. The name is
+         * used internaly as unique identifier for the interpreter and
+         * could be for example "python", "ruby" or "javascript".
+         * \param funcPtr A pointer to the entry function within the
+         * library. The entry function each interpreter-backend does
+         * provide looks like this;
+         * \code
+         * typedef void* (*def_interpreter_func)(int version, Qross::InterpreterInfo*);
+         * \endcode
+         * The def_interpreter_func function will be used by Qross to load
+         * the interpreter's library. The passed version is used to be able
+         * to versioning details and we use the QROSS_VERSION defined within
+         * the qrossconfig.h file here.
+         * \param wildcard File wildcard that identifies a by the interpreter
+         * supported scripting files. As example Python does define here
+         * "*.py" while Java does define "*.java *.class".
+         * \param mimetypes The file mimetype that identifies a by the interpreter
+         * supported scripting files. As example Python does define "text/x-python"
+         * here while Ruby defines "application/x-ruby" and Java "application/java".
+         * \param options The optional list of options supported by the interpreter
+         * to configure the backend.
+         */
+        InterpreterInfo(const QString& interpretername, void* funcPtr, const QString& wildcard, const QStringList& mimetypes, const Option::Map& options = Option::Map());
 
-            /**
-             * List of mimetypes this interpreter supports.
-             * \return QStringList with mimetypes like "application/javascript".
-             */
-            const QStringList mimeTypes() const;
+        /**
+         * Destructor.
+         */
+        ~InterpreterInfo();
 
-            /**
-             * \return true if an \a Option with that \p key exists else false.
-             */
-            bool hasOption(const QString& name) const;
+        /**
+         * \return the name of the interpreter. For example "python" or "kjs".
+         */
+        const QString interpreterName() const;
 
-            /**
-             * \return the option defined with \p name .
-             */
-            Option* option(const QString& name) const;
+        /**
+         * \return the file-wildcard used to determinate by this interpreter
+         * used scriptingfiles. Those filter will be used e.g. with
+         * KGlobal::dirs()->findAllResources() as filtermask. For example
+         * python just defines it as "*py".
+         */
+        const QString wildcard() const;
 
-            /**
-             * \return the reference to the intenal used map with all options.
-             */
-            Option::Map& options();
+        /**
+         * List of mimetypes this interpreter supports.
+         * \return QStringList with mimetypes like "application/javascript".
+         */
+        const QStringList mimeTypes() const;
 
-            /**
-             * \return the value of the option defined with \p name . If there
-             * doesn't exists an option with such a name, the \p defaultvalue
-             * is returned.
-             */
-            const QVariant optionValue(const QString& name, const QVariant& defaultvalue = QVariant()) const;
+        /**
+         * \return true if an \a Option with that \p key exists else false.
+         */
+        bool hasOption(const QString& name) const;
 
-            /**
-             * \return the \a Interpreter instance this \a InterpreterInfo
-             * is the describer for. If the interpreter that implements the
-             * scripting backend isn't loaded yet, this method will trigger
-             * the loading of the interpreter's library. Note that this
-             * method may return NULL if there is no library for that
-             * interpreter installed or if the library is incompatible.
-             */
-            Interpreter* interpreter();
+        /**
+         * \return the option defined with \p name .
+         */
+        Option* option(const QString& name) const;
 
-        private:
-            /// \internal d-pointer class.
-            class Private;
-            /// \internal d-pointer instance.
-            Private* const d;
+        /**
+         * \return the reference to the intenal used map with all options.
+         */
+        Option::Map& options();
+
+        /**
+         * \return the value of the option defined with \p name . If there
+         * doesn't exists an option with such a name, the \p defaultvalue
+         * is returned.
+         */
+        const QVariant optionValue(const QString& name, const QVariant& defaultvalue = QVariant()) const;
+
+        /**
+         * \return the \a Interpreter instance this \a InterpreterInfo
+         * is the describer for. If the interpreter that implements the
+         * scripting backend isn't loaded yet, this method will trigger
+         * the loading of the interpreter's library. Note that this
+         * method may return NULL if there is no library for that
+         * interpreter installed or if the library is incompatible.
+         */
+        Interpreter* interpreter();
+    private:
+        /// \internal d-pointer class.
+        class Private;
+        /// \internal d-pointer instance.
+        Private* const d;
     };
 
     /**
@@ -174,48 +174,45 @@ namespace Qross {
      * class and does provide a factory method to create
      * \a Script implementations.
      */
-    class QROSSCORE_EXPORT Interpreter : public QObject, public ErrorInterface
+    class QROSSCORE_EXPORT Interpreter
+        : public QObject
+        , public ErrorInterface
     {
-            Q_OBJECT
-        public:
+        Q_OBJECT
+    public:
+        /**
+         * Constructor.
+         *
+         * \param info is the \a InterpreterInfo instance
+         *        that describes this interpreter.
+         */
+        explicit Interpreter(InterpreterInfo* info);
 
-            /**
-             * Constructor.
-             *
-             * \param info is the \a InterpreterInfo instance
-             *        that describes this interpreter.
-             */
-            explicit Interpreter(InterpreterInfo* info);
+        /**
+         * Destructor.
+         */
+        virtual ~Interpreter();
 
-            /**
-             * Destructor.
-             */
-            virtual ~Interpreter();
+        /**
+         * \return the \a InterpreterInfo that represents
+         * this \a Interpreter .
+         */
+        InterpreterInfo* interpreterInfo() const;
 
-            /**
-             * \return the \a InterpreterInfo that represents
-             * this \a Interpreter .
-             */
-            InterpreterInfo* interpreterInfo() const;
-
-            /**
-             * Create and return a new interpreter dependent
-             * \a Script instance.
-             *
-             * \param Action The \a Action
-             *        to use for the \a Script instance.
-             * \return The from \a Script inherited instance.
-             */
-            virtual Script* createScript(Action* Action) = 0;
-
-        private:
-            /// \internal d-pointer class.
-            class Private;
-            /// \internal d-pointer instance.
-            Private* const d;
+        /**
+         * Create and return a new interpreter dependent
+         * \a Script instance.
+         *
+         * \param Action The \a Action
+         *        to use for the \a Script instance.
+         * \return The from \a Script inherited instance.
+         */
+        virtual Script* createScript(Action* Action) = 0;
+    private:
+        /// \internal d-pointer class.
+        class Private;
+        /// \internal d-pointer instance.
+        Private* const d;
     };
 
 }
-
-#endif
-

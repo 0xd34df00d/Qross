@@ -34,82 +34,89 @@
 
 using namespace Qross;
 
-namespace Qross {
+namespace Qross
+{
 
     /// \internal d-pointer class.
     class Action::Private
     {
-        public:
+    public:
+        /**
+         * The \a Script instance the \a Action uses if initialized. It will
+         * be NULL as long as we didn't initialized it what will be done on
+         * demand.
+         */
+        Script* script;
 
-            /**
-            * The \a Script instance the \a Action uses if initialized. It will
-            * be NULL as long as we didn't initialized it what will be done on
-            * demand.
-            */
-            Script* script;
+        /**
+         * The version number this \a Action has. Those version number got
+         * used internaly to deal with different releases of scripts.
+         */
+        int version;
 
-            /**
-            * The version number this \a Action has. Those version number got
-            * used internaly to deal with different releases of scripts.
-            */
-            int version;
+        /**
+         * The optional description to provide some more details about the
+         * Action to the user.
+         */
+        QString description;
 
-            /**
-            * The optional description to provide some more details about the
-            * Action to the user.
-            */
-            QString description;
+        /**
+         * The name of the icon.
+         */
+        QString iconname;
 
-            /**
-            * The name of the icon.
-            */
-            QString iconname;
+        /**
+         * The scripting code.
+         */
+        QByteArray code;
 
-            /**
-            * The scripting code.
-            */
-            QByteArray code;
+        /**
+         * The name of the interpreter. This could be something
+         * like for example "python" for the python binding.
+         */
+        QString interpretername;
 
-            /**
-            * The name of the interpreter. This could be something
-            * like for example "python" for the python binding.
-            */
-            QString interpretername;
+        /**
+         * The name of the scriptfile that should be executed. Those
+         * scriptfile will be readed and the content will be used to
+         * set the scripting code and, if not defined, the used
+         * interpreter.
+         */
+        QString scriptfile;
 
-            /**
-            * The name of the scriptfile that should be executed. Those
-            * scriptfile will be readed and the content will be used to
-            * set the scripting code and, if not defined, the used
-            * interpreter.
-            */
-            QString scriptfile;
+        /**
+         * The path list where the \a Script may be located.
+         * \todo after BIC break: don't keep it all the time,
+         * as it is now passed to [to|from]DomElement
+         */
+        QStringList searchpath;
 
-            /**
-            * The path list where the \a Script may be located.
-            * \todo after BIC break: don't keep it all the time,
-            * as it is now passed to [to|from]DomElement
-            */
-            QStringList searchpath;
+        /**
+         * Map of options that overwritte the \a InterpreterInfo::Option::Map
+         * standard options.
+         */
+        QMap<QString, QVariant> options;
 
-            /**
-            * Map of options that overwritte the \a InterpreterInfo::Option::Map
-            * standard options.
-            */
-            QMap< QString, QVariant > options;
-
-            Private() : script(0), version(0) {}
+        Private()
+            : script(0)
+            , version(0)
+        {
+        }
     };
 
 }
 
-enum InitOptions{Enable=1};
-void static init(Action* th, const QString& name, int options=0)
+enum InitOptions
 {
-    th->setEnabled(options&Enable);
+    Enable = 1
+};
+void static init(Action* th, const QString& name, int options = 0)
+{
+    th->setEnabled(options & Enable);
     th->setObjectName(name);
-    #ifdef QROSS_ACTION_DEBUG
-        qrossdebug( QString("Action::Action(QObject*,QString,QDir) Ctor name='%1'").arg(th->objectName()) );
-    #endif
+#ifdef QROSS_ACTION_DEBUG
+    qrossdebug(QString("Action::Action(QObject*,QString,QDir) Ctor name='%1'").arg(th->objectName()));
+#endif
     QObject::connect(th, SIGNAL(triggered(bool)), th, SLOT(slotTriggered()));
 }
 
@@ -117,37 +124,37 @@ Action::Action(QObject* parent, const QString& name, const QDir& packagepath)
     : QAction(parent)
     , ChildrenInterface()
     , ErrorInterface()
-    , d( new Private() )
+    , d(new Private())
 {
-    init(this,name);
-    d->searchpath=QStringList(packagepath.absolutePath());
+    init(this, name);
+    d->searchpath = QStringList(packagepath.absolutePath());
 }
 
 Action::Action(QObject* parent, const QUrl& url)
     : QAction(parent)
     , ChildrenInterface()
     , ErrorInterface()
-    , d( new Private() )
+    , d(new Private())
 {
-    init(this,url.path(),Enable);
-    QFileInfo fi( url.toLocalFile() );
-    setText( fi.fileName() );
-    setFile( url.toLocalFile() );
+    init(this, url.path(), Enable);
+    QFileInfo fi(url.toLocalFile());
+    setText(fi.fileName());
+    setFile(url.toLocalFile());
 }
 
 Action::~Action()
 {
-    #ifdef QROSS_ACTION_DEBUG
-        qrossdebug( QString("Action::~Action() Dtor name='%1'").arg(objectName()) );
-    #endif
+#ifdef QROSS_ACTION_DEBUG
+    qrossdebug(QString("Action::~Action() Dtor name='%1'").arg(objectName()));
+#endif
     finalize();
-    ActionCollection *coll = qobject_cast<ActionCollection*>(parent());
-    if ( coll ) {
+    ActionCollection* coll = qobject_cast<ActionCollection*>(parent());
+    if (coll)
+    {
         coll->removeAction(this);
     }
     delete d;
 }
-
 
 void Action::fromDomElement(const QDomElement& element)
 {
@@ -156,49 +163,58 @@ void Action::fromDomElement(const QDomElement& element)
 
 void Action::fromDomElement(const QDomElement& element, const QStringList& searchPath)
 {
-    if( element.isNull() )
+    if (element.isNull())
         return;
 
     QString file = element.attribute("file");
-    if( ! file.isEmpty() ) {
-        if( QFileInfo(file).exists() ) {
+    if (!file.isEmpty())
+    {
+        if (QFileInfo(file).exists())
+        {
             setFile(file);
         }
-        else {
-            for (const QString& packagepath : searchPath) {
+        else
+        {
+            for (const QString& packagepath : searchPath)
+            {
                 QFileInfo fi(QDir(packagepath), file);
-                if( fi.exists() ) {
-                    setFile( fi.absoluteFilePath() );
+                if (fi.exists())
+                {
+                    setFile(fi.absoluteFilePath());
                     break;
                 }
             }
         }
     }
 
-    d->version = QVariant( element.attribute("version",QString::number(d->version)) ).toInt();
+    d->version = QVariant(element.attribute("version", QString::number(d->version))).toInt();
 
-    setText( tr( element.attribute("text").toUtf8() ) );
-    setDescription( tr( element.attribute("comment").toUtf8() ) );
-    setEnabled( true );
-    setInterpreter( element.attribute("interpreter") );
-    setEnabled( QVariant(element.attribute("enabled","true")).toBool() && isEnabled() );
+    setText(tr(element.attribute("text").toUtf8()));
+    setDescription(tr(element.attribute("comment").toUtf8()));
+    setEnabled(true);
+    setInterpreter(element.attribute("interpreter"));
+    setEnabled(QVariant(element.attribute("enabled", "true")).toBool() && isEnabled());
 
     QString icon = element.attribute("icon");
-    setIconName( icon );
+    setIconName(icon);
 
     const QString code = element.attribute("code");
-    if( ! code.isNull() )
+    if (!code.isNull())
         setCode(code.toUtf8());
 
-    for(QDomNode node = element.firstChild(); ! node.isNull(); node = node.nextSibling()) {
+    for (QDomNode node = element.firstChild(); !node.isNull(); node = node.nextSibling())
+    {
         QDomElement e = node.toElement();
-        if( ! e.isNull() ) {
-            if( e.tagName() == "property" ) {
+        if (!e.isNull())
+        {
+            if (e.tagName() == "property")
+            {
                 const QString n = e.attribute("name", QString());
-                if( ! n.isNull() ) {
-                    #ifdef QROSS_ACTION_DEBUG
-                        qrossdebug(QString("Action::readDomElement: Setting property name=%1 value=%2").arg(n).arg(e.text()));
-                    #endif
+                if (!n.isNull())
+                {
+#ifdef QROSS_ACTION_DEBUG
+                    qrossdebug(QString("Action::readDomElement: Setting property name=%1 value=%2").arg(n).arg(e.text()));
+#endif
                     setProperty(n.toLatin1().constData(), QVariant(e.text()));
                 }
             }
@@ -216,36 +232,39 @@ QDomElement Action::toDomElement(const QStringList& searchPath) const
     QDomDocument doc;
     QDomElement e = doc.createElement("script");
     e.setAttribute("name", objectName());
-    if( d->version > 0 )
+    if (d->version > 0)
         e.setAttribute("version", QString::number(d->version));
-    if( ! text().isNull() )
+    if (!text().isNull())
         e.setAttribute("text", text());
-    if( ! description().isNull() )
+    if (!description().isNull())
         e.setAttribute("comment", description());
-    if( ! iconName().isNull() )
+    if (!iconName().isNull())
         e.setAttribute("icon", iconName());
-    if( ! isEnabled() )
+    if (!isEnabled())
         e.setAttribute("enabled", "false");
-    if( ! interpreter().isNull() )
+    if (!interpreter().isNull())
         e.setAttribute("interpreter", interpreter());
 
-
-    QString fileName=file();
-    if (!searchPath.isEmpty()) {
-        //fileName=QDir(searchPath.first()).relativeFilePath(fileName); //prefer absname if it is short?
-        for (const QString& packagepath : searchPath) {
-            QString nfn=QDir(packagepath).relativeFilePath(file());
-            if (nfn.length()<fileName.length())
-                fileName=nfn;
+    QString fileName = file();
+    if (!searchPath.isEmpty())
+    {
+        // fileName=QDir(searchPath.first()).relativeFilePath(fileName); //prefer absname if it is short?
+        for (const QString& packagepath : searchPath)
+        {
+            QString nfn = QDir(packagepath).relativeFilePath(file());
+            if (nfn.length() < fileName.length())
+                fileName = nfn;
         }
     }
 
-    if( ! fileName.isNull() ) {
+    if (!fileName.isNull())
+    {
         e.setAttribute("file", fileName);
     }
-    
-    QList<QByteArray> props=dynamicPropertyNames();
-    for (const QByteArray& prop : props) {
+
+    QList<QByteArray> props = dynamicPropertyNames();
+    for (const QByteArray& prop : props)
+    {
         QDomElement p = doc.createElement("property");
         p.setAttribute("name", QString::fromLatin1(prop));
         p.appendChild(doc.createTextNode(property(prop.constData()).toString()));
@@ -294,7 +313,7 @@ QString Action::iconName() const
 
 void Action::setIconName(const QString& iconname)
 {
-    setIcon( QIcon(iconname) );
+    setIcon(QIcon(iconname));
     d->iconname = iconname;
     Q_EMIT dataChanged(this);
     Q_EMIT updated();
@@ -319,7 +338,8 @@ QByteArray Action::code() const
 
 void Action::setCode(const QByteArray& code)
 {
-    if( d->code != code ) {
+    if (d->code != code)
+    {
         finalize();
         d->code = code;
         Q_EMIT dataChanged(this);
@@ -334,12 +354,13 @@ QString Action::interpreter() const
 
 void Action::setInterpreter(const QString& interpretername)
 {
-    if( d->interpretername != interpretername ) {
+    if (d->interpretername != interpretername)
+    {
         finalize();
         d->interpretername = interpretername;
-        setEnabled( Manager::self().interpreters().contains(interpretername) );
+        setEnabled(Manager::self().interpreters().contains(interpretername));
         if (!isEnabled())
-            qrosswarning("Action::setInterpreter: interpreter not found: "+interpretername);
+            qrosswarning("Action::setInterpreter: interpreter not found: " + interpretername);
         Q_EMIT dataChanged(this);
         Q_EMIT updated();
     }
@@ -352,18 +373,21 @@ QString Action::file() const
 
 bool Action::setFile(const QString& scriptfile)
 {
-    if( d->scriptfile != scriptfile ) {
+    if (d->scriptfile != scriptfile)
+    {
         finalize();
-        if ( scriptfile.isNull() ) {
-            if( ! d->scriptfile.isNull() )
+        if (scriptfile.isNull())
+        {
+            if (!d->scriptfile.isNull())
                 d->interpretername.clear();
             d->scriptfile.clear();
             d->searchpath.clear();
         }
-        else {
+        else
+        {
             d->scriptfile = scriptfile;
             d->interpretername = Manager::self().interpreternameForFile(scriptfile);
-            if( d->interpretername.isNull() )
+            if (d->interpretername.isNull())
                 return false;
         }
     }
@@ -372,7 +396,7 @@ bool Action::setFile(const QString& scriptfile)
 
 QString Action::currentPath() const
 {
-    return file().isEmpty()?QString():QFileInfo(file()).absolutePath();//obey Qt docs and don't cheat
+    return file().isEmpty() ? QString() : QFileInfo(file()).absolutePath(); // obey Qt docs and don't cheat
 }
 
 QVariantMap Action::options() const
@@ -380,12 +404,12 @@ QVariantMap Action::options() const
     return d->options;
 }
 
-void Action::addQObject(QObject* obj, const QString &name)
+void Action::addQObject(QObject* obj, const QString& name)
 {
     this->addObject(obj, name);
 }
 
-QObject* Action::qobject(const QString &name) const
+QObject* Action::qobject(const QString& name) const
 {
     return this->object(name);
 }
@@ -397,28 +421,35 @@ QStringList Action::qobjectNames() const
 
 QVariant Action::option(const QString& name, const QVariant& defaultvalue)
 {
-    if(d->options.contains(name))
+    if (d->options.contains(name))
         return d->options[name];
-    InterpreterInfo* info = Manager::self().interpreterInfo( d->interpretername );
+    InterpreterInfo* info = Manager::self().interpreterInfo(d->interpretername);
     return info ? info->optionValue(name, defaultvalue) : defaultvalue;
 }
 
 bool Action::setOption(const QString& name, const QVariant& value)
 {
-    InterpreterInfo* info = Manager::self().interpreterInfo( d->interpretername );
-    if(info) {
-        if(info->hasOption(name)) {
+    InterpreterInfo* info = Manager::self().interpreterInfo(d->interpretername);
+    if (info)
+    {
+        if (info->hasOption(name))
+        {
             d->options.insert(name, value);
             return true;
-        } else qrosswarning( QString("Qross::Action::setOption(%1, %2): No such option").arg(name).arg(value.toString()) );
-    } else qrosswarning( QString("Qross::Action::setOption(%1, %2): No such interpreterinfo").arg(name).arg(value.toString()) );
+        }
+        else
+            qrosswarning(QString("Qross::Action::setOption(%1, %2): No such option").arg(name).arg(value.toString()));
+    }
+    else
+        qrosswarning(QString("Qross::Action::setOption(%1, %2): No such interpreterinfo").arg(name).arg(value.toString()));
     return false;
 }
 
 QStringList Action::functionNames()
 {
-    if(! d->script) {
-        if(! initialize())
+    if (!d->script)
+    {
+        if (!initialize())
             return QStringList();
     }
     return d->script->functionNames();
@@ -426,8 +457,9 @@ QStringList Action::functionNames()
 
 QVariant Action::callFunction(const QString& name, const QVariantList& args)
 {
-    if(! d->script) {
-        if(! initialize())
+    if (!d->script)
+    {
+        if (!initialize())
             return QVariant();
     }
     return d->script->callFunction(name, args);
@@ -435,8 +467,9 @@ QVariant Action::callFunction(const QString& name, const QVariantList& args)
 
 QVariant Action::evaluate(const QByteArray& code)
 {
-    if(! d->script) {
-        if(! initialize())
+    if (!d->script)
+    {
+        if (!initialize())
             return QVariant();
     }
     return d->script->evaluate(code);
@@ -446,17 +479,21 @@ bool Action::initialize()
 {
     finalize();
 
-    if( ! d->scriptfile.isNull() ) {
-        QFile f( d->scriptfile );
-        if( ! f.exists() ) {
+    if (!d->scriptfile.isNull())
+    {
+        QFile f(d->scriptfile);
+        if (!f.exists())
+        {
             setError(tr("Scriptfile \"%1\" does not exist.").arg(d->scriptfile));
             return false;
         }
-        if( d->interpretername.isNull() ) {
+        if (d->interpretername.isNull())
+        {
             setError(tr("Failed to determine interpreter for scriptfile \"%1\"").arg(d->scriptfile));
             return false;
         }
-        if( ! f.open(QIODevice::ReadOnly) ) {
+        if (!f.open(QIODevice::ReadOnly))
+        {
             setError(tr("Failed to open scriptfile \"%1\"").arg(d->scriptfile));
             return false;
         }
@@ -465,9 +502,10 @@ bool Action::initialize()
     }
 
     Interpreter* interpreter = Manager::self().interpreter(d->interpretername);
-    if( ! interpreter ) {
+    if (!interpreter)
+    {
         InterpreterInfo* info = Manager::self().interpreterInfo(d->interpretername);
-        if( info )
+        if (info)
             setError(tr("Failed to load interpreter \"%1\"").arg(d->interpretername));
         else
             setError(tr("No such interpreter \"%1\"").arg(d->interpretername));
@@ -475,12 +513,14 @@ bool Action::initialize()
     }
 
     d->script = interpreter->createScript(this);
-    if( ! d->script ) {
+    if (!d->script)
+    {
         setError(tr("Failed to create script for interpreter \"%1\"").arg(d->interpretername));
         return false;
     }
 
-    if( d->script->hadError() ) {
+    if (d->script->hadError())
+    {
         setError(d->script);
         finalize();
         return false;
@@ -492,7 +532,7 @@ bool Action::initialize()
 
 void Action::finalize()
 {
-    if( d->script )
+    if (d->script)
         Q_EMIT finalized(this);
     delete d->script;
     d->script = 0;
@@ -505,32 +545,36 @@ bool Action::isFinalized() const
 
 void Action::slotTriggered()
 {
-    #ifdef QROSS_ACTION_DEBUG
-        qrossdebug( QString("Action::slotTriggered() name=%1").arg(objectName()) );
-    #endif
+#ifdef QROSS_ACTION_DEBUG
+    qrossdebug(QString("Action::slotTriggered() name=%1").arg(objectName()));
+#endif
 
     Q_EMIT started(this);
 
-    if( ! d->script ) {
-        if( ! initialize() )
-            Q_ASSERT( hadError() );
+    if (!d->script)
+    {
+        if (!initialize())
+            Q_ASSERT(hadError());
     }
 
-    if( hadError() ) {
-        #ifdef QROSS_ACTION_DEBUG
-            qrossdebug( QString("Action::slotTriggered() on init, errorMessage=%2").arg(errorMessage()) );
-        #endif
+    if (hadError())
+    {
+#ifdef QROSS_ACTION_DEBUG
+        qrossdebug(QString("Action::slotTriggered() on init, errorMessage=%2").arg(errorMessage()));
+#endif
     }
-    else {
+    else
+    {
         d->script->execute();
-        if( d->script->hadError() ) {
-            #ifdef QROSS_ACTION_DEBUG
-                qrossdebug( QString("Action::slotTriggered() after exec, errorMessage=%2").arg(errorMessage()) );
-            #endif
+        if (d->script->hadError())
+        {
+#ifdef QROSS_ACTION_DEBUG
+            qrossdebug(QString("Action::slotTriggered() after exec, errorMessage=%2").arg(errorMessage()));
+#endif
             setError(d->script);
-            //emit finished(this);
+            // emit finished(this);
             finalize();
-            //return;
+            // return;
         }
     }
 

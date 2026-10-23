@@ -17,12 +17,12 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_WRAPPERINTERFACE_H
-#define QROSS_WRAPPERINTERFACE_H
+#pragma once
 
 #include "qrossconfig.h"
 
-namespace Qross {
+namespace Qross
+{
 
     /**
      * Wrapper-class used to provide handlers for custom types.
@@ -72,24 +72,21 @@ namespace Qross {
      */
     class QROSSCORE_EXPORT WrapperInterface
     {
-        public:
+    public:
+        /**
+         * Destructor.
+         */
+        virtual ~WrapperInterface();
 
-            /**
-             * Destructor.
-             */
-            virtual ~WrapperInterface();
+        /**
+         * This method got called by Qross if the wrapper-instance
+         * got passed to a C++ slot. It is recommed to return here
+         * the wrapped instance, but you don't need to.
+         */
+        virtual void* wrappedObject() const = 0;
 
-            /**
-             * This method got called by Qross if the wrapper-instance
-             * got passed to a C++ slot. It is recommed to return here
-             * the wrapped instance, but you don't need to.
-             */
-            virtual void* wrappedObject() const = 0;
-
-            //void wrapperConstructed() {}
-            //void wrapperDestroyed() {}
+        // void wrapperConstructed() {}
+        // void wrapperDestroyed() {}
     };
 
 }
-
-#endif

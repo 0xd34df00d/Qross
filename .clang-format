@@ -38,6 +38,7 @@ PackConstructorInitializers: Never
 SpaceBeforeParens: ControlStatements
 SpaceAfterTemplateKeyword: false
 SortIncludes: false
+AlignEscapedNewlines: DontAlign
 PointerAlignment: Left
 
 StatementMacros:

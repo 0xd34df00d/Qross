@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_ACTIONCOLLECTION_H
-#define QROSS_ACTIONCOLLECTION_H
+#pragma once
 
 #include "qrossconfig.h"
 #include "action.h"
@@ -29,7 +28,8 @@
 class QDomElement;
 class QIODevice;
 
-namespace Qross {
+namespace Qross
+{
 
     /**
      * The ActionCollection class manages collections of \a Action instances.
@@ -44,205 +44,196 @@ namespace Qross {
      */
     class QROSSCORE_EXPORT ActionCollection : public QObject
     {
-            Q_OBJECT
+        Q_OBJECT
+    public:
+        /**
+         * Constructor.
+         *
+         * \param name The objectName the ActionCollection has.
+         * \param parent The parent ActionCollection this
+         * ActionCollection will be child of. If parent is not
+         * NULL, this \a ActionCollection instance will register
+         * itself as child of the parent \p parent by using the
+         * \a setParentCollection method.
+         */
+        explicit ActionCollection(const QString& name, ActionCollection* parent = 0);
 
-        public:
+        /**
+         * Destructor.
+         */
+        virtual ~ActionCollection();
 
-           /**
-             * Constructor.
-             *
-             * \param name The objectName the ActionCollection has.
-             * \param parent The parent ActionCollection this
-             * ActionCollection will be child of. If parent is not
-             * NULL, this \a ActionCollection instance will register
-             * itself as child of the parent \p parent by using the
-             * \a setParentCollection method.
-             */
-            explicit ActionCollection(const QString& name, ActionCollection* parent = 0);
+        /**
+         * \return the objectName for this ActionCollection.
+         */
+        QString name() const;
 
-            /**
-             * Destructor.
-             */
-            virtual ~ActionCollection();
+        /**
+         * \return the display text
+         */
+        QString text() const;
 
-            /**
-             * \return the objectName for this ActionCollection.
-             */
-            QString name() const;
+        /**
+         * Set the display text to \p text .
+         */
+        void setText(const QString& text);
 
-            /**
-             * \return the display text
-             */
-            QString text() const;
+        /**
+         * \return the optional description for this ActionCollection.
+         */
+        QString description() const;
 
-            /**
-             * Set the display text to \p text .
-             */
-            void setText(const QString& text);
+        /**
+         * Set the optional description for this ActionCollection.
+         */
+        void setDescription(const QString& description);
 
-            /**
-             * \return the optional description for this ActionCollection.
-             */
-            QString description() const;
+        /**
+         * \return the name of the icon.
+         */
+        QString iconName() const;
 
-            /**
-             * Set the optional description for this ActionCollection.
-             */
-            void setDescription(const QString& description);
+        /**
+         * Set the name of the icon to \p iconname .
+         */
+        void setIconName(const QString& iconname);
 
-            /**
-             * \return the name of the icon.
-             */
-            QString iconName() const;
+        /**
+         * \return the icon defined with \p setIconName() .
+         */
+        QIcon icon() const;
 
-            /**
-             * Set the name of the icon to \p iconname .
-             */
-            void setIconName(const QString& iconname);
+        /**
+         * Return the enable this ActionCollection has.
+         */
+        bool isEnabled() const;
 
-            /**
-             * \return the icon defined with \p setIconName() .
-             */
-            QIcon icon() const;
+        /**
+         * Enable or disable this ActionCollection.
+         */
+        void setEnabled(bool enabled);
 
-            /**
-             * Return the enable this ActionCollection has.
-             */
-            bool isEnabled() const;
+        /**
+         * \return the parent \a ActionCollection instance this
+         * \collection is child of or NULL if this collection
+         * does not have a parent.
+         */
+        ActionCollection* parentCollection() const;
+        /// Set the parent to @p parent. NOTE: Do not use setParent().
+        void setParentCollection(ActionCollection* parent);
+        /**
+         * \return true if this collection has a child \a ActionCollection
+         * instance which objectName is \p name .
+         */
+        bool hasCollection(const QString& name) const;
 
-            /**
-             * Enable or disable this ActionCollection.
-             */
-            void setEnabled(bool enabled);
+        /**
+         * \return the \a ActionCollection instance which objectName is
+         * \p name or NULL if there exists no such \a ActionCollection .
+         */
+        ActionCollection* collection(const QString& name) const;
 
-            /**
-             * \return the parent \a ActionCollection instance this
-             * \collection is child of or NULL if this collection
-             * does not have a parent.
-             */
-            ActionCollection* parentCollection() const;
-            /// Set the parent to @p parent. NOTE: Do not use setParent().
-            void setParentCollection( ActionCollection *parent );
-            /**
-             * \return true if this collection has a child \a ActionCollection
-             * instance which objectName is \p name .
-             */
-            bool hasCollection(const QString& name) const;
+        /**
+         * \return a list of names of child \a ActionCollection instances
+         * this collection has
+         */
+        QStringList collections() const;
 
-            /**
-             * \return the \a ActionCollection instance which objectName is
-             * \p name or NULL if there exists no such \a ActionCollection .
-             */
-            ActionCollection* collection(const QString& name) const;
+        QList<Action*> actions() const;
 
-            /**
-             * \return a list of names of child \a ActionCollection instances
-             * this collection has
-             */
-            QStringList collections() const;
+        /**
+         * \return action with given name or 0 if it wasn't found
+         */
+        Action* action(const QString& name) const;
+        void addAction(Action* action);
+        void addAction(const QString& name, Action* action);
+        void removeAction(const QString& name);
+        void removeAction(Action* action);
 
-            QList<Action*> actions() const;
+        /**
+         * Load child \a Action and \a ActionCollection instances this
+         * collection has from the \p element .
+         *
+         * \param element The QDomElement that contains the XML.
+         * \param directory The current directory used for relative paths
+         * defined within a script-tag for the file-attribute. If the
+         * directory is QDir() relative paths are not resolved.
+         * \return true on success else false.
+         */
+        bool readXml(const QDomElement& element, const QDir& directory = QDir());
+        bool readXml(const QDomElement& element, const QStringList& searchPath /* = QStringList()*/);
 
-            /**
-             * \return action with given name or 0 if it wasn't found
-             */
-            Action* action(const QString& name) const;
-            void addAction(Action* action);
-            void addAction(const QString& name, Action* action);
-            void removeAction(const QString& name);
-            void removeAction(Action* action);
+        /**
+         * Read XML from the QIODevice \p device .
+         */
+        bool readXml(QIODevice* device, const QDir& directory = QDir());
+        bool readXml(QIODevice* device, const QStringList& searchPath /* = QStringList()*/);
 
-            /**
-             * Load child \a Action and \a ActionCollection instances this
-             * collection has from the \p element .
-             *
-             * \param element The QDomElement that contains the XML.
-             * \param directory The current directory used for relative paths
-             * defined within a script-tag for the file-attribute. If the
-             * directory is QDir() relative paths are not resolved.
-             * \return true on success else false.
-             */
-            bool readXml(const QDomElement& element, const QDir& directory = QDir());
-            bool readXml(const QDomElement& element, const QStringList& searchPath/* = QStringList()*/);
+        /**
+         * Read the XML from the file \p file .
+         *
+         * \param file The existing XML file that should be read.
+         * \return true if reading was successful else false.
+         */
+        bool readXmlFile(const QString& file);
 
-            /**
-             * Read XML from the QIODevice \p device .
-             */
-            bool readXml(QIODevice* device, const QDir& directory = QDir());
-            bool readXml(QIODevice* device, const QStringList& searchPath/* = QStringList()*/);
+        /**
+         * \return a QDomElement that represents the child \a Action
+         * and \a ActionCollection instances this collection has.
+         */
+        QDomElement writeXml();
+        QDomElement writeXml(const QStringList& searchPath /* = QStringList()*/);
 
-            /**
-             * Read the XML from the file \p file .
-             *
-             * \param file The existing XML file that should be read.
-             * \return true if reading was successful else false.
-             */
-            bool readXmlFile(const QString& file);
+        /**
+         * Write XML to the QIODevice \p device and use a space-idention
+         * of \p indent for the XML.
+         */
+        bool writeXml(QIODevice* device, int indent = 2);
+        bool writeXml(QIODevice* device, int indent /* = 2*/, const QStringList& searchPath /* = QStringList()*/);
 
-            /**
-             * \return a QDomElement that represents the child \a Action
-             * and \a ActionCollection instances this collection has.
-             */
-            QDomElement writeXml();
-            QDomElement writeXml(const QStringList& searchPath/* = QStringList()*/);
+    Q_SIGNALS:
 
+        /**
+         * This signal is emitted if the content of the ActionCollection
+         * was changed.
+         */
+        void updated();
 
-            /**
-             * Write XML to the QIODevice \p device and use a space-idention
-             * of \p indent for the XML.
-             */
-            bool writeXml(QIODevice* device, int indent = 2);
-            bool writeXml(QIODevice* device, int indent/* = 2*/, const QStringList& searchPath/* = QStringList()*/);
+        /// This signal is emitted when the data of a child action is changed
+        void dataChanged(Action*);
+        /// This signal is emitted when the data of the ActionCollection is changed
+        void dataChanged(ActionCollection*);
 
+        /// This signal is emitted just before @p child is added to @p parent
+        void collectionToBeInserted(ActionCollection* child, ActionCollection* parent);
+        /// This signal is emitted after @p child has been added to @p parent
+        void collectionInserted(ActionCollection* child, ActionCollection* parent);
+        /// This signal is emitted before @p child is removed from @p parent
+        void collectionToBeRemoved(ActionCollection* child, ActionCollection* parent);
+        /// This signal is emitted after @p child has been removed from @p parent
+        void collectionRemoved(ActionCollection* child, ActionCollection* parent);
 
-        Q_SIGNALS:
+        /// This signal is emitted just before @p child is added to @p parent
+        void actionToBeInserted(Action* child, ActionCollection* parent);
+        /// This signal is emitted after @p child has been added to @p parent
+        void actionInserted(Action* child, ActionCollection* parent);
+        /// This signal is emitted before @p child is removed from @p parent
+        void actionToBeRemoved(Action* child, ActionCollection* parent);
+        /// This signal is emitted after @p child has been removed from @p parent
+        void actionRemoved(Action* child, ActionCollection* parent);
+    protected:
+        void registerCollection(ActionCollection* collection);
+        void unregisterCollection(const QString& name);
+        void connectSignals(ActionCollection* collection, bool conn);
+        void connectSignals(Action* collection, bool conn);
 
-            /**
-             * This signal is emitted if the content of the ActionCollection
-             * was changed.
-             */
-            void updated();
-
-            /// This signal is emitted when the data of a child action is changed
-            void dataChanged(Action*);
-            /// This signal is emitted when the data of the ActionCollection is changed
-            void dataChanged(ActionCollection*);
-
-            /// This signal is emitted just before @p child is added to @p parent
-            void collectionToBeInserted(ActionCollection* child, ActionCollection* parent);
-            /// This signal is emitted after @p child has been added to @p parent
-            void collectionInserted(ActionCollection* child, ActionCollection* parent);
-            /// This signal is emitted before @p child is removed from @p parent
-            void collectionToBeRemoved(ActionCollection* child, ActionCollection* parent);
-            /// This signal is emitted after @p child has been removed from @p parent
-            void collectionRemoved(ActionCollection* child, ActionCollection* parent);
-
-            /// This signal is emitted just before @p child is added to @p parent
-            void actionToBeInserted(Action* child, ActionCollection* parent);
-            /// This signal is emitted after @p child has been added to @p parent
-            void actionInserted(Action* child, ActionCollection* parent);
-            /// This signal is emitted before @p child is removed from @p parent
-            void actionToBeRemoved(Action* child, ActionCollection* parent);
-            /// This signal is emitted after @p child has been removed from @p parent
-            void actionRemoved(Action* child, ActionCollection* parent);
-
-        protected:
-            void registerCollection(ActionCollection* collection);
-            void unregisterCollection(const QString& name);
-            void connectSignals(ActionCollection* collection, bool conn);
-            void connectSignals(Action* collection, bool conn);
-
-        private Q_SLOTS:
-            void emitUpdated();
-
-        private:
-            /// \internal d-pointer class.
-            class Private;
-            /// \internal d-pointer instance.
-            Private* const d;
+    private Q_SLOTS:
+        void emitUpdated();
+    private:
+        /// \internal d-pointer class.
+        class Private;
+        /// \internal d-pointer instance.
+        Private* const d;
     };
 
 }
-
-#endif
-

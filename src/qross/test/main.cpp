@@ -43,22 +43,24 @@
 #define ERROR_NOINTERPRETER 4
 #define ERROR_EXCEPTION 5
 
-QApplication *app = 0;
+QApplication* app = 0;
 
 QString getInterpreterName(const QString& scriptfile)
 {
-    Qross::InterpreterInfo* interpreterinfo = Qross::Manager::self().interpreterInfo( Qross::Manager::self().interpreternameForFile(scriptfile) );
+    Qross::InterpreterInfo* interpreterinfo = Qross::Manager::self().interpreterInfo(Qross::Manager::self().interpreternameForFile(scriptfile));
     return interpreterinfo ? interpreterinfo->interpreterName() : QString();
 }
 
 int readFile(const QString& scriptfile, QByteArray& content)
 {
     QFile f(scriptfile);
-    if(! f.exists()) {
+    if (!f.exists())
+    {
         std::cerr << "No such scriptfile: " << scriptfile.toLatin1().data() << std::endl;
         return ERROR_NOSUCHFILE;
     }
-    if(! f.open(QIODevice::ReadOnly)) {
+    if (!f.open(QIODevice::ReadOnly))
+    {
         std::cerr << "Failed to open scriptfile: " << scriptfile.toLatin1().data() << std::endl;
         return ERROR_OPENFAILED;
     }
@@ -72,12 +74,13 @@ int runScriptFile(const QString& scriptfile)
     // Read the scriptfile
     QByteArray scriptcode;
     int result = readFile(scriptfile, scriptcode);
-    if(result != ERROR_OK)
+    if (result != ERROR_OK)
         return result;
 
     // Determinate the matching interpreter
     QString interpretername = getInterpreterName(scriptfile);
-    if( interpretername.isNull() ) {
+    if (interpretername.isNull())
+    {
         std::cerr << "No interpreter for scriptfile: " << scriptfile.toLatin1().data() << std::endl;
         std::cerr << "Available interpreters: " << Qross::Manager::self().interpreters().join(", ").toLatin1().data() << std::endl;
         return ERROR_NOINTERPRETER;
@@ -86,25 +89,26 @@ int runScriptFile(const QString& scriptfile)
     // First we need a Action and fill it.
     Qross::Action* action = new Qross::Action(0 /*no parent*/, QUrl::fromLocalFile(scriptfile));
     action->setObjectName("MyAction");
-    action->setInterpreter( interpretername );
-    action->setCode( scriptcode );
+    action->setInterpreter(interpretername);
+    action->setCode(scriptcode);
 
     // Create the testobject instances.
     TestObject* testobj3 = new TestObject(action, "TestObject3");
     TestObject* testobj4 = new TestObject(action, "TestObject4");
 
     // Publish other both testobject instance to the script.
-    action->addObject( testobj3, "TestObject3", Qross::ChildrenInterface::AutoConnectSignals );
-    action->addObject( testobj4, "TestObject4" );
+    action->addObject(testobj3, "TestObject3", Qross::ChildrenInterface::AutoConnectSignals);
+    action->addObject(testobj4, "TestObject4");
 
     // Now execute the Action.
     std::cout << "Execute scriptfile " << scriptfile.toLatin1().data() << " now" << std::endl;
     action->trigger();
     std::cout << "Execution of scriptfile " << scriptfile.toLatin1().data() << " done" << std::endl;
 
-    if(action->hadError()) {
+    if (action->hadError())
+    {
         std::cerr << action->errorMessage().toUtf8().constData() << std::endl;
-        if(! action->errorTrace().isEmpty())
+        if (!action->errorTrace().isEmpty())
             std::cerr << action->errorTrace().toUtf8().constData() << std::endl;
         delete action;
         return ERROR_EXCEPTION;
@@ -117,22 +121,23 @@ int runScriptFile(const QString& scriptfile)
 QVariant OtherObjectHandler(void* ptr)
 {
     OtherObject* obj = static_cast<OtherObject*>(ptr);
-    qDebug()<<"OtherObjectHandler objectName="<<(obj ? obj->objectName() : "NULL");
+    qDebug() << "OtherObjectHandler objectName=" << (obj ? obj->objectName() : "NULL");
     OtherObjectWrapper* wrapper = new OtherObjectWrapper(obj);
     QVariant r;
-    r.setValue( (QObject*) wrapper );
+    r.setValue((QObject*)wrapper);
     return r;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     int result = 0;
 
     QStringList scriptfiles;
-    for(int i = 1; i < argc; i++)
+    for (int i = 1; i < argc; i++)
         scriptfiles.append(argv[i]);
 
-    if(scriptfiles.count() < 1) {
+    if (scriptfiles.count() < 1)
+    {
         std::cerr << "No scriptfile to execute defined. See --help" << std::endl;
         return ERROR_NOSUCHFILE;
     }
@@ -141,14 +146,15 @@ int main(int argc, char **argv)
     app = new QApplication(argc, argv);
     TestObject* testobj1 = new TestObject(0, "TestObject1");
     TestObject* testobj2 = new TestObject(0, "TestObject2");
-    Qross::Manager::self().addObject( testobj1 );
-    Qross::Manager::self().addObject( testobj2 );
+    Qross::Manager::self().addObject(testobj1);
+    Qross::Manager::self().addObject(testobj2);
 
     Qross::Manager::self().registerMetaTypeHandler("OtherObject*", OtherObjectHandler);
 
-    for (const QString &file : scriptfiles) {
+    for (const QString& file : scriptfiles)
+    {
         result = runScriptFile(file);
-        if(result != ERROR_OK)
+        if (result != ERROR_OK)
             break;
     }
 

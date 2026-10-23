@@ -24,127 +24,134 @@ using namespace Qross;
 
 static VALUE callExecuteException(VALUE self, VALUE error)
 {
-    #ifdef QROSS_RUBY_OBJECT_DEBUG
-        qrossdebug( QString("RubyScript::callExecuteException script=%1 error=%2")
-                    .arg( STR2CSTR(rb_inspect(self)) ).arg( STR2CSTR(rb_inspect(error)) ) );
-    #else
-        Q_UNUSED(self);
-        Q_UNUSED(error);
-    #endif
+#ifdef QROSS_RUBY_OBJECT_DEBUG
+    qrossdebug(QString("RubyScript::callExecuteException script=%1 error=%2")
+            .arg(STR2CSTR(rb_inspect(self)))
+            .arg(STR2CSTR(rb_inspect(error))));
+#else
+    Q_UNUSED(self);
+    Q_UNUSED(error);
+#endif
 
     VALUE info = rb_gv_get("$!");
     VALUE bt = rb_funcall(info, rb_intern("backtrace"), 0);
     VALUE message = RARRAY(bt)->ptr[0];
 
     QString errormessage = QString("%1: %2 (%3)")
-                            .arg( STR2CSTR(message) )
-                            .arg( STR2CSTR(rb_obj_as_string(info)) )
-                            .arg( rb_class2name(CLASS_OF(info)) );
+                               .arg(STR2CSTR(message))
+                               .arg(STR2CSTR(rb_obj_as_string(info)))
+                               .arg(rb_class2name(CLASS_OF(info)));
     fprintf(stderr, "%s\n", errormessage.toLatin1().data());
 
     QString tracemessage;
-    for(int i = 1; i < RARRAY(bt)->len; ++i) {
-        if( TYPE(RARRAY(bt)->ptr[i]) == T_STRING ) {
-            QString s = QString("%1\n").arg( STR2CSTR(RARRAY(bt)->ptr[i]) );
-            Q_ASSERT( ! s.isNull() );
+    for (int i = 1; i < RARRAY(bt)->len; ++i)
+    {
+        if (TYPE(RARRAY(bt)->ptr[i]) == T_STRING)
+        {
+            QString s = QString("%1\n").arg(STR2CSTR(RARRAY(bt)->ptr[i]));
+            Q_ASSERT(!s.isNull());
             tracemessage += s;
             fprintf(stderr, "\t%s", s.toLatin1().data());
         }
     }
 
     ruby_nerrs++;
-/*
-    VALUE rubyscriptvalue = rb_funcall(self, rb_intern("const_get"), 1, ID2SYM(rb_intern("RUBYSCRIPTOBJ")));
-    RubyScript* rubyscript;
-    Data_Get_Struct(rubyscriptvalue, RubyScript, rubyscript);
-    Q_ASSERT(rubyscript);
-    rubyscript->setError(errormessage, tracemessage);
-*/
+    /*
+        VALUE rubyscriptvalue = rb_funcall(self, rb_intern("const_get"), 1, ID2SYM(rb_intern("RUBYSCRIPTOBJ")));
+        RubyScript* rubyscript;
+        Data_Get_Struct(rubyscriptvalue, RubyScript, rubyscript);
+        Q_ASSERT(rubyscript);
+        rubyscript->setError(errormessage, tracemessage);
+    */
     return Qnil;
 }
 
 static VALUE callFunction2(VALUE args)
 {
-    #ifdef QROSS_RUBY_OBJECT_DEBUG
-        qrossdebug( QString("RubyObject::callFunction2 args=%1").arg( STR2CSTR(rb_inspect(args)) ) );
-    #endif
-    Q_ASSERT( TYPE(args) == T_ARRAY );
+#ifdef QROSS_RUBY_OBJECT_DEBUG
+    qrossdebug(QString("RubyObject::callFunction2 args=%1").arg(STR2CSTR(rb_inspect(args))));
+#endif
+    Q_ASSERT(TYPE(args) == T_ARRAY);
     VALUE self = rb_ary_entry(args, 0);
-    Q_ASSERT( ! NIL_P(self) );
+    Q_ASSERT(!NIL_P(self));
     ID functionId = rb_ary_entry(args, 1);
     VALUE arguments = rb_ary_entry(args, 2);
-    Q_ASSERT( TYPE(arguments) == T_ARRAY );
+    Q_ASSERT(TYPE(arguments) == T_ARRAY);
     return rb_funcall2(self, functionId, RARRAY(arguments)->len, RARRAY(arguments)->ptr);
 }
 
 class RubyObject::Private
 {
 public:
-    Private() : rbobject(0) {};
-    Private(const VALUE& object) : rbobject(object) {};
+    Private()
+        : rbobject(0) { };
+    Private(const VALUE& object)
+        : rbobject(object) { };
     const VALUE rbobject;
     QStringList calls;
-    #ifdef QROSS_RUBY_OBJECT_DEBUG
-        QString debug;
-    #endif
+#ifdef QROSS_RUBY_OBJECT_DEBUG
+    QString debug;
+#endif
 };
 
 RubyObject::RubyObject()
     : Qross::Object()
     , d(new Private)
 {
-    #ifdef QROSS_RUBY_OBJECT_DEBUG
-        d->debug = QString("type=NIL");
-        qrossdebug( QString("RubyObject::RubyObject() constructor: %1").arg(d->debug) );
-    #endif
+#ifdef QROSS_RUBY_OBJECT_DEBUG
+    d->debug = QString("type=NIL");
+    qrossdebug(QString("RubyObject::RubyObject() constructor: %1").arg(d->debug));
+#endif
 }
 
 RubyObject::RubyObject(const VALUE& object)
     : Qross::Object()
     , d(new Private(object))
 {
-    #ifdef QROSS_RUBY_OBJECT_DEBUG
-        d->debug = QString("type=%1 value=%2").arg(TYPE(object)).arg(STR2CSTR(rb_inspect(object)));
-        qrossdebug( QString("RubyObject::RubyObject(const VALUE& object) constructor: %1").arg(d->debug) );
-    #endif
+#ifdef QROSS_RUBY_OBJECT_DEBUG
+    d->debug = QString("type=%1 value=%2").arg(TYPE(object)).arg(STR2CSTR(rb_inspect(object)));
+    qrossdebug(QString("RubyObject::RubyObject(const VALUE& object) constructor: %1").arg(d->debug));
+#endif
 
     VALUE args[] = { Qfalse };
     VALUE methods;
     const char* method;
     methods = rb_class_instance_methods(1, args, CLASS_OF(object));
-    for (int i = 0; i < RARRAY(methods)->len; i++) {
+    for (int i = 0; i < RARRAY(methods)->len; i++)
+    {
         method = StringValuePtr(RARRAY(methods)->ptr[i]);
-        qrossdebug( QString("RubyObject::RubyObject() method=%1").arg( method ));
+        qrossdebug(QString("RubyObject::RubyObject() method=%1").arg(method));
         d->calls << method;
     }
 }
 
 RubyObject::~RubyObject()
 {
-    #ifdef QROSS_RUBY_OBJECT_DEBUG
-        qrossdebug( QString("RubyObject::~RubyObject() destructor: %1").arg(d->debug) );
-    #endif
+#ifdef QROSS_RUBY_OBJECT_DEBUG
+    qrossdebug(QString("RubyObject::~RubyObject() destructor: %1").arg(d->debug));
+#endif
     delete d;
 }
 
 QVariant RubyObject::callMethod(const QString& name, const QVariantList& args)
 {
-    #ifdef QROSS_RUBY_OBJECT_DEBUG
-        qrossdebug( QString("RubyObject::call(%1): %2").arg(name).arg(d->debug) );
-    #endif
+#ifdef QROSS_RUBY_OBJECT_DEBUG
+    qrossdebug(QString("RubyObject::call(%1): %2").arg(name).arg(d->debug));
+#endif
 
     QVariant result;
     const int rnargs = args.size();
-    VALUE *rargs = new VALUE[rnargs];
-    for(int i = 0; i < rnargs; ++i) {
-        rargs[i] = RubyType<QVariant>::toVALUE( args[i] );
+    VALUE* rargs = new VALUE[rnargs];
+    for (int i = 0; i < rnargs; ++i)
+    {
+        rargs[i] = RubyType<QVariant>::toVALUE(args[i]);
     }
 
     VALUE vargs = rb_ary_new2(3);
-    rb_ary_store(vargs, 0, d->rbobject); //self
+    rb_ary_store(vargs, 0, d->rbobject); // self
     rb_ary_store(vargs, 1, rb_intern(name.toLatin1()));
     rb_ary_store(vargs, 2, rb_ary_new4(rnargs, rargs));
-    VALUE v = rb_rescue2((VALUE(*)(...))callFunction2, vargs, (VALUE(*)(...))callExecuteException, d->rbobject, rb_eException, 0);
+    VALUE v = rb_rescue2((VALUE (*)(...))callFunction2, vargs, (VALUE (*)(...))callExecuteException, d->rbobject, rb_eException, 0);
     result = RubyType<QVariant>::toVariant(v);
 
     delete[] rargs;
@@ -160,4 +167,3 @@ VALUE RubyObject::rbObject()
 {
     return d->rbobject;
 }
-

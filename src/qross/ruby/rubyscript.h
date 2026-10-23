@@ -18,85 +18,84 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_RUBYRUBYSCRIPT_H
-#define QROSS_RUBYRUBYSCRIPT_H
+#pragma once
 
 #include "rubyconfig.h"
 #include <qross/core/qrossconfig.h>
 #include <qross/core/script.h>
 
-namespace Qross {
+namespace Qross
+{
 
     class RubyModule;
     class RubyFunction;
     class RubyScriptPrivate;
 
     /**
-    *  Handle ruby scripts. This class implements
-    * \a Qross::Script for ruby.
-    * @author Cyrille Berger
-    */
+     *  Handle ruby scripts. This class implements
+     * \a Qross::Script for ruby.
+     * @author Cyrille Berger
+     */
     class RubyScript : public Qross::Script
     {
-            friend class RubyScriptPrivate;
-        public:
+        friend class RubyScriptPrivate;
+    public:
+        /**
+         * Constructor.
+         *
+         * @param interpreter The @a RubyInterpreter instance used to
+         *        create this script.
+         * @param action The @a Qross::Action
+         *        instance this @a RubyScript does handle the
+         *        backend-work for.
+         */
+        RubyScript(Qross::Interpreter* interpreter, Qross::Action* action);
 
-            /**
-            * Constructor.
-            *
-            * @param interpreter The @a RubyInterpreter instance used to
-            *        create this script.
-            * @param action The @a Qross::Action
-            *        instance this @a RubyScript does handle the
-            *        backend-work for.
-            */
-            RubyScript(Qross::Interpreter* interpreter, Qross::Action* action);
+        /**
+         * Destructor.
+         */
+        ~RubyScript();
 
-            /**
-            * Destructor.
-            */
-            ~RubyScript();
+        /**
+         * \return a \a RubyModule instance defined with the \p modname for
+         * that wraps the QObject \p object . If there exist no such
+         * module yet we create a new one and remember it.
+         */
+        RubyModule* module(QObject* object, const QString& modname);
 
-            /**
-            * \return a \a RubyModule instance defined with the \p modname for
-            * that wraps the QObject \p object . If there exist no such
-            * module yet we create a new one and remember it.
-            */
-            RubyModule* module(QObject* object, const QString& modname);
+        /**
+         * \return true if the as argument passed \p value is a
+         * \a RubyScript object else false is returned.
+         */
+        static bool isRubyScript(VALUE value);
 
-            /**
-            * \return true if the as argument passed \p value is a
-            * \a RubyScript object else false is returned.
-            */
-            static bool isRubyScript(VALUE value);
+        /**
+         * Execute the script.
+         */
+        virtual void execute();
 
-            /**
-            * Execute the script.
-            */
-            virtual void execute();
+        /**
+         * \return the list of functionnames.
+         */
+        virtual QStringList functionNames();
 
-            /**
-            * \return the list of functionnames.
-            */
-            virtual QStringList functionNames();
+        /**
+         * Call a function in the script.
+         *
+         * \param name The name of the function which should be called.
+         * \param args The optional list of arguments.
+         */
+        virtual QVariant callFunction(const QString& name, const QVariantList& args = QVariantList());
 
-            /**
-            * Call a function in the script.
-            *
-            * \param name The name of the function which should be called.
-            * \param args The optional list of arguments.
-            */
-            virtual QVariant callFunction(const QString& name, const QVariantList& args = QVariantList());
+        /**
+         * Evaluate some scripting code.
+         *
+         * \param code The scripting code to evaluate.
+         * \return The return value of the evaluation.
+         */
+        virtual QVariant evaluate(const QByteArray& code);
 
-            /**
-             * Evaluate some scripting code.
-             *
-             * \param code The scripting code to evaluate.
-             * \return The return value of the evaluation.
-             */
-            virtual QVariant evaluate(const QByteArray& code);
-
-            #if 0
+#if 0
             /**
             * Return a list of class types this script supports.
             */
@@ -106,23 +105,20 @@ namespace Qross {
              * Create and return a new class instance.
              */
             virtual Qross::Object::Ptr classInstance(const QString& name);
-            #endif
+#endif
 
-            /**
-            * Connect a QObject signal with a Ruby method function.
-            *
-            * \param sender The QObject instance that sends the signal.
-            * \param signal The signature of the signal the QObject emits.
-            * \param method The callable ruby methods that should
-            * be executed if the QObject emits the signal.
-            */
-            RubyFunction* connectFunction(QObject* sender, const QByteArray& signal, VALUE method);
-
-        private:
-            /// Private d-pointer.
-            RubyScriptPrivate * const d;
+        /**
+         * Connect a QObject signal with a Ruby method function.
+         *
+         * \param sender The QObject instance that sends the signal.
+         * \param signal The signature of the signal the QObject emits.
+         * \param method The callable ruby methods that should
+         * be executed if the QObject emits the signal.
+         */
+        RubyFunction* connectFunction(QObject* sender, const QByteArray& signal, VALUE method);
+    private:
+        /// Private d-pointer.
+        RubyScriptPrivate* const d;
     };
 
 }
-
-#endif

@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_SCRIPT_H
-#define QROSS_SCRIPT_H
+#pragma once
 
 #include "errorinterface.h"
 
@@ -26,7 +25,8 @@
 #include <QtCore/QVariant>
 #include <QtCore/QObject>
 
-namespace Qross {
+namespace Qross
+{
 
     // Forward declarations.
     class Interpreter;
@@ -40,73 +40,70 @@ namespace Qross {
      * that implements the \a Script functionality for the
      * defined \a Interpreter .
      */
-    class QROSSCORE_EXPORT Script : public QObject, public ErrorInterface
+    class QROSSCORE_EXPORT Script
+        : public QObject
+        , public ErrorInterface
     {
-            Q_OBJECT
-        public:
+        Q_OBJECT
+    public:
+        /**
+         * Constructor.
+         *
+         * \param interpreter The \a Interpreter instance that
+         *        was used to created this \a Script instance.
+         * \param Action The \a Action instance this script is
+         *        associated with.
+         */
+        Script(Interpreter* interpreter, Action* action);
 
-            /**
-             * Constructor.
-             *
-             * \param interpreter The \a Interpreter instance that
-             *        was used to created this \a Script instance.
-             * \param Action The \a Action instance this script is
-             *        associated with.
-             */
-            Script(Interpreter* interpreter, Action* action);
+        /**
+         * Destructor.
+         */
+        virtual ~Script();
 
-            /**
-             * Destructor.
-             */
-            virtual ~Script();
+    public Q_SLOTS:
 
-        public Q_SLOTS:
+        /**
+         * \return the \a Interpreter instance that was used to created
+         * this \a Script .
+         */
+        Interpreter* interpreter() const;
 
-            /**
-             * \return the \a Interpreter instance that was used to created
-             * this \a Script .
-             */
-            Interpreter* interpreter() const;
+        /**
+         * \return the \a Action instance associated with this \a Script .
+         */
+        Action* action() const;
 
-            /**
-             * \return the \a Action instance associated with this \a Script .
-             */
-            Action* action() const;
+        /**
+         * Execute the script.
+         */
+        virtual void execute() = 0;
 
-            /**
-             * Execute the script.
-             */
-            virtual void execute() = 0;
+        /**
+         * \return the list of functionnames.
+         */
+        virtual QStringList functionNames() = 0;
 
-            /**
-             * \return the list of functionnames.
-             */
-            virtual QStringList functionNames() = 0;
+        /**
+         * Call a function in the script.
+         *
+         * \param name The name of the function which should be called.
+         * \param args The optional list of arguments.
+         */
+        virtual QVariant callFunction(const QString& name, const QVariantList& args = QVariantList()) = 0;
 
-            /**
-             * Call a function in the script.
-             *
-             * \param name The name of the function which should be called.
-             * \param args The optional list of arguments.
-             */
-            virtual QVariant callFunction(const QString& name, const QVariantList& args = QVariantList()) = 0;
-
-            /**
-             * Evaluate some scripting code.
-             *
-             * \param code The scripting code to evaluate.
-             * \return The return value of the evaluation.
-             */
-            virtual QVariant evaluate(const QByteArray& code) = 0;
-
-        private:
-            /// \internal d-pointer class.
-            class Private;
-            /// \internal d-pointer instance.
-            Private* const d;
+        /**
+         * Evaluate some scripting code.
+         *
+         * \param code The scripting code to evaluate.
+         * \return The return value of the evaluation.
+         */
+        virtual QVariant evaluate(const QByteArray& code) = 0;
+    private:
+        /// \internal d-pointer class.
+        class Private;
+        /// \internal d-pointer instance.
+        Private* const d;
     };
 
 }
-
-#endif
-

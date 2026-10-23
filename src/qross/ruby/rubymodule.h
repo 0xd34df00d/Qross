@@ -18,63 +18,58 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_RUBYRUBYMODULE_H
-#define QROSS_RUBYRUBYMODULE_H
+#pragma once
 
 #include "rubyconfig.h"
 #include <qross/core/qrossconfig.h>
-//#include "../core/object.h"
-//#include "../core/module.h"
+// #include "../core/object.h"
+// #include "../core/module.h"
 
 #include <QString>
 #include <QObject>
 
-namespace Qross {
+namespace Qross
+{
 
     class RubyExtension;
     class RubyModulePrivate;
 
     /**
-    * A ruby module.
-    * @author Cyrille Berger
-    */
-    class RubyModule : public QObject {
-        public:
+     * A ruby module.
+     * @author Cyrille Berger
+     */
+    class RubyModule : public QObject
+    {
+    public:
+        /**
+         * Constructor.
+         *
+         * @param parent The parent QObject. This \a RubyModule instance will
+         * be destroyed if the parent QObject got destroyed.
+         * @param object The QObject instance this extension provides access to.
+         * @param modname The name the module will be published as.
+         */
+        RubyModule(QObject* parent, QObject* object, const QString& modname);
 
-            /**
-            * Constructor.
-            *
-            * @param parent The parent QObject. This \a RubyModule instance will
-            * be destroyed if the parent QObject got destroyed.
-            * @param object The QObject instance this extension provides access to.
-            * @param modname The name the module will be published as.
-            */
-            RubyModule(QObject* parent, QObject* object, const QString & modname);
+        /**
+         * Destructor.
+         */
+        ~RubyModule();
 
-            /**
-            * Destructor.
-            */
-            ~RubyModule();
-
-            /**
-            * \return the \a RubyExtension instance used for this module.
-            */
-            RubyExtension* extension() const;
-
-        private:
-
-            /**
-            * This function will catch functions that are undefined.
-            */
-            static VALUE method_missing(int argc, VALUE *argv, VALUE self);
-
-        private:
-            /// Private d-pointer.
-            RubyModulePrivate * const d;
-            /// Unwanted copy-ctor.
-            RubyModule(const RubyModule&);
+        /**
+         * \return the \a RubyExtension instance used for this module.
+         */
+        RubyExtension* extension() const;
+    private:
+        /**
+         * This function will catch functions that are undefined.
+         */
+        static VALUE method_missing(int argc, VALUE* argv, VALUE self);
+    private:
+        /// Private d-pointer.
+        RubyModulePrivate* const d;
+        /// Unwanted copy-ctor.
+        RubyModule(const RubyModule&);
     };
 
 }
-
-#endif

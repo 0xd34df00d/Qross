@@ -32,12 +32,12 @@ TestObject::TestObject(QObject* parent, const QString& name)
     setObjectName(name);
 
     qRegisterMetaType<TestObject*>("TestObject");
-    //qRegisterMetaType< QList<TestObject*> >("QList<TestObject*>");
+    // qRegisterMetaType< QList<TestObject*> >("QList<TestObject*>");
 
     QTimer* timer = new QTimer(this);
     timer->setObjectName("TestTimer");
 
-    setProperty("dynamicProperty",QVariantList() << "Some String" << 99);
+    setProperty("dynamicProperty", QVariantList() << "Some String" << 99);
 }
 
 TestObject::~TestObject()
@@ -47,7 +47,7 @@ TestObject::~TestObject()
 QObject* TestObject::createThread(int steps, int msecs, bool start)
 {
     TestThread* t = new TestThread(this, steps, msecs);
-    if( start )
+    if (start)
         t->run();
     return t;
 }
@@ -59,100 +59,100 @@ QString TestObject::name()
 
 void TestObject::func_void()
 {
-    //kDebug() << "TestObject::func_void";
+    // kDebug() << "TestObject::func_void";
 }
 
 void TestObject::func_void_int(int)
 {
-    //kDebug() << "TestObject::func_void_int i=" << i;
+    // kDebug() << "TestObject::func_void_int i=" << i;
 }
 
 int TestObject::func_int_int(int i)
 {
-    //kDebug() << "TestObject::func_int_int i=" << i;
+    // kDebug() << "TestObject::func_int_int i=" << i;
     return i;
 }
 
 bool TestObject::func_bool_bool(bool b)
 {
-    //kDebug() << "TestObject::func_bool_bool b=" << b;
+    // kDebug() << "TestObject::func_bool_bool b=" << b;
     return b;
 }
 
 uint TestObject::func_uint_uint(uint i)
 {
-    //kDebug() << "TestObject::func_uint_uint i=" << i;
+    // kDebug() << "TestObject::func_uint_uint i=" << i;
     return i;
 }
 
 double TestObject::func_double_double(double d)
 {
-    //kDebug() << "TestObject::func_double_double d=" << d;
+    // kDebug() << "TestObject::func_double_double d=" << d;
     return d;
 }
 
 qlonglong TestObject::func_qlonglong_qlonglong(qlonglong l)
 {
-    //kDebug() << "TestObject::func_qlonglong_qlonglong l=" << l;
+    // kDebug() << "TestObject::func_qlonglong_qlonglong l=" << l;
     return l;
 }
 
 qulonglong TestObject::func_qulonglong_qulonglong(qulonglong l)
 {
-    //kDebug() << "TestObject::func_qulonglong_qulonglong l=" << l;
+    // kDebug() << "TestObject::func_qulonglong_qulonglong l=" << l;
     return l;
 }
 
 void TestObject::func_void_qstring_int(QString, int)
 {
-    //kDebug() << "TestObject::func_void_qstring_int s=" << s << " i=" << i;
+    // kDebug() << "TestObject::func_void_qstring_int s=" << s << " i=" << i;
 }
 
 void TestObject::func_void_qstringlist(QStringList)
 {
-    //kDebug() << "TestObject::func_void_qstringlist sl=" << sl.join(",");
+    // kDebug() << "TestObject::func_void_qstringlist sl=" << sl.join(",");
 }
 
 QString TestObject::func_qstring_qstring_int(QString s, int i)
 {
     QString r = QString("%1,%2").arg(s).arg(i);
-    //kDebug() << "TestObject::func_void_qstring_int s=" << s << " i=" << i << " returnvalue=" << r;
+    // kDebug() << "TestObject::func_void_qstring_int s=" << s << " i=" << i << " returnvalue=" << r;
     return r;
 }
 
 QByteArray TestObject::func_qbytearray_qbytearray(QByteArray ba)
 {
-    //kDebug() << "TestObject::func_qbytearray_qbytearray ba=" << ba;
+    // kDebug() << "TestObject::func_qbytearray_qbytearray ba=" << ba;
     return ba;
 }
 
 QString TestObject::func_qstring_qstring(const QString& s)
 {
-    //kDebug() << "TestObject::func_qstring_qstring s=" << s;
+    // kDebug() << "TestObject::func_qstring_qstring s=" << s;
     return s;
 }
 
 QStringList TestObject::func_qstringlist_qstringlist(QStringList sl)
 {
-    //kDebug() << "TestObject::func_qstringlist_qstringlist sl=" << sl.join(",");
+    // kDebug() << "TestObject::func_qstringlist_qstringlist sl=" << sl.join(",");
     return sl;
 }
 
 QVariantList TestObject::func_qvariantlist_qvariantlist(QVariantList vl)
 {
-    //kDebug() << "TestObject::func_qvariantlist_qvariantlist vl.count=" << vl.count();
+    // kDebug() << "TestObject::func_qvariantlist_qvariantlist vl.count=" << vl.count();
     return vl;
 }
 
 QVariantMap TestObject::func_qvariantmap_qvariantmap(QVariantMap vm)
 {
-    //kDebug() << "TestObject::func_qvariantmap_qvariantmap vm.count=" << vm.count();
+    // kDebug() << "TestObject::func_qvariantmap_qvariantmap vm.count=" << vm.count();
     return vm;
 }
 
 QVariantList TestObject::func_qobject2qvariantlist(QObject* obj)
 {
-    //kDebug()<<"TestObject::func_qobject2qvariantlist obj="<<(obj ? obj->objectName() : "NULL");
+    // kDebug()<<"TestObject::func_qobject2qvariantlist obj="<<(obj ? obj->objectName() : "NULL");
     QVariant v;
     v.setValue(obj);
     return QVariantList() << v;
@@ -185,25 +185,25 @@ void TestObject::func_void_qvariant(const QVariant& v)
 
 QVariant TestObject::func_qvariant_qvariant(const QVariant& v)
 {
-    //kDebug() << "TestObject::func_qvariant_qvariant value=" << v.toString() << " type=" << v.typeName();
+    // kDebug() << "TestObject::func_qvariant_qvariant value=" << v.toString() << " type=" << v.typeName();
     return v;
 }
 
 Qross::Object::Ptr TestObject::func_qrossobject_qrossobject(Qross::Object::Ptr object)
 {
-    //kDebug() << "TestObject::func_qrossobject_qrossobject";
+    // kDebug() << "TestObject::func_qrossobject_qrossobject";
     return object;
 }
 
 QStringList TestObject::get_qrossobject_methods(Qross::Object::Ptr object)
 {
-    //kDebug() << "TestObject::get_qrossobject_methods";
+    // kDebug() << "TestObject::get_qrossobject_methods";
     return object->methodNames();
 }
 
 QVariant TestObject::call_qrossobject_method(Qross::Object::Ptr object, const QString& methodname, const QVariantList& args)
 {
-    //kDebug() << "TestObject::call_qrossobject_method";
+    // kDebug() << "TestObject::call_qrossobject_method";
     return object->callMethod(methodname, args);
 }
 
@@ -214,12 +214,12 @@ QObject* TestObject::func_createChildTestObject(const QString& objectname)
 
 void TestObject::func_void_qobject(QObject*)
 {
-    //kDebug() << "TestObject::func_void_qobject " << (obj ? QString("objectName=%1 className=%2").arg(obj->objectName()).arg(obj->metaObject()->className()) : "NULL");
+    // kDebug() << "TestObject::func_void_qobject " << (obj ? QString("objectName=%1 className=%2").arg(obj->objectName()).arg(obj->metaObject()->className()) : "NULL");
 }
 
 QObject* TestObject::func_qobject_qobject(QObject* obj)
 {
-    //kDebug() << "TestObject::func_qobject_qobject " << (obj ? QString("objectName=%1 className=%2").arg(obj->objectName()).arg(obj->metaObject()->className()) : "NULL");
+    // kDebug() << "TestObject::func_qobject_qobject " << (obj ? QString("objectName=%1 className=%2").arg(obj->objectName()).arg(obj->metaObject()->className()) : "NULL");
     return obj;
 }
 
@@ -265,7 +265,7 @@ QList<TestObject*> TestObject::func_testobjectlist_testobjectlist(QList<TestObje
 
 OtherObject* TestObject::func_otherobject(const QByteArray& name)
 {
-    if( OtherObject* obj = findChild<OtherObject*>(name) )
+    if (OtherObject* obj = findChild<OtherObject*>(name))
         return obj;
     return new OtherObject(this, name);
 }
@@ -290,17 +290,17 @@ TestThread::TestThread(TestObject* parent, int steps, int msecs)
     , m_steps(steps)
     , m_msecs(msecs)
 {
-    //kDebug() << "TestThread::TestThread()";
+    // kDebug() << "TestThread::TestThread()";
 }
 
 TestThread::~TestThread()
 {
-    //kDebug() << "TestThread::~TestThread()";
+    // kDebug() << "TestThread::~TestThread()";
 }
 
 void TestThread::emitStepDone(int step)
 {
-    //kDebug() << "TestThread::emitStepDone() step=" << step;
+    // kDebug() << "TestThread::emitStepDone() step=" << step;
     Q_EMIT stepDone(step);
 }
 
@@ -313,11 +313,12 @@ QVariant TestThread::callFunction(QObject* action, const QString& functionname, 
 
 void TestThread::run()
 {
-    //kDebug() << "TestThread::run()";
-    for(int i = 0; i < m_steps; ++i) {
+    // kDebug() << "TestThread::run()";
+    for (int i = 0; i < m_steps; ++i)
+    {
         qDebug() << "TestThread::run() 1 step=" << i << "m_steps=" << m_steps << "m_msecs=" << m_msecs;
         Q_EMIT stepDone(i);
-        //m_testobject->emitSignalVoid();
+        // m_testobject->emitSignalVoid();
         msleep(m_msecs);
     }
 }

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_RUBYRUBYINTERPRETER_H
-#define QROSS_RUBYRUBYINTERPRETER_H
+#pragma once
 
 #include "rubyconfig.h"
 
@@ -28,61 +27,58 @@
 
 #include <QPointer>
 
-namespace Qross {
+namespace Qross
+{
 
     class RubyModule;
     class RubyInterpreterPrivate;
 
     /**
-    * This class is the bridget between Qross and Ruby.
-    * @author Cyrille Berger
-    */
+     * This class is the bridget between Qross and Ruby.
+     * @author Cyrille Berger
+     */
     class RubyInterpreter : public Qross::Interpreter
     {
-        public:
+    public:
+        /**
+         * Constructor
+         *
+         * @param info The \a Qross::InterpreterInfo instance
+         *        that describes this \a RubyInterpreter .
+         */
+        explicit RubyInterpreter(Qross::InterpreterInfo* info);
 
-            /**
-            * Constructor
-            *
-            * @param info The \a Qross::InterpreterInfo instance
-            *        that describes this \a RubyInterpreter .
-            */
-            explicit RubyInterpreter(Qross::InterpreterInfo* info);
+        /**
+         * Destructor.
+         */
+        virtual ~RubyInterpreter();
 
-            /**
-            * Destructor.
-            */
-            virtual ~RubyInterpreter();
+        /**
+         * Factory method to create and return a new \a RubyScript instance.
+         */
+        virtual Qross::Script* createScript(Qross::Action* action);
 
-            /**
-            * Factory method to create and return a new \a RubyScript instance.
-            */
-            virtual Qross::Script* createScript(Qross::Action* action);
-
-            /**
-            * @return the hash of \a RubyModule instances we know about.
-            */
-            QHash<QString, QPointer<RubyModule> > modules() const;
-        public:
-            /**
-             * @return the ruby object with the module Qross, this module holds class
-             * definition used by qross, and scripts object. All qross specific objects
-             * should be member of that module.
-             */
-            static VALUE qrossModule();
-
-        private:
-            /// Initialize the ruby interpreter.
-            void initRuby();
-            /// Finalize the ruby interpreter.
-            void finalizeRuby();
-            /// Load an external plugin / module.
-            static VALUE require (VALUE, VALUE);
-        private:
-            /// Private d-pointer.
-            static RubyInterpreterPrivate * d;
+        /**
+         * @return the hash of \a RubyModule instances we know about.
+         */
+        QHash<QString, QPointer<RubyModule>> modules() const;
+    public:
+        /**
+         * @return the ruby object with the module Qross, this module holds class
+         * definition used by qross, and scripts object. All qross specific objects
+         * should be member of that module.
+         */
+        static VALUE qrossModule();
+    private:
+        /// Initialize the ruby interpreter.
+        void initRuby();
+        /// Finalize the ruby interpreter.
+        void finalizeRuby();
+        /// Load an external plugin / module.
+        static VALUE require(VALUE, VALUE);
+    private:
+        /// Private d-pointer.
+        static RubyInterpreterPrivate* d;
     };
 
 }
-
-#endif

@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_RUBY_OBJECT_H
-#define QROSS_RUBY_OBJECT_H
+#pragma once
 
 #include "rubyconfig.h"
 #include <qross/core/object.h>
@@ -26,7 +25,8 @@
 #include <QString>
 #include <QStringList>
 
-namespace Qross {
+namespace Qross
+{
 
     /**
      * The RubyObject class is used for Instances of Ruby
@@ -34,60 +34,56 @@ namespace Qross {
      */
     class RubyObject : public Qross::Object
     {
-        public:
+    public:
+        /**
+         * Default constructor.
+         */
+        explicit RubyObject();
 
-            /**
-             * Default constructor.
-             */
-            explicit RubyObject();
+        /**
+         * Constructor.
+         *
+         * \param object The Py::Object this \a RubyObject
+         *        provides access to.
+         */
+        explicit RubyObject(const VALUE& object);
 
-            /**
-             * Constructor.
-             *
-             * \param object The Py::Object this \a RubyObject
-             *        provides access to.
-             */
-            explicit RubyObject(const VALUE& object);
+        /**
+         * Destructor.
+         */
+        virtual ~RubyObject();
 
-            /**
-             * Destructor.
-             */
-            virtual ~RubyObject();
+        /**
+         * Pass a call to the object. Objects like \a Class
+         * are able to handle call's by just implementating
+         * this function.
+         *
+         * \param name Each call has a name that says what
+         *        should be called. In the case of a \a Class
+         *        the name is the functionname.
+         * \param args The list of arguments passed to
+         *        the call.
+         * \return The call-result as QVariant
+         */
+        virtual QVariant callMethod(const QString& name,
+            const QVariantList& args = QVariantList());
 
-            /**
-             * Pass a call to the object. Objects like \a Class
-             * are able to handle call's by just implementating
-             * this function.
-             *
-             * \param name Each call has a name that says what
-             *        should be called. In the case of a \a Class
-             *        the name is the functionname.
-             * \param args The list of arguments passed to
-             *        the call.
-             * \return The call-result as QVariant
-             */
-            virtual QVariant callMethod(const QString& name,
-                    const QVariantList& args = QVariantList());
+        /**
+         * Return a list of supported callable objects.
+         *
+         * \return List of supported calls.
+         */
+        virtual QStringList methodNames();
 
-            /**
-             * Return a list of supported callable objects.
-             *
-             * \return List of supported calls.
-             */
-            virtual QStringList methodNames();
-
-            /**
-             * Return ruby object used in this object.
-             *
-             * \return ruby object.
-             */
-            VALUE rbObject();
-
-         private:
-            /// Private d-pointer class.
-            class Private;
-            Private* const d;
+        /**
+         * Return ruby object used in this object.
+         *
+         * \return ruby object.
+         */
+        VALUE rbObject();
+    private:
+        /// Private d-pointer class.
+        class Private;
+        Private* const d;
     };
 }
-
-#endif

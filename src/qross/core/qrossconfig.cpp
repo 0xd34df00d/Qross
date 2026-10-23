@@ -25,15 +25,15 @@
 
 using namespace Qross;
 
-void Qross::qrossdebug(const QString &s)
+void Qross::qrossdebug(const QString& s)
 {
-    //kDebug(410) << s;
+    // kDebug(410) << s;
     qDebug() << "Qross:" << s;
 }
 
-void Qross::qrosswarning(const QString &s)
+void Qross::qrosswarning(const QString& s)
 {
-    //kWarning(410) << s;
+    // kWarning(410) << s;
     qWarning() << "Qross:" << s;
 }
 

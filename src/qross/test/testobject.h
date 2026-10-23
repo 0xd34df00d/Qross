@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_TEST_TESTOBJECT_H
-#define QROSS_TEST_TESTOBJECT_H
+#pragma once
 
 #include <QtCore/QObject>
 #include <QtCore/QString>
@@ -54,240 +53,249 @@ class OtherObject;
 /// \internal class to test functionality within qrosstest
 class TestObject : public QObject
 {
-        Q_OBJECT
+    Q_OBJECT
 
-        Q_PROPERTY(bool boolProperty READ boolProperty WRITE setBoolProperty)
-        Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty)
-        Q_PROPERTY(double doubleProperty READ doubleProperty WRITE setDoubleProperty)
-        Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty)
-        Q_PROPERTY(QStringList stringListProperty READ stringListProperty WRITE setStringListProperty)
-        Q_PROPERTY(QVariantList listProperty READ listProperty WRITE setListProperty)
+    Q_PROPERTY(bool boolProperty READ boolProperty WRITE setBoolProperty)
+    Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty)
+    Q_PROPERTY(double doubleProperty READ doubleProperty WRITE setDoubleProperty)
+    Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty)
+    Q_PROPERTY(QStringList stringListProperty READ stringListProperty WRITE setStringListProperty)
+    Q_PROPERTY(QVariantList listProperty READ listProperty WRITE setListProperty)
 
-        Q_ENUMS(TestEnum)
+    Q_ENUMS(TestEnum)
+public:
+    explicit TestObject(QObject* parent = 0, const QString& name = QString());
+    // TestObject(const TestObject&) {}
+    virtual ~TestObject();
 
-    public:
-        explicit TestObject(QObject* parent = 0, const QString& name = QString());
-        //TestObject(const TestObject&) {}
-        virtual ~TestObject();
+    enum TestEnum
+    {
+        TESTENUM1 = 1,
+        TESTENUM2 = 2,
+        TESTENUM3 = 4,
+        TESTENUM4 = 8
+    };
+private:
+    bool m_boolproperty;
+    bool boolProperty() const { return m_boolproperty; }
+    void setBoolProperty(bool prop) { m_boolproperty = prop; }
 
-        enum TestEnum { TESTENUM1 = 1, TESTENUM2 = 2, TESTENUM3 = 4, TESTENUM4 = 8 };
+    int m_intproperty;
+    int intProperty() const { return m_intproperty; }
+    void setIntProperty(int prop) { m_intproperty = prop; }
 
-    private:
+    double m_doubleproperty;
+    double doubleProperty() const { return m_doubleproperty; }
+    void setDoubleProperty(double prop) { m_doubleproperty = prop; }
 
-        bool m_boolproperty;
-        bool boolProperty() const { return m_boolproperty; }
-        void setBoolProperty(bool prop) { m_boolproperty = prop; }
+    QString m_stringproperty;
+    QString stringProperty() const { return m_stringproperty; }
+    void setStringProperty(QString prop) { m_stringproperty = prop; }
 
-        int m_intproperty;
-        int intProperty() const { return m_intproperty; }
-        void setIntProperty(int prop) { m_intproperty = prop; }
+    QStringList m_stringlistproperty;
+    QStringList stringListProperty() const { return m_stringlistproperty; }
+    void setStringListProperty(QStringList prop) { m_stringlistproperty = prop; }
 
-        double m_doubleproperty;
-        double doubleProperty() const { return m_doubleproperty; }
-        void setDoubleProperty(double prop) { m_doubleproperty = prop; }
+    QVariantList m_listproperty;
+    QVariantList listProperty() const { return m_listproperty; }
+    void setListProperty(QVariantList prop) { m_listproperty = prop; }
 
-        QString m_stringproperty;
-        QString stringProperty() const { return m_stringproperty; }
-        void setStringProperty(QString prop) { m_stringproperty = prop; }
+Q_SIGNALS:
+    void signalVoid();
+    void signalBool(bool);
+    void signalInt(int);
+    void signalString(const QString&);
+    void signalObject(QObject* obj);
 
-        QStringList m_stringlistproperty;
-        QStringList stringListProperty() const { return m_stringlistproperty; }
-        void setStringListProperty(QStringList prop) { m_stringlistproperty = prop; }
+public Q_SLOTS:
 
-        QVariantList m_listproperty;
-        QVariantList listProperty() const { return m_listproperty; }
-        void setListProperty(QVariantList prop) { m_listproperty = prop; }
+    QObject* myself() { return this; }
+    TestObject* myself2() { return this; }
+    QList<TestObject*> myself3() { return QList<TestObject*>() << this; }
 
-    Q_SIGNALS:
-        void signalVoid();
-        void signalBool(bool);
-        void signalInt(int);
-        void signalString(const QString&);
-        void signalObject(QObject* obj);
+    // return a TestThread instance.
+    QObject* createThread(int steps, int msecs, bool start = false);
 
-    public Q_SLOTS:
+    // emit some signals
+    void emitSignalVoid() { Q_EMIT signalVoid(); }
+    void emitSignalBool(bool b) { Q_EMIT signalBool(b); }
+    void emitSignalInt(int i) { Q_EMIT signalInt(i); }
+    void emitSignalString(const QString& s) { Q_EMIT signalString(s); }
+    void emitSignalObject(QObject* obj) { Q_EMIT signalObject(obj); }
 
-        QObject* myself() { return this; }
-        TestObject* myself2() { return this; }
-        QList<TestObject*> myself3() { return QList<TestObject*>() << this; }
+    // return the objectname
+    QString name();
 
-        // return a TestThread instance.
-        QObject* createThread(int steps, int msecs, bool start = false);
+    // test the enumerator
+    // TestEnum testEnum(TestEnum e) const { return e; }
 
-        // emit some signals
-        void emitSignalVoid() { Q_EMIT signalVoid(); }
-        void emitSignalBool(bool b) { Q_EMIT signalBool(b); }
-        void emitSignalInt(int i) { Q_EMIT signalInt(i); }
-        void emitSignalString(const QString& s) { Q_EMIT signalString(s); }
-        void emitSignalObject(QObject* obj) { Q_EMIT signalObject(obj); }
+    // to test basic datatypes
+    int func_int_int(int);
+    bool func_bool_bool(bool);
+    uint func_uint_uint(uint);
+    double func_double_double(double);
+    qlonglong func_qlonglong_qlonglong(qlonglong);
+    qulonglong func_qulonglong_qulonglong(qulonglong);
+    QByteArray func_qbytearray_qbytearray(QByteArray);
+    QString func_qstring_qstring(const QString&);
+    QStringList func_qstringlist_qstringlist(QStringList);
+    QVariantList func_qvariantlist_qvariantlist(QVariantList);
+    QVariantMap func_qvariantmap_qvariantmap(QVariantMap);
 
-        // return the objectname
-        QString name();
+    QVariantList func_qobject2qvariantlist(QObject* obj);
+    QObject* func_qvariantlist2qobject(QVariantList list);
 
-        // test the enumerator
-        //TestEnum testEnum(TestEnum e) const { return e; }
+    QSize func_qsize_qsize(const QSize&);
+    QSizeF func_qsizef_qsizef(const QSizeF&);
+    QPoint func_qpoint_qpoint(const QPoint&);
+    QPointF func_qpointf_qpointf(const QPointF&);
+    QRect func_qrect_qrect(const QRect&);
+    QRectF func_qrectf_qrectf(const QRectF&);
+    QUrl func_qurl_qurl(const QUrl&);
 
-        // to test basic datatypes
-        int func_int_int(int);
-        bool func_bool_bool(bool);
-        uint func_uint_uint(uint);
-        double func_double_double(double);
-        qlonglong func_qlonglong_qlonglong(qlonglong);
-        qulonglong func_qulonglong_qulonglong(qulonglong);
-        QByteArray func_qbytearray_qbytearray(QByteArray);
-        QString func_qstring_qstring(const QString&);
-        QStringList func_qstringlist_qstringlist(QStringList);
-        QVariantList func_qvariantlist_qvariantlist(QVariantList);
-        QVariantMap func_qvariantmap_qvariantmap(QVariantMap);
+    QColor func_qcolor_qcolor(const QColor&);
+    QFont func_qfont_qfont(const QFont&);
+    QBrush func_qbrush_qbrush(const QBrush&);
+    QTime func_qtime_qtime(const QTime&);
+    QDate func_qdate_qdate(const QDate&);
+    QDateTime func_qdatetime_qdatetime(const QDateTime&);
+    void func_void_qvariant(const QVariant&);
+    QVariant func_qvariant_qvariant(const QVariant&);
 
-        QVariantList func_qobject2qvariantlist(QObject* obj);
-        QObject* func_qvariantlist2qobject(QVariantList list);
+    // for misc tests
+    void func_void();
+    void func_void_int(int);
+    void func_void_qstring_int(QString, int);
+    void func_void_qstringlist(QStringList);
+    QString func_qstring_qstring_int(QString, int);
 
-        QSize func_qsize_qsize(const QSize&);
-        QSizeF func_qsizef_qsizef(const QSizeF&);
-        QPoint func_qpoint_qpoint(const QPoint&);
-        QPointF func_qpointf_qpointf(const QPointF&);
-        QRect func_qrect_qrect(const QRect&);
-        QRectF func_qrectf_qrectf(const QRectF&);
-        QUrl func_qurl_qurl(const QUrl&);
+    // Qross::Object
+    Qross::Object::Ptr func_qrossobject_qrossobject(Qross::Object::Ptr object);
+    QStringList get_qrossobject_methods(Qross::Object::Ptr object);
+    QVariant call_qrossobject_method(Qross::Object::Ptr object, const QString& methodname, const QVariantList& args = QVariantList());
 
-        QColor func_qcolor_qcolor(const QColor&);
-        QFont func_qfont_qfont(const QFont&);
-        QBrush func_qbrush_qbrush(const QBrush&);
-        QTime func_qtime_qtime(const QTime&);
-        QDate func_qdate_qdate(const QDate&);
-        QDateTime func_qdatetime_qdatetime(const QDateTime&);
-        void func_void_qvariant(const QVariant&);
-        QVariant func_qvariant_qvariant(const QVariant&);
+    // QObject
+    QObject* func_createChildTestObject(const QString& objectname);
+    void func_void_qobject(QObject*);
+    QObject* func_qobject_qobject(QObject*);
 
-        // for misc tests
-        void func_void();
-        void func_void_int(int);
-        void func_void_qstring_int(QString,int);
-        void func_void_qstringlist(QStringList);
-        QString func_qstring_qstring_int(QString,int);
+    // QWidget
+    QWidget* func_qwidget_qwidget(QWidget*);
 
-        // Qross::Object
-        Qross::Object::Ptr func_qrossobject_qrossobject(Qross::Object::Ptr object);
-        QStringList get_qrossobject_methods(Qross::Object::Ptr object);
-        QVariant call_qrossobject_method(Qross::Object::Ptr object, const QString& methodname, const QVariantList& args = QVariantList());
+    // TestObject
+    void func_void_testobject(TestObject*);
+    TestObject* func_testobject_testobject(TestObject*);
+    TestObject* func_testobject_qobject(QObject*);
+    void func_void_testobjectlist(QList<TestObject*>);
+    QList<TestObject*> func_testobjectlist_testobjectlist(QList<TestObject*>);
 
-        // QObject
-        QObject* func_createChildTestObject(const QString& objectname);
-        void func_void_qobject(QObject*);
-        QObject* func_qobject_qobject(QObject*);
-
-        // QWidget
-        QWidget* func_qwidget_qwidget(QWidget*);
-
-        // TestObject
-        void func_void_testobject(TestObject*);
-        TestObject* func_testobject_testobject(TestObject*);
-        TestObject* func_testobject_qobject(QObject*);
-        void func_void_testobjectlist(QList<TestObject*>);
-        QList<TestObject*> func_testobjectlist_testobjectlist(QList<TestObject*>);
-
-        // OtherObject
-        OtherObject* func_otherobject(const QByteArray& name);
-        OtherObject* func_otherobject_otherobject(OtherObject*);
-        QList<OtherObject*> func_otherobjectlist_otherobjectlist(QList<OtherObject*>);
+    // OtherObject
+    OtherObject* func_otherobject(const QByteArray& name);
+    OtherObject* func_otherobject_otherobject(OtherObject*);
+    QList<OtherObject*> func_otherobjectlist_otherobjectlist(QList<OtherObject*>);
 };
 
 /// \internal class used in TestObject to test functionality within qrosstest
 class OtherObject : public QObject
 {
-        Q_OBJECT
-    public:
-        explicit OtherObject(TestObject* testobj, const QByteArray& name) : QObject(testobj) { setObjectName(name); }
-    public Q_SLOTS:
-        QObject* testObject() const { return parent(); }
+    Q_OBJECT
+public:
+    explicit OtherObject(TestObject* testobj, const QByteArray& name)
+        : QObject(testobj)
+    {
+        setObjectName(name);
+    }
+public Q_SLOTS:
+    QObject* testObject() const { return parent(); }
 };
 
 /// \internal class used in a handler within qrosstest to provide a OtherObject wrapper on demand
-class OtherObjectWrapper : public QObject, public Qross::WrapperInterface
+class OtherObjectWrapper
+    : public QObject
+    , public Qross::WrapperInterface
 {
-        Q_OBJECT
-    public:
-        OtherObjectWrapper(QObject* obj) : QObject(obj) {
-            Q_ASSERT(obj);
-            setObjectName(QString("%1_wrapper").arg(obj->objectName()).toLatin1());
-        }
-        void* wrappedObject() const { return parent(); }
-    public Q_SLOTS:
-        QObject* parentObject() const { return parent(); }
+    Q_OBJECT
+public:
+    OtherObjectWrapper(QObject* obj)
+        : QObject(obj)
+    {
+        Q_ASSERT(obj);
+        setObjectName(QString("%1_wrapper").arg(obj->objectName()).toLatin1());
+    }
+    void* wrappedObject() const { return parent(); }
+public Q_SLOTS:
+    QObject* parentObject() const { return parent(); }
 };
 
 /**
-* \internal class to test threading functionality within qrosstest.
-*
-* Following python code does provide a sample how this class
-* may used to test the threading functionality.
-* \code
-* import time, TestObject1
-* # this function will be called by our thread
-* def myFunction(step):
-*     print "myFunction step=%i" % step
-* # create a thread that iterates 15 times and waits 200
-* # milliseconds on each iteration, 20*200=2 seconds
-* mythread = TestObject1.createThread(15,200)
-* # connect the stepDone signal our thread provides to
-* # our own python function above
-* mythread.connect("stepDone(int)",myFunction)
-* # start the thread
-* mythread.start()
-* # let this python thread sleep for a second
-* time.sleep(1)
-* # ask our action to call our myFunction function
-* self.callFunction("myFunction", [123])
-* # ask our thread to emit the stepDone signal which in
-* # turn should call our myFunction function.
-* mythread.emitStepDone(456)
-* # same as above but we emit the signal by our own
-* # rather than going through a helper-function.
-* mythread.stepDone(789)
-* # now let's ask our thread to ask our action to execute
-* # our function to have one complete roundtrip :)
-* mythread.callFunction(self, "myFunction", [987])
-* # sleep again one second
-* time.sleep(1)
-* \endcode
-*
-* Following sample code does the same as the code above but
-* uses the Ruby scripting language.
-* \code
-* require 'TestObject1'
-* def myFunction(step)
-*     puts "myFunction step=" + step.to_s
-* end
-* mythread = TestObject1.createThread(10,200)
-* mythread.connect("stepDone(int)", method("myFunction"))
-* mythread.start()
-* sleep(1)
-* self.action().callFunction("myFunction", [123])
-* mythread.emitStepDone(456)
-* mythread.stepDone(789)
-* mythread.callFunction(self.action(), "myFunction", [987])
-* sleep(1)
-* \endcode
-*/
+ * \internal class to test threading functionality within qrosstest.
+ *
+ * Following python code does provide a sample how this class
+ * may used to test the threading functionality.
+ * \code
+ * import time, TestObject1
+ * # this function will be called by our thread
+ * def myFunction(step):
+ *     print "myFunction step=%i" % step
+ * # create a thread that iterates 15 times and waits 200
+ * # milliseconds on each iteration, 20*200=2 seconds
+ * mythread = TestObject1.createThread(15,200)
+ * # connect the stepDone signal our thread provides to
+ * # our own python function above
+ * mythread.connect("stepDone(int)",myFunction)
+ * # start the thread
+ * mythread.start()
+ * # let this python thread sleep for a second
+ * time.sleep(1)
+ * # ask our action to call our myFunction function
+ * self.callFunction("myFunction", [123])
+ * # ask our thread to emit the stepDone signal which in
+ * # turn should call our myFunction function.
+ * mythread.emitStepDone(456)
+ * # same as above but we emit the signal by our own
+ * # rather than going through a helper-function.
+ * mythread.stepDone(789)
+ * # now let's ask our thread to ask our action to execute
+ * # our function to have one complete roundtrip :)
+ * mythread.callFunction(self, "myFunction", [987])
+ * # sleep again one second
+ * time.sleep(1)
+ * \endcode
+ *
+ * Following sample code does the same as the code above but
+ * uses the Ruby scripting language.
+ * \code
+ * require 'TestObject1'
+ * def myFunction(step)
+ *     puts "myFunction step=" + step.to_s
+ * end
+ * mythread = TestObject1.createThread(10,200)
+ * mythread.connect("stepDone(int)", method("myFunction"))
+ * mythread.start()
+ * sleep(1)
+ * self.action().callFunction("myFunction", [123])
+ * mythread.emitStepDone(456)
+ * mythread.stepDone(789)
+ * mythread.callFunction(self.action(), "myFunction", [987])
+ * sleep(1)
+ * \endcode
+ */
 class TestThread : public QThread
 {
-        Q_OBJECT
-    public:
-        explicit TestThread(TestObject* parent, int steps, int msecs);
-        virtual ~TestThread();
-        virtual void run();
-    public Q_SLOTS:
-        void emitStepDone(int step);
-        QVariant callFunction(QObject* action, const QString& functionname, QVariantList arguments);
-    Q_SIGNALS:
-        void stepDone(int step);
-    private:
-        TestObject* m_testobject;
-        int m_steps, m_msecs;
+    Q_OBJECT
+public:
+    explicit TestThread(TestObject* parent, int steps, int msecs);
+    virtual ~TestThread();
+    virtual void run();
+public Q_SLOTS:
+    void emitStepDone(int step);
+    QVariant callFunction(QObject* action, const QString& functionname, QVariantList arguments);
+Q_SIGNALS:
+    void stepDone(int step);
+private:
+    TestObject* m_testobject;
+    int m_steps, m_msecs;
 };
 
-//Q_DECLARE_METATYPE( TestObject* )
-//Q_DECLARE_METATYPE( TestObject )
-
-#endif
+// Q_DECLARE_METATYPE( TestObject* )
+// Q_DECLARE_METATYPE( TestObject )

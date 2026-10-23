@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_RUBY_CONFIG_H
-#define QROSS_RUBY_CONFIG_H
+#pragma once
 
 #include <ruby.h>
 #include <env.h>
@@ -27,7 +26,7 @@
 #include <version.h>
 
 #include <st.h>
-//#include <typeinfo>
+// #include <typeinfo>
 
 #include <qross/core/qrossconfig.h>
 
@@ -39,7 +38,7 @@
 // just introduced via this switch a way to allow to enable/disable the
 // finalize and work that way around the crash-on-exit. For sure the
 // proper way would be to gain a useful backtrace and fix it ;)
-//#define QROSS_RUBY_FINALIZE
+// #define QROSS_RUBY_FINALIZE
 
 // If this is defined we call explicit rb_gc() manualy on many places. This is
 // normaly not needed and Ruby will handle the garbage collection for you. So,
@@ -49,32 +48,30 @@
 // #define QROSS_RUBY_EXPLICIT_GC
 
 // Following defines are for debugging only. If defined, we are more verbose.
-//#define QROSS_RUBY_SCRIPT_CTORDTOR_DEBUG
-//#define QROSS_RUBY_SCRIPT_CONNECTFUNCTION_DEBUG
-//#define QROSS_RUBY_SCRIPT_CALLFUNCTION_DEBUG
-//#define QROSS_RUBY_SCRIPT_FUNCTIONNAMES_DEBUG
-//#define QROSS_RUBY_SCRIPT_EXECUTE_DEBUG
-//#define QROSS_RUBY_SCRIPT_METHODADDED_DEBUG
-//#define QROSS_RUBY_SCRIPT_DEBUG
+// #define QROSS_RUBY_SCRIPT_CTORDTOR_DEBUG
+// #define QROSS_RUBY_SCRIPT_CONNECTFUNCTION_DEBUG
+// #define QROSS_RUBY_SCRIPT_CALLFUNCTION_DEBUG
+// #define QROSS_RUBY_SCRIPT_FUNCTIONNAMES_DEBUG
+// #define QROSS_RUBY_SCRIPT_EXECUTE_DEBUG
+// #define QROSS_RUBY_SCRIPT_METHODADDED_DEBUG
+// #define QROSS_RUBY_SCRIPT_DEBUG
 
-//#define QROSS_RUBY_INTERPRETER_CTORDTOR_DEBUG
-//#define QROSS_RUBY_INTERPRETER_DEBUG
+// #define QROSS_RUBY_INTERPRETER_CTORDTOR_DEBUG
+// #define QROSS_RUBY_INTERPRETER_DEBUG
 
-//#define QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
-//#define QROSS_RUBY_EXTENSION_CALLCONNECT_DEBUG
-//#define QROSS_RUBY_EXTENSION_DEBUG
+// #define QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
+// #define QROSS_RUBY_EXTENSION_CALLCONNECT_DEBUG
+// #define QROSS_RUBY_EXTENSION_DEBUG
 
-//#define QROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
-//#define QROSS_RUBY_CALLCACHE_DEBUG
+// #define QROSS_RUBY_CALLCACHE_CTORDTOR_DEBUG
+// #define QROSS_RUBY_CALLCACHE_DEBUG
 
-//#define QROSS_RUBY_MODULE_CTORDTOR_DEBUG
-//#define QROSS_RUBY_MODULE_DEBUG
+// #define QROSS_RUBY_MODULE_CTORDTOR_DEBUG
+// #define QROSS_RUBY_MODULE_DEBUG
 
-//#define QROSS_RUBY_VARIANT_DEBUG
+// #define QROSS_RUBY_VARIANT_DEBUG
 
-//#define QROSS_RUBY_FUNCTION_CTORDTOR_DEBUG
-//#define QROSS_RUBY_FUNCTION_DEBUG
+// #define QROSS_RUBY_FUNCTION_CTORDTOR_DEBUG
+// #define QROSS_RUBY_FUNCTION_DEBUG
 
-//#define QROSS_RUBY_OBJECT_DEBUG
-
-#endif
+// #define QROSS_RUBY_OBJECT_DEBUG

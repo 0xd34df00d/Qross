@@ -36,24 +36,26 @@
 
 using namespace Qross;
 
-namespace Qross {
+namespace Qross
+{
 
     /// @internal d-pointer class.
-    class RubyExtensionPrivate {
+    class RubyExtensionPrivate
+    {
         friend class RubyExtension;
 
         /// The wrapped QObject.
-        //QObject* m_object;
+        // QObject* m_object;
         QPointer<QObject> m_object;
 
-        #ifdef QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
-            /// \internal string for debugging.
-            QString debuginfo;
-        #endif
+#ifdef QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
+        /// \internal string for debugging.
+        QString debuginfo;
+#endif
 
         /// The wrapped qrossobject VALUE type.
         static VALUE s_qrossObject;
-        //static VALUE s_qrossException;
+        // static VALUE s_qrossException;
 
         /// The cached list of methods.
         QHash<QByteArray, int> m_methods;
@@ -66,11 +68,11 @@ namespace Qross {
         QHash<QByteArray, RubyFunction*> m_functions;
 
         /// The list of \a RubyCallCache instances.
-        QList< RubyCallCache* > m_cachelist;
+        QList<RubyCallCache*> m_cachelist;
     };
 
     VALUE RubyExtensionPrivate::s_qrossObject = 0;
-    //VALUE RubyExtensionPrivate::s_qrossException = 0;
+    // VALUE RubyExtensionPrivate::s_qrossException = 0;
 
 }
 
@@ -79,41 +81,46 @@ RubyExtension::RubyExtension(QObject* object)
 {
     d->m_object = object;
 
-    #ifdef QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
-        d->debuginfo = object ? QString("name=%1 class=%2").arg(object->objectName()).arg(object->metaObject()->className()) : "NULL";
-        qrossdebug(QString("RubyExtension Ctor %1").arg(d->debuginfo));
-    #endif
+#ifdef QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
+    d->debuginfo = object ? QString("name=%1 class=%2").arg(object->objectName()).arg(object->metaObject()->className()) : "NULL";
+    qrossdebug(QString("RubyExtension Ctor %1").arg(d->debuginfo));
+#endif
 
-    if(d->m_object) {
+    if (d->m_object)
+    {
         const QMetaObject* metaobject = d->m_object->metaObject();
 
         { // initialize methods.
             const int count = metaobject->methodCount();
-            for(int i = 0; i < count; ++i) {
+            for (int i = 0; i < count; ++i)
+            {
                 QMetaMethod member = metaobject->method(i);
                 const QString signature = member.signature();
                 const QByteArray name = signature.left(signature.indexOf('(')).toLatin1();
-                if(! d->m_methods.contains(name))
+                if (!d->m_methods.contains(name))
                     d->m_methods.insert(name, i);
             }
         }
 
         { // initialize properties
             const int count = metaobject->propertyCount();
-            for(int i = 0; i < count; ++i) {
+            for (int i = 0; i < count; ++i)
+            {
                 QMetaProperty prop = metaobject->property(i);
                 d->m_properties.insert(prop.name(), i);
-                if(prop.isWritable())
+                if (prop.isWritable())
                     d->m_properties.insert(QByteArray(prop.name()).append('='), i);
             }
         }
 
         { // initialize enumerations
             const int count = metaobject->enumeratorCount();
-            for(int i = 0; i < count; ++i) {
+            for (int i = 0; i < count; ++i)
+            {
                 QMetaEnum e = metaobject->enumerator(i);
                 const int kc = e.keyCount();
-                for(int k = 0; k < kc; ++k) {
+                for (int k = 0; k < kc; ++k)
+                {
                     const QByteArray name = /*e.name() +*/ e.key(k);
                     d->m_enumerations.insert(name, e.value(k));
                 }
@@ -124,11 +131,11 @@ RubyExtension::RubyExtension(QObject* object)
 
 RubyExtension::~RubyExtension()
 {
-    #ifdef QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
-        qrossdebug(QString("RubyExtension Dtor %1 functioncount=%2 cachecount=%3").arg(d->debuginfo).arg(d->m_functions.count()).arg(d->m_cachelist.count()));
-    #endif
+#ifdef QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
+    qrossdebug(QString("RubyExtension Dtor %1 functioncount=%2 cachecount=%3").arg(d->debuginfo).arg(d->m_functions.count()).arg(d->m_cachelist.count()));
+#endif
     qDeleteAll(d->m_functions);
-    //qDeleteAll(d->m_cachelist);
+    // qDeleteAll(d->m_cachelist);
     delete d;
 }
 
@@ -144,14 +151,14 @@ RubyFunction* RubyExtension::createFunction(QObject* sender, const QByteArray& s
     return function;
 }
 
-VALUE RubyExtension::method_missing(int argc, VALUE *argv, VALUE self)
+VALUE RubyExtension::method_missing(int argc, VALUE* argv, VALUE self)
 {
-    if( argc < 1 )
+    if (argc < 1)
         return 0;
 
-    #ifdef QROSS_RUBY_EXTENSION_DEBUG
-        qrossdebug("RubyExtension::method_missing Converting self to RubyExtension");
-    #endif
+#ifdef QROSS_RUBY_EXTENSION_DEBUG
+    qrossdebug("RubyExtension::method_missing Converting self to RubyExtension");
+#endif
 
     RubyExtension* extension = toExtension(self);
     Q_ASSERT(extension);
@@ -160,12 +167,13 @@ VALUE RubyExtension::method_missing(int argc, VALUE *argv, VALUE self)
 
 VALUE RubyExtension::clone(VALUE self)
 {
-    #ifdef QROSS_RUBY_EXTENSION_DEBUG
-        qrossdebug("Cloning...");
-    #endif
+#ifdef QROSS_RUBY_EXTENSION_DEBUG
+    qrossdebug("Cloning...");
+#endif
     RubyExtension* extension = toExtension(self);
     Q_ASSERT(extension);
-    if( extension->d->m_methods.contains("clone") ) {
+    if (extension->d->m_methods.contains("clone"))
+    {
         return extension->callMetaMethod("clone", 1, &self, self);
     }
     return Qnil; // TODO: is it useful to call the ruby clone function if no clone function is available ?
@@ -173,29 +181,31 @@ VALUE RubyExtension::clone(VALUE self)
 
 VALUE RubyExtension::toVoidPtr(VALUE self)
 {
-      RubyExtension* extension = toExtension(self);
-      Q_ASSERT(extension);
-      return Data_Wrap_Struct( rb_cObject, 0, 0, extension->object());
+    RubyExtension* extension = toExtension(self);
+    Q_ASSERT(extension);
+    return Data_Wrap_Struct(rb_cObject, 0, 0, extension->object());
 }
 
 VALUE RubyExtension::fromVoidPtr(VALUE /*self*/, VALUE obj)
 {
     QObject* qobj;
     Data_Get_Struct(obj, QObject, qobj);
-    return qobj ? RubyExtension::toVALUE( new RubyExtension(qobj), true /*owner*/ ) : Qnil;
+    return qobj ? RubyExtension::toVALUE(new RubyExtension(qobj), true /*owner*/) : Qnil;
 }
 
-VALUE RubyExtension::callFindChild(int argc, VALUE *argv, VALUE self)
+VALUE RubyExtension::callFindChild(int argc, VALUE* argv, VALUE self)
 {
-    VALUE name = ( argc == 1 && TYPE(argv[0]) == T_STRING ) ? argv[0] : ( argc >= 2 && TYPE(argv[1]) == T_STRING ) ? argv[1] : Qnil;
-    if( TYPE(name) == T_NIL ) {
+    VALUE name = (argc == 1 && TYPE(argv[0]) == T_STRING) ? argv[0] : (argc >= 2 && TYPE(argv[1]) == T_STRING) ? argv[1] :
+                                                                                                                 Qnil;
+    if (TYPE(name) == T_NIL)
+    {
         rb_raise(rb_eTypeError, "Expected the objectName as argument.");
         return Qnil;
     }
     RubyExtension* extension = toExtension(self);
     Q_ASSERT(extension);
     QObject* object = extension->d->m_object->findChild<QObject*>(RubyType<QString>::toVariant(name));
-    return object ? RubyExtension::toVALUE( new RubyExtension(object), true /*owner*/ ) : Qnil;
+    return object ? RubyExtension::toVALUE(new RubyExtension(object), true /*owner*/) : Qnil;
 }
 
 VALUE RubyExtension::propertyNames(VALUE self)
@@ -204,41 +214,43 @@ VALUE RubyExtension::propertyNames(VALUE self)
     Q_ASSERT(extension);
     const QMetaObject* metaobject = extension->d->m_object->metaObject();
     VALUE list = rb_ary_new();
-    for(int i = 0; i < metaobject->propertyCount(); ++i)
-        rb_ary_push(list, RubyType<QString>::toVALUE( metaobject->property(i).name() ));
+    for (int i = 0; i < metaobject->propertyCount(); ++i)
+        rb_ary_push(list, RubyType<QString>::toVALUE(metaobject->property(i).name()));
     return list;
 }
 
-VALUE RubyExtension::property(int argc, VALUE *argv, VALUE self)
+VALUE RubyExtension::property(int argc, VALUE* argv, VALUE self)
 {
     VALUE name = argc == 1 ? argv[0] : Qnil;
-    if( TYPE(name) != T_STRING ) {
+    if (TYPE(name) != T_STRING)
+    {
         rb_raise(rb_eTypeError, "Expected the properties name as argument.");
         return Qnil;
     }
     RubyExtension* extension = toExtension(self);
     Q_ASSERT(extension);
-    return RubyType<QVariant>::toVALUE( extension->d->m_object->property(STR2CSTR(name)) );
+    return RubyType<QVariant>::toVALUE(extension->d->m_object->property(STR2CSTR(name)));
 }
 
-VALUE RubyExtension::setProperty(int argc, VALUE *argv, VALUE self)
+VALUE RubyExtension::setProperty(int argc, VALUE* argv, VALUE self)
 {
     VALUE name = argc >= 2 ? argv[0] : Qnil;
     VALUE value = argc >= 2 ? argv[1] : Qnil;
-    if( TYPE(name) != T_STRING || argc < 2 ) {
+    if (TYPE(name) != T_STRING || argc < 2)
+    {
         rb_raise(rb_eTypeError, "Expected the properties name and value as arguments.");
         return Qnil;
     }
     RubyExtension* extension = toExtension(self);
     Q_ASSERT(extension && extension->d->m_object);
-    return RubyType<bool>::toVALUE( extension->d->m_object->setProperty(STR2CSTR(name), RubyType<QVariant>::toVariant(value)) );
+    return RubyType<bool>::toVALUE(extension->d->m_object->setProperty(STR2CSTR(name), RubyType<QVariant>::toVariant(value)));
 }
 
-VALUE RubyExtension::callConnect(int argc, VALUE *argv, VALUE self)
+VALUE RubyExtension::callConnect(int argc, VALUE* argv, VALUE self)
 {
-    #ifdef QROSS_RUBY_EXTENSION_CALLCONNECT_DEBUG
-        qrossdebug(QString("RubyExtension::callConnect"));
-    #endif
+#ifdef QROSS_RUBY_EXTENSION_CALLCONNECT_DEBUG
+    qrossdebug(QString("RubyExtension::callConnect"));
+#endif
     /*
     http://www.ruby-doc.org/doxygen/1.8.4/eval_8c-source.html#l08914
     http://renaud.waldura.com/doc/ruby/idioms.shtml
@@ -246,7 +258,8 @@ VALUE RubyExtension::callConnect(int argc, VALUE *argv, VALUE self)
     http://www.rubycentral.com/book/ext_ruby.html
     */
 
-    if( argc < 2 ) {
+    if (argc < 2)
+    {
         rb_raise(rb_eTypeError, "Expected at least 2 arguments.");
         return Qfalse;
     }
@@ -257,45 +270,54 @@ VALUE RubyExtension::callConnect(int argc, VALUE *argv, VALUE self)
     int idx; // next argument to check
     QObject* sender; // the sender object
     QByteArray sendersignal; // the sender signal
-    switch( TYPE(argv[0]) ) {
-        case T_STRING: { // connect(signal, ...)
-            sender = selfextension->object();
-            sendersignal = RubyType<QByteArray>::toVariant(argv[0]);
-            idx = 1;
-        } break;
-        case T_DATA: { // connect(sender, signal, ...)
-            if( ! RubyExtension::isRubyExtension(argv[0]) ) {
-                rb_raise(rb_eTypeError, "First argument needs to be a signalname or a sender-object.");
-                return Qfalse;
-            }
-            if( ! TYPE(argv[1]) != T_STRING ) {
-                rb_raise(rb_eTypeError, "Second argument needs to be a signalname.");
-                return Qfalse;
-            }
-            RubyExtension* senderextension = toExtension(argv[0]);
-            Q_ASSERT(senderextension);
-            sender = senderextension->object();
-            sendersignal = RubyType<QByteArray>::toVariant(argv[1]);
-            idx = 2;
-            if( argc <= idx ) {
-                rb_raise(rb_eTypeError, ::QString("Expected at least %1 arguments.").arg(idx+1).toLatin1().constData());
-                return Qfalse;
-            }
-        } break;
-        default: {
+    switch (TYPE(argv[0]))
+    {
+    case T_STRING: { // connect(signal, ...)
+        sender = selfextension->object();
+        sendersignal = RubyType<QByteArray>::toVariant(argv[0]);
+        idx = 1;
+    }
+    break;
+    case T_DATA: { // connect(sender, signal, ...)
+        if (!RubyExtension::isRubyExtension(argv[0]))
+        {
             rb_raise(rb_eTypeError, "First argument needs to be a signalname or a sender-object.");
             return Qfalse;
-        } break;
+        }
+        if (!TYPE(argv[1]) != T_STRING)
+        {
+            rb_raise(rb_eTypeError, "Second argument needs to be a signalname.");
+            return Qfalse;
+        }
+        RubyExtension* senderextension = toExtension(argv[0]);
+        Q_ASSERT(senderextension);
+        sender = senderextension->object();
+        sendersignal = RubyType<QByteArray>::toVariant(argv[1]);
+        idx = 2;
+        if (argc <= idx)
+        {
+            rb_raise(rb_eTypeError, ::QString("Expected at least %1 arguments.").arg(idx + 1).toLatin1().constData());
+            return Qfalse;
+        }
+    }
+    break;
+    default: {
+        rb_raise(rb_eTypeError, "First argument needs to be a signalname or a sender-object.");
+        return Qfalse;
+    }
+    break;
     }
 
     QObject* receiver = 0; // the receiver object
     QByteArray receiverslot; // the receiver slot
-    if( TYPE(argv[idx]) == T_DATA ) {
-#if(RUBY_VERSION_MAJOR==1 && RUBY_VERSION_MINOR==8 && RUBY_VERSION_TEENY==4)
-        //Ruby sucks sometimes; http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-talk/201285
+    if (TYPE(argv[idx]) == T_DATA)
+    {
+#if (RUBY_VERSION_MAJOR == 1 && RUBY_VERSION_MINOR == 8 && RUBY_VERSION_TEENY == 4)
+        // Ruby sucks sometimes; http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-talk/201285
         { // just always assume the user provides a method here for now...
 #else
-        if( rb_obj_is_kind_of(argv[idx], rb_cMethod) ) { // connect with ruby method
+        if (rb_obj_is_kind_of(argv[idx], rb_cMethod))
+        { // connect with ruby method
 #endif
             RubyFunction* function = selfextension->createFunction(sender, sendersignal, argv[idx]);
             receiver = function;
@@ -308,8 +330,9 @@ VALUE RubyExtension::callConnect(int argc, VALUE *argv, VALUE self)
             receiver = receiverextension->object();
         }
         */
-#if(!(RUBY_VERSION_MAJOR==1 && RUBY_VERSION_MINOR==8 && RUBY_VERSION_TEENY==4))
-        else {
+#if (!(RUBY_VERSION_MAJOR == 1 && RUBY_VERSION_MINOR == 8 && RUBY_VERSION_TEENY == 4))
+        else
+        {
             rb_raise(rb_eTypeError, ::QString("The argument number %1 is invalid.").arg(idx).toLatin1().constData());
             return Qfalse;
         }
@@ -319,120 +342,134 @@ VALUE RubyExtension::callConnect(int argc, VALUE *argv, VALUE self)
     // Dirty hack to replace SIGNAL() and SLOT() macros. If the user doesn't
     // defined them explicit, we assume it's wanted to connect from a signal to
     // a slot. This seems to be the most flexible solution so far...
-    if( ! sendersignal.startsWith('1') && ! sendersignal.startsWith('2') )
+    if (!sendersignal.startsWith('1') && !sendersignal.startsWith('2'))
         sendersignal.prepend('2'); // prepending 2 means SIGNAL(...)
-    if( ! receiverslot.startsWith('1') && ! receiverslot.startsWith('2') )
+    if (!receiverslot.startsWith('1') && !receiverslot.startsWith('2'))
         receiverslot.prepend('1'); // prepending 1 means SLOT(...)
 
-    #ifdef QROSS_RUBY_EXTENSION_CALLCONNECT_DEBUG
-        qrossdebug( QString("RubyExtension::doConnect sender=%1 signal=%2 receiver=%3 slot=%4").arg(sender->objectName()).arg(sendersignal.constData()).arg(receiver->objectName()).arg(receiverslot.constData()).toLatin1().constData() );
-    #endif
-    if(! QObject::connect(sender, sendersignal, receiver, receiverslot) ) {
-        qrosswarning( QString("RubyExtension::doConnect Failed to connect").toLatin1().constData() );
+#ifdef QROSS_RUBY_EXTENSION_CALLCONNECT_DEBUG
+    qrossdebug(QString("RubyExtension::doConnect sender=%1 signal=%2 receiver=%3 slot=%4").arg(sender->objectName()).arg(sendersignal.constData()).arg(receiver->objectName()).arg(receiverslot.constData()).toLatin1().constData());
+#endif
+    if (!QObject::connect(sender, sendersignal, receiver, receiverslot))
+    {
+        qrosswarning(QString("RubyExtension::doConnect Failed to connect").toLatin1().constData());
         return Qfalse;
     }
     return Qtrue;
 }
 
-VALUE RubyExtension::callDisconnect(int argc, VALUE *argv, VALUE self)
+VALUE RubyExtension::callDisconnect(int argc, VALUE* argv, VALUE self)
 {
-    //TODO
+    // TODO
     Q_UNUSED(argc);
     Q_UNUSED(argv);
     Q_UNUSED(self);
     return Qfalse;
 }
 
-VALUE RubyExtension::callMetaMethod(const QByteArray& funcname, int argc, VALUE *argv, VALUE self)
+VALUE RubyExtension::callMetaMethod(const QByteArray& funcname, int argc, VALUE* argv, VALUE self)
 {
     const int argumentcount = argc - 1;
 
-    #ifdef QROSS_RUBY_EXTENSION_DEBUG
-        qrossdebug(QString("RubyExtension::callMetaMethod method=%1 argumentcount=%2").arg(funcname.constData()).arg(argumentcount));
-        for(int i = 1; i < argc; i++) {
-            QVariant v = RubyType<QVariant>::toVariant(argv[i]);
-            qrossdebug(QString("  argument #%1: variant.toString=%2 variant.typeName=%3").arg(i).arg(v.toString()).arg(v.typeName()));
-        }
-    #endif
+#ifdef QROSS_RUBY_EXTENSION_DEBUG
+    qrossdebug(QString("RubyExtension::callMetaMethod method=%1 argumentcount=%2").arg(funcname.constData()).arg(argumentcount));
+    for (int i = 1; i < argc; i++)
+    {
+        QVariant v = RubyType<QVariant>::toVariant(argv[i]);
+        qrossdebug(QString("  argument #%1: variant.toString=%2 variant.typeName=%3").arg(i).arg(v.toString()).arg(v.typeName()));
+    }
+#endif
 
     int methodindex = d->m_methods[funcname];
-    if(methodindex < 0) {
+    if (methodindex < 0)
+    {
         qrosswarning(QString("No such function '%1'").arg(funcname.constData()));
         rb_raise(rb_eTypeError, "No such function");
         return Qnil;
     }
 
     QObject* object = d->m_object;
-    QMetaMethod metamethod = object->metaObject()->method( methodindex );
-    if(metamethod.parameterTypes().size() != argumentcount) {
+    QMetaMethod metamethod = object->metaObject()->method(methodindex);
+    if (metamethod.parameterTypes().size() != argumentcount)
+    {
         bool found = false;
         const int count = object->metaObject()->methodCount();
-        for(++methodindex; methodindex < count; ++methodindex) {
-            metamethod = object->metaObject()->method( methodindex );
+        for (++methodindex; methodindex < count; ++methodindex)
+        {
+            metamethod = object->metaObject()->method(methodindex);
             const QString signature = metamethod.signature();
             const QByteArray name = signature.left(signature.indexOf('(')).toLatin1();
-            if(name == funcname && metamethod.parameterTypes().size() == argumentcount) {
+            if (name == funcname && metamethod.parameterTypes().size() == argumentcount)
+            {
                 found = true;
                 break;
             }
         }
-        if(! found) {
+        if (!found)
+        {
             qrosswarning(QString("The function '%1' does not expect %2 arguments.").arg(funcname.constData()).arg(argumentcount));
             return Qfalse;
         }
     }
 
-    #ifdef QROSS_RUBY_EXTENSION_DEBUG
-        qrossdebug( QString("QMetaMethod idx=%1 sig=%2 tag=%3 type=%4").arg(methodindex).arg(metamethod.signature()).arg(metamethod.tag()).arg(metamethod.typeName()) );
-    #endif
+#ifdef QROSS_RUBY_EXTENSION_DEBUG
+    qrossdebug(QString("QMetaMethod idx=%1 sig=%2 tag=%3 type=%4").arg(methodindex).arg(metamethod.signature()).arg(metamethod.tag()).arg(metamethod.typeName()));
+#endif
 
     QList<QByteArray> typelist = metamethod.parameterTypes();
     const int typelistcount = typelist.count();
-    bool hasreturnvalue = strcmp(metamethod.typeName(),"") != 0;
+    bool hasreturnvalue = strcmp(metamethod.typeName(), "") != 0;
 
     // exact 1 returnvalue + 0..9 arguments
     Q_ASSERT(typelistcount <= 10);
-    //QVarLengthArray<MetaType*> variantargs( typelistcount + 1 );
-    //QVarLengthArray<void*> voidstarargs( typelistcount + 1 );
-    QVarLengthArray<int> types( typelistcount + 1 );
-    QVarLengthArray<int> metatypes( typelistcount + 1 );
+    // QVarLengthArray<MetaType*> variantargs( typelistcount + 1 );
+    // QVarLengthArray<void*> voidstarargs( typelistcount + 1 );
+    QVarLengthArray<int> types(typelistcount + 1);
+    QVarLengthArray<int> metatypes(typelistcount + 1);
 
     // set the return type
-    if(hasreturnvalue) {
-        types[0] = QVariant::nameToType( metamethod.typeName() );
-        if( types[0] == QVariant::Invalid || types[0] == QVariant::UserType ) {
-            metatypes[0] = QMetaType::type( metamethod.typeName() );
-            #ifdef QROSS_RUBY_EXTENSION_DEBUG
-                qrossdebug( QString("RubyExtension::callMetaMethod return typeName=%1 typeId=%2").arg(metamethod.typeName()).arg(metatypes[0]) );
-            #endif
+    if (hasreturnvalue)
+    {
+        types[0] = QVariant::nameToType(metamethod.typeName());
+        if (types[0] == QVariant::Invalid || types[0] == QVariant::UserType)
+        {
+            metatypes[0] = QMetaType::type(metamethod.typeName());
+#ifdef QROSS_RUBY_EXTENSION_DEBUG
+            qrossdebug(QString("RubyExtension::callMetaMethod return typeName=%1 typeId=%2").arg(metamethod.typeName()).arg(metatypes[0]));
+#endif
         }
-        else {
-            metatypes[0] = QMetaType::Void; //FIXME: disable before release
-            #ifdef QROSS_RUBY_EXTENSION_DEBUG
-                qrossdebug( QString("RubyExtension::callMetaMethod return typeName=%1 typeId=%2 (with metatype=QMetaType::Void)").arg(metamethod.typeName()).arg(metatypes[0]) );
-            #endif
+        else
+        {
+            metatypes[0] = QMetaType::Void; // FIXME: disable before release
+#ifdef QROSS_RUBY_EXTENSION_DEBUG
+            qrossdebug(QString("RubyExtension::callMetaMethod return typeName=%1 typeId=%2 (with metatype=QMetaType::Void)").arg(metamethod.typeName()).arg(metatypes[0]));
+#endif
         }
     }
-    else {
-        types[0] = QVariant::Invalid; //FIXME: disable before release
+    else
+    {
+        types[0] = QVariant::Invalid; // FIXME: disable before release
         metatypes[0] = QMetaType::Void;
     }
 
     // set the arguments types
-    for(int idx = 1; idx <= typelistcount; ++idx) {
+    for (int idx = 1; idx <= typelistcount; ++idx)
+    {
         const char* typeName = typelist[idx - 1].constData();
         types[idx] = QVariant::nameToType(typeName);
-        if( types[idx] == QVariant::Invalid || types[idx] == QVariant::UserType ) {
+        if (types[idx] == QVariant::Invalid || types[idx] == QVariant::UserType)
+        {
             metatypes[idx] = QMetaType::type(typeName);
-            #ifdef QROSS_RUBY_EXTENSION_DEBUG
-                qrossdebug( QString("  RubyExtension::callMetaMethod argument idx=%1 typeName=%2 typeId=%3").arg(idx).arg(typeName).arg(metatypes[idx]) );
-            #endif
+#ifdef QROSS_RUBY_EXTENSION_DEBUG
+            qrossdebug(QString("  RubyExtension::callMetaMethod argument idx=%1 typeName=%2 typeId=%3").arg(idx).arg(typeName).arg(metatypes[idx]));
+#endif
         }
-        else {
-            metatypes[idx] = QMetaType::Void; //FIXME: disable before release
-            #ifdef QROSS_RUBY_EXTENSION_DEBUG
-                qrossdebug( QString("  RubyExtension::callMetaMethod argument idx=%1 typeName=%2 typeId=%3 set metatype=QMetaType::Void").arg(idx).arg(typeName).arg(metatypes[idx]) );
-            #endif
+        else
+        {
+            metatypes[idx] = QMetaType::Void; // FIXME: disable before release
+#ifdef QROSS_RUBY_EXTENSION_DEBUG
+            qrossdebug(QString("  RubyExtension::callMetaMethod argument idx=%1 typeName=%2 typeId=%3 set metatype=QMetaType::Void").arg(idx).arg(typeName).arg(metatypes[idx]));
+#endif
         }
     }
 
@@ -441,60 +478,70 @@ VALUE RubyExtension::callMetaMethod(const QByteArray& funcname, int argc, VALUE 
     QByteArray varcallcache = QByteArray("@callcache") + funcname;
     rb_iv_set(self, varcallcache, callobj->toValue());
     rb_define_variable("$qrossinternallastclass", &self);
-    rb_eval_string("def $qrossinternallastclass." + funcname + "(*args)\n "+ varcallcache +".cacheexec(nil,*args)\nend");
-    d->m_cachelist.append( callobj );
-    //qrossdebug( QString("|||>>> %1").arg(d->debuginfo) );
+    rb_eval_string("def $qrossinternallastclass." + funcname + "(*args)\n " + varcallcache + ".cacheexec(nil,*args)\nend");
+    d->m_cachelist.append(callobj);
+    // qrossdebug( QString("|||>>> %1").arg(d->debuginfo) );
     return callobj->execfunction(argc, argv);
 }
 
-VALUE RubyExtension::call_method_missing(RubyExtension* extension, int argc, VALUE *argv, VALUE self)
+VALUE RubyExtension::call_method_missing(RubyExtension* extension, int argc, VALUE* argv, VALUE self)
 {
     QByteArray name = rb_id2name(SYM2ID(argv[0]));
 
     // look if the name is a method
-    if( extension->d->m_methods.contains(name) ) {
+    if (extension->d->m_methods.contains(name))
+    {
         return extension->callMetaMethod(name, argc, argv, self);
     }
 
     // look if the name is a property
-    if( extension->d->m_properties.contains(name) /* && extension->d->m_object */ ) {
+    if (extension->d->m_properties.contains(name) /* && extension->d->m_object */)
+    {
         const QMetaObject* metaobject = extension->d->m_object->metaObject();
-        QMetaProperty property = metaobject->property( extension->d->m_properties[name] );
-        if( name.endsWith('=') ) { // setter
-            if(argc < 2) {
+        QMetaProperty property = metaobject->property(extension->d->m_properties[name]);
+        if (name.endsWith('='))
+        { // setter
+            if (argc < 2)
+            {
                 rb_raise(rb_eNameError, QString("Expected value-argument for \"%1\" setter.").arg(name.constData()).toLatin1().constData());
                 return Qnil;
             }
             QVariant v = RubyType<QVariant>::toVariant(argv[1]);
-            if(! property.write(extension->d->m_object, v)) {
+            if (!property.write(extension->d->m_object, v))
+            {
                 rb_raise(rb_eNameError, QString("Setting attribute \"%1\" failed.").arg(name.constData()).toLatin1().constData());
                 return Qnil;
             }
             return Qnil;
         }
-        else { // getter
-            if(! property.isReadable()) {
+        else
+        { // getter
+            if (!property.isReadable())
+            {
                 rb_raise(rb_eNameError, QString("Attribute \"%1\" is not readable.").arg(name.constData()).toLatin1().constData());
                 return Qnil;
             }
-            return RubyType<QVariant>::toVALUE( property.read(extension->d->m_object) );
+            return RubyType<QVariant>::toVALUE(property.read(extension->d->m_object));
         }
     }
 
     // look if the name is an enumeration
-    if( extension->d->m_enumerations.contains(name) ) {
-        return RubyType<int>::toVALUE( extension->d->m_enumerations[name] );
+    if (extension->d->m_enumerations.contains(name))
+    {
+        return RubyType<int>::toVALUE(extension->d->m_enumerations[name]);
     }
 
     // look if it's a dynamic property
-    if( extension->d->m_object->dynamicPropertyNames().contains(name) ) {
-        return RubyType<QVariant>::toVALUE( extension->d->m_object->property(name) );
+    if (extension->d->m_object->dynamicPropertyNames().contains(name))
+    {
+        return RubyType<QVariant>::toVALUE(extension->d->m_object->property(name));
     }
 
     // look if the name refers to a child object
     QObject* object = extension->d->m_object->findChild<QObject*>(name);
-    if( object ) {
-        return RubyExtension::toVALUE( new RubyExtension(object), true /*owner*/ );
+    if (object)
+    {
+        return RubyExtension::toVALUE(new RubyExtension(object), true /*owner*/);
     }
 
     rb_raise(rb_eNameError, QString("No such method or variable \"%1\".").arg(name.constData()).toLatin1().constData());
@@ -503,10 +550,10 @@ VALUE RubyExtension::call_method_missing(RubyExtension* extension, int argc, VAL
 
 void RubyExtension::delete_object(void* object)
 {
-    #ifdef QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
-        qrossdebug("RubyExtension::delete_object");
-    #endif
-    RubyExtension* extension = static_cast< RubyExtension* >(object);
+#ifdef QROSS_RUBY_EXTENSION_CTORDTOR_DEBUG
+    qrossdebug("RubyExtension::delete_object");
+#endif
+    RubyExtension* extension = static_cast<RubyExtension*>(object);
     delete extension;
     extension = 0;
 }
@@ -521,14 +568,15 @@ void RubyExtension::delete_exception(void* object)
 
 bool RubyExtension::isRubyExtension(VALUE value)
 {
-    VALUE result = rb_funcall(value, rb_intern("kind_of?"), 1, RubyExtensionPrivate::s_qrossObject );
-    if( TYPE(result) == T_TRUE )
+    VALUE result = rb_funcall(value, rb_intern("kind_of?"), 1, RubyExtensionPrivate::s_qrossObject);
+    if (TYPE(result) == T_TRUE)
         return true;
-    result = rb_funcall(value, rb_intern("const_defined?"), 1, ID2SYM(rb_intern("MODULEOBJ") ));
-    if(TYPE(result) == T_TRUE) {
+    result = rb_funcall(value, rb_intern("const_defined?"), 1, ID2SYM(rb_intern("MODULEOBJ")));
+    if (TYPE(result) == T_TRUE)
+    {
         value = rb_funcall(value, rb_intern("const_get"), 1, ID2SYM(rb_intern("MODULEOBJ")));
-        result = rb_funcall(value, rb_intern("kind_of?"), 1, RubyExtensionPrivate::s_qrossObject );
-        if(TYPE(result) == T_TRUE)
+        result = rb_funcall(value, rb_intern("kind_of?"), 1, RubyExtensionPrivate::s_qrossObject);
+        if (TYPE(result) == T_TRUE)
             return true;
     }
     return false;
@@ -560,16 +608,17 @@ VALUE RubyExtension::convertFromException(Qross::Exception::Ptr exc)
 
 RubyExtension* RubyExtension::toExtension(VALUE value)
 {
-    VALUE result = rb_funcall(value, rb_intern("kind_of?"), 1, RubyExtensionPrivate::s_qrossObject );
-    if( TYPE(result) != T_TRUE ) {
-        if( TYPE(value) != T_MODULE )
+    VALUE result = rb_funcall(value, rb_intern("kind_of?"), 1, RubyExtensionPrivate::s_qrossObject);
+    if (TYPE(result) != T_TRUE)
+    {
+        if (TYPE(value) != T_MODULE)
             return 0;
-        result = rb_funcall(value, rb_intern("const_defined?"), 1, ID2SYM(rb_intern("MODULEOBJ") ));
-        if(TYPE(result) != T_TRUE)
+        result = rb_funcall(value, rb_intern("const_defined?"), 1, ID2SYM(rb_intern("MODULEOBJ")));
+        if (TYPE(result) != T_TRUE)
             return 0;
-        value = rb_funcall( value, rb_intern("const_get"), 1, ID2SYM(rb_intern("MODULEOBJ")) );
-        result = rb_funcall(value, rb_intern("kind_of?"), 1, RubyExtensionPrivate::s_qrossObject );
-        if(TYPE(result) != T_TRUE)
+        value = rb_funcall(value, rb_intern("const_get"), 1, ID2SYM(rb_intern("MODULEOBJ")));
+        result = rb_funcall(value, rb_intern("kind_of?"), 1, RubyExtensionPrivate::s_qrossObject);
+        if (TYPE(result) != T_TRUE)
             return 0;
     }
     RubyExtension* extension;
@@ -580,19 +629,19 @@ RubyExtension* RubyExtension::toExtension(VALUE value)
 VALUE RubyExtension::toVALUE(RubyExtension* extension, bool owner)
 {
     QObject* object = extension->d->m_object;
-    #ifdef QROSS_RUBY_EXTENSION_DEBUG
-        qrossdebug( QString("RubyExtension::toVALUE RubyExtension.QObject=%1 owner=%2").arg( object ? QString("%1 %2").arg(object->objectName()).arg(object->metaObject()->className()).arg(owner) : "NULL" ).arg(owner) );
-    #endif
-    if( ! object )
+#ifdef QROSS_RUBY_EXTENSION_DEBUG
+    qrossdebug(QString("RubyExtension::toVALUE RubyExtension.QObject=%1 owner=%2").arg(object ? QString("%1 %2").arg(object->objectName()).arg(object->metaObject()->className()).arg(owner) : "NULL").arg(owner));
+#endif
+    if (!object)
         return 0;
-    Q_ASSERT( RubyExtensionPrivate::s_qrossObject );
+    Q_ASSERT(RubyExtensionPrivate::s_qrossObject);
     return Data_Wrap_Struct(RubyExtensionPrivate::s_qrossObject, 0, owner ? RubyExtension::delete_object : 0, extension);
 }
 
 void RubyExtension::init()
 {
     RubyExtensionPrivate::s_qrossObject = rb_define_class_under(RubyInterpreter::qrossModule(), "Object", rb_cObject);
-    rb_define_method(RubyExtensionPrivate::s_qrossObject, "method_missing",  (VALUE (*)(...))RubyExtension::method_missing, -1);
+    rb_define_method(RubyExtensionPrivate::s_qrossObject, "method_missing", (VALUE (*)(...))RubyExtension::method_missing, -1);
     rb_define_method(RubyExtensionPrivate::s_qrossObject, "clone", (VALUE (*)(...))RubyExtension::clone, 0);
     rb_define_method(RubyExtensionPrivate::s_qrossObject, "findChild", (VALUE (*)(...))RubyExtension::callFindChild, -1);
     rb_define_method(RubyExtensionPrivate::s_qrossObject, "propertyNames", (VALUE (*)(...))RubyExtension::propertyNames, 0);

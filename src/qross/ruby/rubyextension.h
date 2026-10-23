@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_RUBYRUBYEXTENSION_H
-#define QROSS_RUBYRUBYEXTENSION_H
+#pragma once
 
 #include "rubyconfig.h"
 
@@ -27,118 +26,117 @@
 #include <QVariant>
 #include <QObject>
 
-namespace Qross {
+namespace Qross
+{
 
     class RubyFunction;
     class RubyExtensionPrivate;
 
     /**
-    * This class wraps a QObject into the world of ruby.
-    *
-    * @author Cyrille Berger
-    */
-    class RubyExtension {
-            friend class RubyInterpreter;
-            friend class RubyModule;
-            friend class RubyScript;
-            friend class RubyScriptPrivate;
-        public:
+     * This class wraps a QObject into the world of ruby.
+     *
+     * @author Cyrille Berger
+     */
+    class RubyExtension
+    {
+        friend class RubyInterpreter;
+        friend class RubyModule;
+        friend class RubyScript;
+        friend class RubyScriptPrivate;
+    public:
+        /**
+         * Constructor.
+         *
+         * @param object The QObject instance this extension provides access to.
+         */
+        explicit RubyExtension(QObject* object);
 
-            /**
-            * Constructor.
-            *
-            * @param object The QObject instance this extension provides access to.
-            */
-            explicit RubyExtension(QObject* object);
+        /**
+         * Destructor.
+         */
+        ~RubyExtension();
 
-            /**
-            * Destructor.
-            */
-            ~RubyExtension();
+        /**
+         * \return the QObject this \a RubyExtension wraps.
+         */
+        QObject* object() const;
+    private:
+        /**
+         * Initialize our extension object.
+         */
+        static void init();
 
-            /**
-            * \return the QObject this \a RubyExtension wraps.
-            */
-            QObject* object() const;
+        /**
+         * Create and return a new \a RubyFunction instance.
+         */
+        RubyFunction* createFunction(QObject* sender, const QByteArray& signal, const VALUE& method);
 
-        private:
+        /**
+         * Handle the function call.
+         */
+        VALUE callMetaMethod(const QByteArray& funcname, int argc, VALUE* argv, VALUE self);
 
-            /**
-            * Initialize our extension object.
-            */
-            static void init();
+        /**
+         * This function will catch functions that are undefined, extracts
+         * the matching @a RubyExtension instance and redirects the call
+         * to @a call_method_missing .
+         *
+         */
+        static VALUE method_missing(int argc, VALUE* argv, VALUE self);
 
-            /**
-            * Create and return a new \a RubyFunction instance.
-            */
-            RubyFunction* createFunction(QObject* sender, const QByteArray& signal, const VALUE& method);
+        /**
+         * This function will call a function in a \a RubyExtension object.
+         *
+         * @param extension the \a RubyExtension object which contains the function
+         * @param argc the number of argument
+         * @param argv the lists of arguments (the first argument is the Ruby ID of the function)
+         */
+        static VALUE call_method_missing(RubyExtension* extension, int argc, VALUE* argv, VALUE self);
 
-            /**
-            * Handle the function call.
-            */
-            VALUE callMetaMethod(const QByteArray& funcname, int argc, VALUE *argv, VALUE self);
+        /**
+         * This function override the clone function behaviour.
+         */
+        static VALUE clone(VALUE self);
 
-            /**
-            * This function will catch functions that are undefined, extracts
-            * the matching @a RubyExtension instance and redirects the call
-            * to @a call_method_missing .
-            * 
-            */
-            static VALUE method_missing(int argc, VALUE *argv, VALUE self);
+        /**
+         * Return a (void*) wraped objects of this.
+         */
+        static VALUE toVoidPtr(VALUE self);
+        /**
+         * @return a RubyExtension from an void* object
+         */
+        static VALUE fromVoidPtr(VALUE self, VALUE obj);
 
-            /**
-            * This function will call a function in a \a RubyExtension object.
-            *
-            * @param extension the \a RubyExtension object which contains the function
-            * @param argc the number of argument
-            * @param argv the lists of arguments (the first argument is the Ruby ID of the function)
-            */
-            static VALUE call_method_missing(RubyExtension* extension, int argc, VALUE *argv, VALUE self);
+        /**
+         * Find and return a child object of this object.
+         */
+        static VALUE callFindChild(int argc, VALUE* argv, VALUE self);
 
-            /**
-             * This function override the clone function behaviour.
-             */
-            static VALUE clone(VALUE self);
+        /**
+         * @return the a list of names of all properties this object provides.
+         */
+        static VALUE propertyNames(VALUE self);
 
-            /**
-             * Return a (void*) wraped objects of this.
-             */
-            static VALUE toVoidPtr(VALUE self);
-            /**
-             * @return a RubyExtension from an void* object
-             */
-            static VALUE fromVoidPtr(VALUE self, VALUE obj);
+        /**
+         * @return the value of a property.
+         */
+        static VALUE property(int argc, VALUE* argv, VALUE self);
 
-            /**
-             * Find and return a child object of this object.
-             */
-            static VALUE callFindChild(int argc, VALUE *argv, VALUE self);
+        /**
+         * Set the value of a property.
+         */
+        static VALUE setProperty(int argc, VALUE* argv, VALUE self);
 
-            /**
-             * @return the a list of names of all properties this object provides.
-             */
-            static VALUE propertyNames(VALUE self);
+        /**
+         * Connect was called. This does connect a signal with
+         * a slot or a scripting function.
+         */
+        static VALUE callConnect(int argc, VALUE* argv, VALUE self);
 
-            /**
-             * @return the value of a property.
-             */
-            static VALUE property(int argc, VALUE *argv, VALUE self);
-
-            /**
-             * Set the value of a property.
-             */
-            static VALUE setProperty(int argc, VALUE *argv, VALUE self);
-
-            /**
-             * Connect was called. This does connect a signal with
-             * a slot or a scripting function.
-             */
-            static VALUE callConnect(int argc, VALUE *argv, VALUE self);
-
-            /**
-             * Disconnect was called.
-             */
-            static VALUE callDisconnect(int argc, VALUE *argv, VALUE self);
+        /**
+         * Disconnect was called.
+         */
+        static VALUE callDisconnect(int argc, VALUE* argv, VALUE self);
 
 #if 0
             /**
@@ -148,10 +146,10 @@ namespace Qross {
             static VALUE call_each(int argc, VALUE *argv, VALUE self);
 #endif
 
-            /**
-            * This function is called by ruby to delete a RubyExtension object.
-            */
-            static void delete_object(void* object);
+        /**
+         * This function is called by ruby to delete a RubyExtension object.
+         */
+        static void delete_object(void* object);
 
 #if 0
             /**
@@ -159,13 +157,11 @@ namespace Qross {
             */
             static void delete_exception(void* object);
 #endif
-
-        public:
-
-            /**
-            * Test if the ruby object is a \a RubyExtension object.
-            */
-            static bool isRubyExtension(VALUE obj);
+    public:
+        /**
+         * Test if the ruby object is a \a RubyExtension object.
+         */
+        static bool isRubyExtension(VALUE obj);
 
 #if 0
             /**
@@ -184,33 +180,30 @@ namespace Qross {
             static VALUE convertFromException(Qross::Exception::Ptr exc);
 #endif
 
-            /**
-            * Converts the VALUE to a \a RubyExtension .
-            * \param value The VALUE object.
-            * \return The RubyExtension instance or NULL if cast
-            * was not possible.
-            */
-            static RubyExtension* toExtension(VALUE value);
+        /**
+         * Converts the VALUE to a \a RubyExtension .
+         * \param value The VALUE object.
+         * \return The RubyExtension instance or NULL if cast
+         * was not possible.
+         */
+        static RubyExtension* toExtension(VALUE value);
 
-            /**
-            * Converts a \a RubyExtension to a VALUE.
-            *
-            * \param extension The \a RubyExtension object to convert.
-            * \param owner if true the returned value will take over
-            * the ownership of the extension. That means, once the
-            * Ruby gc removes the returned VALUE instance we will
-            * also delete the extension.
-            * \return The to a VALUE converted RubyExtension.
-            */
-            static VALUE toVALUE(RubyExtension* extension, bool owner);
-
-        private:
-            /// @internal private d-pointer.
-            RubyExtensionPrivate * const d;
-            /// @internal unwanted copy-ctor.
-            RubyExtension(const RubyExtension&);
+        /**
+         * Converts a \a RubyExtension to a VALUE.
+         *
+         * \param extension The \a RubyExtension object to convert.
+         * \param owner if true the returned value will take over
+         * the ownership of the extension. That means, once the
+         * Ruby gc removes the returned VALUE instance we will
+         * also delete the extension.
+         * \return The to a VALUE converted RubyExtension.
+         */
+        static VALUE toVALUE(RubyExtension* extension, bool owner);
+    private:
+        /// @internal private d-pointer.
+        RubyExtensionPrivate* const d;
+        /// @internal unwanted copy-ctor.
+        RubyExtension(const RubyExtension&);
     };
 
 }
-
-#endif

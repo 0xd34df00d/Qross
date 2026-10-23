@@ -22,9 +22,8 @@
 #include "action.h"
 #include "manager.h"
 
-extern "C"
-{
-    typedef void* (*def_interpreter_func)(int version, Qross::InterpreterInfo*);
+extern "C" {
+typedef void* (*def_interpreter_func)(int version, Qross::InterpreterInfo*);
 }
 
 using namespace Qross;
@@ -33,30 +32,31 @@ using namespace Qross;
  * InterpreterInfo
  */
 
-namespace Qross {
+namespace Qross
+{
 
     /// \internal d-pointer class.
     class InterpreterInfo::Private
     {
-        public:
-            /// The name the interpreter has. Could be something like "python" or "kjs".
-            QString interpretername;
-            /// The function-pointer to the module factory function.
-            void* funcPtr;
-            /// The file wildcard used to determinate extensions.
-            QString wildcard;
-            /// List of mimetypes this interpreter supports.
-            QStringList mimetypes;
-            /// A map with options.
-            Option::Map options;
-            /// The \a Interpreter instance.
-            Interpreter* interpreter;
+    public:
+        /// The name the interpreter has. Could be something like "python" or "kjs".
+        QString interpretername;
+        /// The function-pointer to the module factory function.
+        void* funcPtr;
+        /// The file wildcard used to determinate extensions.
+        QString wildcard;
+        /// List of mimetypes this interpreter supports.
+        QStringList mimetypes;
+        /// A map with options.
+        Option::Map options;
+        /// The \a Interpreter instance.
+        Interpreter* interpreter;
     };
 
 }
 
 InterpreterInfo::InterpreterInfo(const QString& interpretername, void* funcPtr, const QString& wildcard, const QStringList& mimetypes, const Option::Map& options)
-    : d( new Private() )
+    : d(new Private())
 {
     d->interpretername = interpretername;
     d->funcPtr = funcPtr;
@@ -110,32 +110,32 @@ const QVariant InterpreterInfo::optionValue(const QString& name, const QVariant&
 
 Interpreter* InterpreterInfo::interpreter()
 {
-    if(d->interpreter) // buffered
+    if (d->interpreter) // buffered
         return d->interpreter;
 
-    //#ifdef QROSS_INTERPRETER_DEBUG
-        qrossdebug( QString("Loading the interpreter library for %1").arg(d->interpretername) );
-    //#endif
+    // #ifdef QROSS_INTERPRETER_DEBUG
+    qrossdebug(QString("Loading the interpreter library for %1").arg(d->interpretername));
+    // #endif
 
     // Get the extern "C" qrosspython_instance function.
-    def_interpreter_func interpreter_func = (def_interpreter_func) d->funcPtr;
+    def_interpreter_func interpreter_func = (def_interpreter_func)d->funcPtr;
 
     // and execute the extern qrosspython_instance function.
-    d->interpreter = interpreter_func
-        ? (Interpreter*) (interpreter_func)(QROSS_VERSION, this)
-        : 0;
+    d->interpreter = interpreter_func ? (Interpreter*)(interpreter_func)(QROSS_VERSION, this) : 0;
 
-    if(! d->interpreter) {
-        //#ifdef QROSS_INTERPRETER_DEBUG
-            qrosswarning("Incompatible interpreter library.");
-        //#endif
+    if (!d->interpreter)
+    {
+        // #ifdef QROSS_INTERPRETER_DEBUG
+        qrosswarning("Incompatible interpreter library.");
+        // #endif
     }
-    else {
+    else
+    {
         // Job done. The library is loaded and our Interpreter* points
         // to the external Qross::Python::Interpreter* instance.
-        //#ifdef QROSS_INTERPRETER_DEBUG
-            qrossdebug("Successfully loaded Interpreter instance from library.");
-        //#endif
+        // #ifdef QROSS_INTERPRETER_DEBUG
+        qrossdebug("Successfully loaded Interpreter instance from library.");
+        // #endif
     }
 
     return d->interpreter;
@@ -145,14 +145,18 @@ Interpreter* InterpreterInfo::interpreter()
  * Interpreter
  */
 
-namespace Qross {
+namespace Qross
+{
 
     /// \internal d-pointer class.
     class Interpreter::Private
     {
-        public:
-            InterpreterInfo* interpreterinfo;
-            Private(InterpreterInfo* info) : interpreterinfo(info) {}
+    public:
+        InterpreterInfo* interpreterinfo;
+        Private(InterpreterInfo* info)
+            : interpreterinfo(info)
+        {
+        }
     };
 
 }
@@ -160,7 +164,7 @@ namespace Qross {
 Interpreter::Interpreter(InterpreterInfo* info)
     : QObject()
     , ErrorInterface()
-    , d( new Private(info) )
+    , d(new Private(info))
 {
 }
 

@@ -18,34 +18,31 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef QROSS_EXPORT_H
-#define QROSS_EXPORT_H
+#pragma once
 
 #ifndef QROSS_EXPORT
-# if defined(qross_EXPORTS)
-   /* We are building this library */
-#  define QROSS_EXPORT Q_DECL_EXPORT
-# else
-   /* We are using this library */
-#  define QROSS_EXPORT Q_DECL_IMPORT
-# endif
+#if defined(qross_EXPORTS)
+/* We are building this library */
+#define QROSS_EXPORT Q_DECL_EXPORT
+#else
+/* We are using this library */
+#define QROSS_EXPORT Q_DECL_IMPORT
+#endif
 #endif
 
 #ifndef QROSSCORE_EXPORT
-# if defined(qrosscore_EXPORTS)
-   /* We are building this library */
-#  define QROSSCORE_EXPORT Q_DECL_EXPORT
-# else
-   /* We are using this library */
-#  define QROSSCORE_EXPORT Q_DECL_IMPORT
-# endif
+#if defined(qrosscore_EXPORTS)
+/* We are building this library */
+#define QROSSCORE_EXPORT Q_DECL_EXPORT
+#else
+/* We are using this library */
+#define QROSSCORE_EXPORT Q_DECL_IMPORT
+#endif
 #endif
 
-# ifndef QROSS_EXPORT_DEPRECATED
-#  define QROSS_EXPORT_DEPRECATED Q_DECL_DEPRECATED QROSS_EXPORT
-# endif
-# ifndef QROSSCORE_EXPORT_DEPRECATED
-#  define QROSSCORE_EXPORT_DEPRECATED Q_DECL_DEPRECATED QROSSCORE_EXPORT
-# endif
-
+#ifndef QROSS_EXPORT_DEPRECATED
+#define QROSS_EXPORT_DEPRECATED Q_DECL_DEPRECATED QROSS_EXPORT
+#endif
+#ifndef QROSSCORE_EXPORT_DEPRECATED
+#define QROSSCORE_EXPORT_DEPRECATED Q_DECL_DEPRECATED QROSSCORE_EXPORT
 #endif

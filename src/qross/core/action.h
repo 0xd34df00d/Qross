@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_ACTION_H
-#define QROSS_ACTION_H
+#pragma once
 
 #include <QVariant>
 #include <QObject>
@@ -31,7 +30,8 @@
 
 class QDomElement;
 
-namespace Qross {
+namespace Qross
+{
 
     class Script;
 
@@ -96,304 +96,298 @@ namespace Qross {
         , public ChildrenInterface
         , public ErrorInterface
     {
-            Q_OBJECT
+        Q_OBJECT
+    public:
+        /**
+         * Constructor.
+         *
+         * \param parent The parent QObject this \a Action is a child of.
+         * \param name The unique name this Action has. It's used
+         * e.g. at the \a Manager to identify the Action. The
+         * name is accessible via \a QObject::objectName .
+         * \deprecated since 4.3: pass search path to fromDomElement() and toDomElement()
+         */
+        Action(QObject* parent, const QString& name, const QDir& packagepath = QDir()); // BIC may be removed in favour of the next c'tor
 
-        public:
+        /**
+         * Constructor.
+         *
+         * \param parent The parent QObject this \a Action is a child of.
+         * \param url The URL should point to a valid scripting file.
+         * This \a Action will be filled with the content of the
+         * file (e.g. the file is read and \a code should return
+         * its content and it's also tried to determine the
+         * \a interpreter ). Remember to use QUrl c'tor explicitly.
+         * The name will be set to url.path()
+         */
+        Action(QObject* parent, const QUrl& url);
 
-           /**
-             * Constructor.
-             *
-             * \param parent The parent QObject this \a Action is a child of.
-             * \param name The unique name this Action has. It's used
-             * e.g. at the \a Manager to identify the Action. The
-             * name is accessible via \a QObject::objectName .
-             * \deprecated since 4.3: pass search path to fromDomElement() and toDomElement()
-             */
-            Action(QObject* parent, const QString& name, const QDir& packagepath = QDir()); //BIC may be removed in favour of the next c'tor
+        /**
+         * Destructor.
+         */
+        virtual ~Action();
 
-            /**
-             * Constructor.
-             *
-             * \param parent The parent QObject this \a Action is a child of.
-             * \param url The URL should point to a valid scripting file.
-             * This \a Action will be filled with the content of the
-             * file (e.g. the file is read and \a code should return
-             * its content and it's also tried to determine the
-             * \a interpreter ). Remember to use QUrl c'tor explicitly.
-             * The name will be set to url.path()
-             */
-            Action(QObject* parent, const QUrl& url);
+        /**
+         * Method to read settings from the QDomElement \p element that
+         * contains details about e.g. the displayed text, the file to
+         * execute or the used interpreter.
+         * \todo BIC merge
+         */
+        void fromDomElement(const QDomElement& element);
 
-            /**
-             * Destructor.
-             */
-            virtual ~Action();
+        /**
+         * Method to read settings from the QDomElement \p element that
+         * contains details about e.g. the displayed text, the file to
+         * execute or the used interpreter.
+         *
+         * \param searchPath List of directories where to search the script if its path is relative
+         * First item is given the highest priority.
+         */
+        void fromDomElement(const QDomElement& element, const QStringList& searchPath /* = QStringList()*/);
 
-            /**
-             * Method to read settings from the QDomElement \p element that
-             * contains details about e.g. the displayed text, the file to
-             * execute or the used interpreter.
-             * \todo BIC merge
-             */
-            void fromDomElement(const QDomElement& element);
+        /**
+         * \return a QDomElement that contains the settings like e.g. the
+         * displayed text, the file to execute or the used interpreter
+         * of this \a Action instance.
+         */
+        QDomElement toDomElement() const;
 
-            /**
-             * Method to read settings from the QDomElement \p element that
-             * contains details about e.g. the displayed text, the file to
-             * execute or the used interpreter.
-             * 
-             * \param searchPath List of directories where to search the script if its path is relative
-             * First item is given the highest priority.
-             */
-            void fromDomElement(const QDomElement& element, const QStringList& searchPath/* = QStringList()*/);
+        /**
+         * \return a QDomElement that contains the settings like e.g. the
+         * displayed text, the file to execute or the used interpreter
+         * of this \a Action instance.
+         * \param searchPath if given, find the closest directory containing the scriptfile
+         *  and write relative filepath
+         */
+        QDomElement toDomElement(const QStringList& searchPath /* = QStringList()*/) const;
 
-            /**
-             * \return a QDomElement that contains the settings like e.g. the
-             * displayed text, the file to execute or the used interpreter
-             * of this \a Action instance.
-             */
-            QDomElement toDomElement() const;
+        /**
+         * Initialize the \a Script instance.
+         *
+         * Normally there is no need to call this function directly because
+         * if will be called internally if needed (e.g. on \a execute ).
+         *
+         * \return true if the initialization was successful else
+         * false is returned.
+         */
+        bool initialize();
 
-            /**
-             * \return a QDomElement that contains the settings like e.g. the
-             * displayed text, the file to execute or the used interpreter
-             * of this \a Action instance.
-             * \param searchPath if given, find the closest directory containing the scriptfile
-             *  and write relative filepath
-             */
-            QDomElement toDomElement(const QStringList& searchPath/* = QStringList()*/) const;
+        /**
+         * Finalize the \a Script instance and frees any cached or still
+         * running executions. Normally there is no need to call this
+         * function directly because the \a Action will take care
+         * of calling it if needed.
+         */
+        void finalize();
 
-            /**
-             * Initialize the \a Script instance.
-             *
-             * Normally there is no need to call this function directly because
-             * if will be called internally if needed (e.g. on \a execute ).
-             *
-             * \return true if the initialization was successful else
-             * false is returned.
-             */
-            bool initialize();
+        /**
+         * \return true if the action is finalized, which means the
+         * action is currently not running.
+         */
+        bool isFinalized() const;
 
-            /**
-             * Finalize the \a Script instance and frees any cached or still
-             * running executions. Normally there is no need to call this
-             * function directly because the \a Action will take care
-             * of calling it if needed.
-             */
-            void finalize();
+        /**
+         * \return the \a Qross::Script implementation used by the scripting
+         * backend. This returns NULL until the action got triggered or if
+         * there was an error before that.
+         *
+         * Normaly it shouldn't be necessary to deal with the scripting backend
+         * depending instance of a \a Qross::Script implementation since this
+         * \a Action class already decorates all the things needed. It
+         * may however be useful to provide additional interpreter dependent
+         * functionality.
+         */
+        Script* script() const;
 
-            /**
-             * \return true if the action is finalized, which means the
-             * action is currently not running.
-             */
-            bool isFinalized() const;
+    public Q_SLOTS:
 
-            /**
-             * \return the \a Qross::Script implementation used by the scripting
-             * backend. This returns NULL until the action got triggered or if
-             * there was an error before that.
-             *
-             * Normaly it shouldn't be necessary to deal with the scripting backend
-             * depending instance of a \a Qross::Script implementation since this
-             * \a Action class already decorates all the things needed. It
-             * may however be useful to provide additional interpreter dependent
-             * functionality.
-             */
-            Script* script() const;
+        /**
+         * \return the objectName for this Action.
+         */
+        QString name() const;
 
-        public Q_SLOTS:
+        /**
+         * \return the version number this Action has.
+         * Per default 0 is returned.
+         */
+        int version() const;
 
-            /**
-             * \return the objectName for this Action.
-             */
-            QString name() const;
+        /**
+         * \return the optional description for this Action.
+         */
+        QString description() const;
 
-            /**
-             * \return the version number this Action has.
-             * Per default 0 is returned.
-             */
-            int version() const;
+        /**
+         * Set the optional description for this Action.
+         */
+        void setDescription(const QString& description);
 
-            /**
-             * \return the optional description for this Action.
-             */
-            QString description() const;
+        /**
+         * Return the name of the icon.
+         */
+        QString iconName() const;
 
-            /**
-             * Set the optional description for this Action.
-             */
-            void setDescription(const QString& description);
+        /**
+         * Set the name of the icon to \p iconname .
+         */
+        void setIconName(const QString& iconname);
 
-            /**
-             * Return the name of the icon.
-             */
-            QString iconName() const;
+        /**
+         * Return true if this Action is enabled else false is returned.
+         */
+        bool isEnabled() const;
 
-            /**
-             * Set the name of the icon to \p iconname .
-             */
-            void setIconName(const QString& iconname);
+        /**
+         * Set the enable state of this Action to \p enabled .
+         */
+        void setEnabled(bool enabled);
 
-            /**
-             * Return true if this Action is enabled else false is returned.
-             */
-            bool isEnabled() const;
+        /**
+         * \return the script file that should be executed.
+         */
+        QString file() const;
 
-            /**
-             * Set the enable state of this Action to \p enabled .
-             */
-            void setEnabled(bool enabled);
+        /**
+         * Set the script file that should be executed.
+         */
+        bool setFile(const QString& scriptfile);
 
-            /**
-             * \return the script file that should be executed.
-             */
-            QString file() const;
+        /**
+         * \return the scriptcode this Action holds.
+         */
+        QByteArray code() const;
 
-            /**
-             * Set the script file that should be executed.
-             */
-            bool setFile(const QString& scriptfile);
+        /**
+         * Set the scriptcode \p code this Action should execute.
+         */
+        void setCode(const QByteArray& code);
 
-            /**
-             * \return the scriptcode this Action holds.
-             */
-            QByteArray code() const;
+        /**
+         * \return the name of the interpreter. Could be for
+         * example "python" or "ruby".
+         */
+        QString interpreter() const;
 
-            /**
-             * Set the scriptcode \p code this Action should execute.
-             */
-            void setCode(const QByteArray& code);
+        /**
+         * Set the name of the interpreter (javascript, python or ruby).
+         */
+        void setInterpreter(const QString& interpretername);
 
-            /**
-             * \return the name of the interpreter. Could be for
-             * example "python" or "ruby".
-             */
-            QString interpreter() const;
+        /**
+         * \return the current path the script is running in or
+         * an empty string if there is no current path defined.
+         */
+        QString currentPath() const;
 
-            /**
-             * Set the name of the interpreter (javascript, python or ruby).
-             */
-            void setInterpreter(const QString& interpretername);
+        /**
+         * Add a QObject instance to the action. This instance will
+         * be published to scripts.
+         */
+        void addQObject(QObject* obj, const QString& name = QString());
 
-            /**
-             * \return the current path the script is running in or
-             * an empty string if there is no current path defined.
-             */
-            QString currentPath() const;
+        /**
+         * \return the QObject with the object name \p name .
+         */
+        QObject* qobject(const QString& name) const;
 
-            /**
-             * Add a QObject instance to the action. This instance will
-             * be published to scripts.
-             */
-            void addQObject(QObject* obj, const QString &name = QString());
+        /**
+         * \return a list of QObject object names.
+         */
+        QStringList qobjectNames() const;
 
-            /**
-             * \return the QObject with the object name \p name .
-             */
-            QObject* qobject(const QString &name) const;
+        /**
+         * \return a map of options this \a Action defines.
+         * The options are returned call-by-ref, so you are able to
+         * manipulate them.
+         */
+        QVariantMap options() const;
 
-            /**
-             * \return a list of QObject object names.
-             */
-            QStringList qobjectNames() const;
+        /**
+         * \return the value of the option defined with \p name .
+         * If there doesn't exist an option with such a name,
+         * the \p defaultvalue is returned.
+         */
+        QVariant option(const QString& name, const QVariant& defaultvalue = QVariant());
 
-            /**
-             * \return a map of options this \a Action defines.
-             * The options are returned call-by-ref, so you are able to
-             * manipulate them.
-             */
-            QVariantMap options() const;
+        /**
+         * Set the \a Interpreter::Option value.
+         */
+        bool setOption(const QString& name, const QVariant& value);
 
-            /**
-             * \return the value of the option defined with \p name .
-             * If there doesn't exist an option with such a name,
-             * the \p defaultvalue is returned.
-             */
-            QVariant option(const QString& name, const QVariant& defaultvalue = QVariant());
+        /**
+         * \return the list of functionnames.
+         */
+        QStringList functionNames();
 
-            /**
-             * Set the \a Interpreter::Option value.
-             */
-            bool setOption(const QString& name, const QVariant& value);
+        /**
+         * Call a function in the script.
+         *
+         * \param name The name of the function which should be called.
+         * \param args The optional list of arguments.
+         */
+        QVariant callFunction(const QString& name, const QVariantList& args = QVariantList());
 
-            /**
-             * \return the list of functionnames.
-             */
-            QStringList functionNames();
+        /**
+         * Evaluate some scripting code.
+         *
+         * Example how this can be used:
+         * \code
+         * Qross::Action* a = new Qross::Action(0, "MyScript");
+         * a->setInterpreter("python");
+         * a->setCode("def myFunc(x): return x");
+         * a->execute();
+         * int three = a->evaluate("1+2").toInt(); // returns 3
+         * int nine = a->evaluate("myFunc(9)").toInt(); // returns 9
+         * \endcode
+         *
+         * \param code The scripting code to evaluate.
+         * \return The return value of the evaluation.
+         */
+        QVariant evaluate(const QByteArray& code);
 
-            /**
-             * Call a function in the script.
-             *
-             * \param name The name of the function which should be called.
-             * \param args The optional list of arguments.
-             */
-            QVariant callFunction(const QString& name, const QVariantList& args = QVariantList());
+    Q_SIGNALS:
 
-            /**
-             * Evaluate some scripting code.
-             *
-             * Example how this can be used:
-             * \code
-             * Qross::Action* a = new Qross::Action(0, "MyScript");
-             * a->setInterpreter("python");
-             * a->setCode("def myFunc(x): return x");
-             * a->execute();
-             * int three = a->evaluate("1+2").toInt(); // returns 3
-             * int nine = a->evaluate("myFunc(9)").toInt(); // returns 9
-             * \endcode
-             *
-             * \param code The scripting code to evaluate.
-             * \return The return value of the evaluation.
-             */
-            QVariant evaluate(const QByteArray& code);
+        /**
+         * This signal is emitted if the content of the Action
+         * was changed. The \a ActionCollection instances this Action
+         * is a child of are connected with this signal to fire up
+         * their own updated signal if an Action of them was updated.
+         */
+        void updated();
 
-        Q_SIGNALS:
+        /// This signal is emitted when the data of the Action is changed
+        void dataChanged(Action*);
 
-            /**
-             * This signal is emitted if the content of the Action
-             * was changed. The \a ActionCollection instances this Action
-             * is a child of are connected with this signal to fire up
-             * their own updated signal if an Action of them was updated.
-             */
-            void updated();
+        /**
+         * This signal is emitted before the script got executed.
+         */
+        void started(Qross::Action*);
 
-            /// This signal is emitted when the data of the Action is changed
-            void dataChanged(Action*);
+        /**
+         * This signal is emitted after the script got executed.
+         */
+        void finished(Qross::Action*);
 
-            /**
-             * This signal is emitted before the script got executed.
-             */
-            void started(Qross::Action*);
+        /**
+         * This signal is emitted once a script finalized.
+         */
+        void finalized(Qross::Action*);
 
-            /**
-             * This signal is emitted after the script got executed.
-             */
-            void finished(Qross::Action*);
+    private Q_SLOTS:
 
-            /**
-             * This signal is emitted once a script finalized.
-             */
-            void finalized(Qross::Action*);
-
-        private Q_SLOTS:
-
-            /**
-             * This private slot is connected with the \a QAction::triggered
-             * signal. To execute the script just emit that signal and this
-             * slot tries to execute the script.
-             */
-            void slotTriggered();
-
-        private:
-            /// \internal d-pointer class.
-            class Private;
-            /// \internal d-pointer instance.
-            Private* const d;
+        /**
+         * This private slot is connected with the \a QAction::triggered
+         * signal. To execute the script just emit that signal and this
+         * slot tries to execute the script.
+         */
+        void slotTriggered();
+    private:
+        /// \internal d-pointer class.
+        class Private;
+        /// \internal d-pointer instance.
+        Private* const d;
     };
 
 }
 
 Q_DECLARE_METATYPE(Qross::Action*)
-
-#endif
-
