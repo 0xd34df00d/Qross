@@ -24,7 +24,6 @@
 #include <QtCore/QMap>
 #include <QtCore/QObject>
 #include <QtCore/QUrl>
-#include <QtScript/QScriptable>
 
 #include "qrossconfig.h"
 #include "childreninterface.h"
@@ -48,7 +47,6 @@ namespace Qross {
      */
     class QROSSCORE_EXPORT Manager
         : public QObject
-        , public QScriptable
         , public ChildrenInterface
     {
             Q_OBJECT

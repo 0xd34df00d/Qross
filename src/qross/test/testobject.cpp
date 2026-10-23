@@ -24,9 +24,7 @@
 #include <QtCore/QRect>
 #include <QtCore/QDate>
 #include <QtCore/QTimer>
-#include <QtGui/QColor>
-#include <QtGui/QFont>
-#include <QtGui/QBrush>
+#include <QtWidgets/QWidget>
 
 TestObject::TestObject(QObject* parent, const QString& name)
     : QObject(parent)
@@ -251,7 +249,7 @@ TestObject* TestObject::func_testobject_qobject(QObject* obj)
 void TestObject::func_void_testobjectlist(QList<TestObject*> l)
 {
     qDebug() << "TestObject::func_void_testobjectlist " << l.count();
-    foreach(TestObject* obj, l)
+    for (TestObject* obj : l)
         qDebug() << "  " << (obj ? obj->objectName() : "NULL");
 }
 
@@ -303,7 +301,7 @@ TestThread::~TestThread()
 void TestThread::emitStepDone(int step)
 {
     //kDebug() << "TestThread::emitStepDone() step=" << step;
-    emit stepDone(step);
+    Q_EMIT stepDone(step);
 }
 
 QVariant TestThread::callFunction(QObject* action, const QString& functionname, QVariantList arguments)
@@ -318,7 +316,7 @@ void TestThread::run()
     //kDebug() << "TestThread::run()";
     for(int i = 0; i < m_steps; ++i) {
         qDebug() << "TestThread::run() 1 step=" << i << "m_steps=" << m_steps << "m_msecs=" << m_msecs;
-        emit stepDone(i);
+        Q_EMIT stepDone(i);
         //m_testobject->emitSignalVoid();
         msleep(m_msecs);
     }

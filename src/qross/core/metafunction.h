@@ -26,12 +26,11 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QArgument>
-#include <QtCore/QByteRef>
 #include <QtCore/QPointer>
 
-#if QT_VERSION >= 0x050000
 #include <private/qmetaobjectbuilder_p.h>
-#endif
+
+#include <cstring>
 
 namespace Qross {
 
@@ -58,46 +57,10 @@ namespace Qross {
             MetaFunction(QObject* sender, const QByteArray& signal)
                 : QObject(), m_sender(sender), m_signature(QMetaObject::normalizedSignature(signal))
             {
-#if QT_VERSION < 0x050000
-                //qrossdebug(QString("MetaFunction sender=\"%1\" signal=\"%2\"").arg(sender->objectName()).arg(m_signature.constData()));
-                const uint signatureSize = m_signature.size() + 1;
-
-                // content
-                m_data[0] = 1;  // revision
-                m_data[1] = 0;  // classname
-                m_data[2] = 0;  // classinfo
-                m_data[3] = 0;  // classinfo
-                m_data[4] = 1;  // methods
-                m_data[5] = 15; // methods
-                m_data[6] = 0;  // properties
-                m_data[7] = 0;  // properties
-                m_data[8] = 0;  // enums/sets
-                m_data[9] = 0;  // enums/sets
-
-                // slots
-                m_data[15] = 15;  // signature start
-                m_data[16] = 15 + signatureSize;  // parameters start
-                m_data[17] = 15 + signatureSize;  // type start
-                m_data[18] = 15 + signatureSize;  // tag start
-                m_data[19] = 0x0a; // flags
-                m_data[20] = 0;    // eod
-
-                // data
-                m_stringData = QByteArray("ScriptFunction\0", 15);
-                m_stringData += m_signature;
-                m_stringData += QByteArray("\0\0", 2);
-
-                // static metaobject
-                staticMetaObject.d.superdata = &QObject::staticMetaObject;
-                staticMetaObject.d.stringdata = m_stringData.data();
-                staticMetaObject.d.data = m_data;
-                staticMetaObject.d.extradata = 0;
-#else
-				QMetaObjectBuilder builder;
-				builder.setClassName("ScriptFunction");
-				builder.addSignal(m_signature);
-				staticMetaObject = *builder.toMetaObject();
-#endif
+                QMetaObjectBuilder builder;
+                builder.setClassName("ScriptFunction");
+                builder.addSignal(m_signature);
+                staticMetaObject = *builder.toMetaObject();
             }
 
             /**
@@ -143,12 +106,6 @@ namespace Qross {
             QByteArray m_signature;
             /// The sender QObject.
             QPointer<QObject> m_sender;
-#if QT_VERSION < 0x050000
-            /// The stringdata.
-            QByteArray m_stringData;
-            /// The data array.
-            uint m_data[21];
-#endif
     };
 
 }

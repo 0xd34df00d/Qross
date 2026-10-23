@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 
     Qross::Manager::self().registerMetaTypeHandler("OtherObject*", OtherObjectHandler);
 
-    foreach(const QString &file, scriptfiles) {
+    for (const QString &file : scriptfiles) {
         result = runScriptFile(file);
         if(result != ERROR_OK)
             break;

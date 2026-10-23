@@ -115,7 +115,6 @@ void static init(Action* th, const QString& name, int options=0)
 
 Action::Action(QObject* parent, const QString& name, const QDir& packagepath)
     : QAction(parent)
-    , QScriptable()
     , ChildrenInterface()
     , ErrorInterface()
     , d( new Private() )
@@ -166,7 +165,7 @@ void Action::fromDomElement(const QDomElement& element, const QStringList& searc
             setFile(file);
         }
         else {
-            foreach (const QString& packagepath, searchPath) {
+            for (const QString& packagepath : searchPath) {
                 QFileInfo fi(QDir(packagepath), file);
                 if( fi.exists() ) {
                     setFile( fi.absoluteFilePath() );
@@ -176,7 +175,7 @@ void Action::fromDomElement(const QDomElement& element, const QStringList& searc
         }
     }
 
-    d->version = QVariant( element.attribute("version",QString(d->version)) ).toInt();
+    d->version = QVariant( element.attribute("version",QString::number(d->version)) ).toInt();
 
     setText( tr( element.attribute("text").toUtf8() ) );
     setDescription( tr( element.attribute("comment").toUtf8() ) );
@@ -218,7 +217,7 @@ QDomElement Action::toDomElement(const QStringList& searchPath) const
     QDomElement e = doc.createElement("script");
     e.setAttribute("name", objectName());
     if( d->version > 0 )
-        e.setAttribute("version", QString(d->version));
+        e.setAttribute("version", QString::number(d->version));
     if( ! text().isNull() )
         e.setAttribute("text", text());
     if( ! description().isNull() )
@@ -234,7 +233,7 @@ QDomElement Action::toDomElement(const QStringList& searchPath) const
     QString fileName=file();
     if (!searchPath.isEmpty()) {
         //fileName=QDir(searchPath.first()).relativeFilePath(fileName); //prefer absname if it is short?
-        foreach(const QString& packagepath, searchPath) {
+        for (const QString& packagepath : searchPath) {
             QString nfn=QDir(packagepath).relativeFilePath(file());
             if (nfn.length()<fileName.length())
                 fileName=nfn;
@@ -246,7 +245,7 @@ QDomElement Action::toDomElement(const QStringList& searchPath) const
     }
     
     QList<QByteArray> props=dynamicPropertyNames();
-    foreach(const QByteArray& prop, props) {
+    for (const QByteArray& prop : props) {
         QDomElement p = doc.createElement("property");
         p.setAttribute("name", QString::fromLatin1(prop));
         p.appendChild(doc.createTextNode(property(prop.constData()).toString()));
@@ -284,8 +283,8 @@ QString Action::description() const
 void Action::setDescription(const QString& description)
 {
     d->description = description;
-    emit dataChanged(this);
-    emit updated();
+    Q_EMIT dataChanged(this);
+    Q_EMIT updated();
 }
 
 QString Action::iconName() const
@@ -297,8 +296,8 @@ void Action::setIconName(const QString& iconname)
 {
     setIcon( QIcon(iconname) );
     d->iconname = iconname;
-    emit dataChanged(this);
-    emit updated();
+    Q_EMIT dataChanged(this);
+    Q_EMIT updated();
 }
 
 bool Action::isEnabled() const
@@ -309,8 +308,8 @@ bool Action::isEnabled() const
 void Action::setEnabled(bool enabled)
 {
     QAction::setEnabled(enabled);
-    emit dataChanged(this);
-    emit updated();
+    Q_EMIT dataChanged(this);
+    Q_EMIT updated();
 }
 
 QByteArray Action::code() const
@@ -323,8 +322,8 @@ void Action::setCode(const QByteArray& code)
     if( d->code != code ) {
         finalize();
         d->code = code;
-        emit dataChanged(this);
-        emit updated();
+        Q_EMIT dataChanged(this);
+        Q_EMIT updated();
     }
 }
 
@@ -341,8 +340,8 @@ void Action::setInterpreter(const QString& interpretername)
         setEnabled( Manager::self().interpreters().contains(interpretername) );
         if (!isEnabled())
             qrosswarning("Action::setInterpreter: interpreter not found: "+interpretername);
-        emit dataChanged(this);
-        emit updated();
+        Q_EMIT dataChanged(this);
+        Q_EMIT updated();
     }
 }
 
@@ -494,7 +493,7 @@ bool Action::initialize()
 void Action::finalize()
 {
     if( d->script )
-        emit finalized(this);
+        Q_EMIT finalized(this);
     delete d->script;
     d->script = 0;
 }
@@ -510,7 +509,7 @@ void Action::slotTriggered()
         qrossdebug( QString("Action::slotTriggered() name=%1").arg(objectName()) );
     #endif
 
-    emit started(this);
+    Q_EMIT started(this);
 
     if( ! d->script ) {
         if( ! initialize() )
@@ -535,7 +534,7 @@ void Action::slotTriggered()
         }
     }
 
-    emit finished(this);
+    Q_EMIT finished(this);
 }
 
 // --------

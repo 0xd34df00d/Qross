@@ -58,7 +58,7 @@ namespace Qross {
     // The version number of Qross. For example the interpreters use
     // it do be sure there are linked against the correct core version
     // and if the numbers don't match, the interpreter is not loaded.
-    #define QROSS_VERSION 12
+    #define QROSS_VERSION 13
 
     // The export macro for interpreter plugins.
     #define QROSS_EXPORT_INTERPRETER( InterpreterImpl ) \

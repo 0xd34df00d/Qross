@@ -35,14 +35,15 @@ class QPointF;
 class QRect;
 class QRectF;
 
-class QColor;
-class QFont;
-class QBrush;
+class QWidget;
 class QDate;
 
 #include <QtCore/QUrl>
 #include <QtCore/QDebug>
 #include <QtCore/QDateTime>
+#include <QtGui/QColor>
+#include <QtGui/QFont>
+#include <QtGui/QBrush>
 
 #include "../core/action.h"
 #include "../core/object.h"
@@ -114,11 +115,11 @@ class TestObject : public QObject
         QObject* createThread(int steps, int msecs, bool start = false);
 
         // emit some signals
-        void emitSignalVoid() { emit signalVoid(); }
-        void emitSignalBool(bool b) { emit signalBool(b); }
-        void emitSignalInt(int i) { emit signalInt(i); }
-        void emitSignalString(const QString& s) { emit signalString(s); }
-        void emitSignalObject(QObject* obj) { emit signalObject(obj); }
+        void emitSignalVoid() { Q_EMIT signalVoid(); }
+        void emitSignalBool(bool b) { Q_EMIT signalBool(b); }
+        void emitSignalInt(int i) { Q_EMIT signalInt(i); }
+        void emitSignalString(const QString& s) { Q_EMIT signalString(s); }
+        void emitSignalObject(QObject* obj) { Q_EMIT signalObject(obj); }
 
         // return the objectname
         QString name();

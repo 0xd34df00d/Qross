@@ -25,7 +25,6 @@
 #include <QDir>
 #include <QUrl>
 #include <QAction>
-#include <QScriptable>
 
 #include "errorinterface.h"
 #include "childreninterface.h"
@@ -94,7 +93,6 @@ namespace Qross {
      */
     class QROSSCORE_EXPORT Action
         : public QAction
-        , public QScriptable
         , public ChildrenInterface
         , public ErrorInterface
     {

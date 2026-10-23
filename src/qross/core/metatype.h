@@ -85,17 +85,17 @@ namespace Qross {
         public:
             MetaTypeVariant(const VARIANTTYPE& v) : m_value(v) {
                 #ifdef QROSS_METATYPE_DEBUG
-                    qrossdebug( QString("MetaTypeVariant<VARIANTTYPE> Ctor value=%1 typename=%2").arg(qVariantFromValue(m_value).toString()).arg(qVariantFromValue(m_value).typeName()) );
+                    qrossdebug( QString("MetaTypeVariant<VARIANTTYPE> Ctor value=%1 typename=%2").arg(QVariant::fromValue(m_value).toString()).arg(QVariant::fromValue(m_value).typeName()) );
                 #endif
             }
             virtual ~MetaTypeVariant() {
                 #ifdef QROSS_METATYPE_DEBUG
-                    qrossdebug( QString("MetaTypeVariant<VARIANTTYPE> Dtor value=%1 typename=%2").arg(qVariantFromValue(m_value).toString()).arg(qVariantFromValue(m_value).typeName()) );
+                    qrossdebug( QString("MetaTypeVariant<VARIANTTYPE> Dtor value=%1 typename=%2").arg(QVariant::fromValue(m_value).toString()).arg(QVariant::fromValue(m_value).typeName()) );
                 #endif
             }
 
-            virtual int typeId() { return qVariantFromValue(m_value).type(); }
-            //virtual QVariant toVariant() { return qVariantFromValue(m_value); }
+            virtual int typeId() { return QVariant::fromValue(m_value).typeId(); }
+            //virtual QVariant toVariant() { return QVariant::fromValue(m_value); }
             virtual void* toVoidStar() { return (void*) &m_value; }
 
         private:
@@ -118,7 +118,7 @@ namespace Qross {
                     qrossdebug( QString("MetaTypeVoidStar Ctor typeid=%1 typename=%2 owner=%3").arg(m_typeId).arg(typeid(m_ptr).name()).arg(m_owner) );
                 #endif
                 if( m_owner )
-                    QMetaType::destroy(m_typeId, m_ptr);
+                    QMetaType(m_typeId).destroy(m_ptr);
             }
             virtual int typeId() { return m_typeId; }
             virtual void* toVoidStar() { return (void*) &m_ptr; /*return m_ptr;*/ }

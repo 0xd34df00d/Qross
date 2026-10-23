@@ -1,10 +1,11 @@
 prefix=@CMAKE_INSTALL_PREFIX@
-exec_prefix=${prefix}/bin
+exec_prefix=${prefix}
 libdir=@CMAKE_INSTALL_FULL_LIBDIR@
 includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
 
 Name: qrosscore
 Description: Qross C++ scripting core library
 Version: @PROJECT_VERSION@
-Libs: -L${libdir} -lqrosscore-qt5
+Requires: Qt6Core Qt6Gui Qt6Xml
+Libs: -L${libdir} -lqrosscore@SHLIB_SUFFIX@
 Cflags: -I${includedir}

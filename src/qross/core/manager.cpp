@@ -25,7 +25,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QArgument>
 #include <QtCore/QFile>
-#include <QtCore/QRegExp>
+#include <QtCore/QRegularExpression>
 #include <QtCore/QFileInfo>
 #include <QtCore/QPointer>
 #include <QtCore/QLibrary>
@@ -117,18 +117,13 @@ void* loadLibrary(const char* libname, const char* functionname)
             return 0;
         }
     }
-#if QT_VERSION < 0x050000
-    void* funcPtr = lib.resolve(functionname);
-#else
-    void* funcPtr = reinterpret_cast<void*> (lib.resolve(functionname));
-#endif
+    void* funcPtr = reinterpret_cast<void*>(lib.resolve(functionname));
     Q_ASSERT(funcPtr);
     return funcPtr;
 }
 
 Manager::Manager()
     : QObject()
-    , QScriptable()
     , ChildrenInterface()
     , d( new Private() )
 {
@@ -260,14 +255,12 @@ InterpreterInfo* Manager::interpreterInfo(const QString& interpretername) const
 
 const QString Manager::interpreternameForFile(const QString& file)
 {
-    QRegExp rx;
-    rx.setPatternSyntax(QRegExp::Wildcard);
     for(QHash<QString, InterpreterInfo*>::Iterator it = d->interpreterinfos.begin(); it != d->interpreterinfos.end(); ++it) {
         if( ! it.value() )
             continue;
-        foreach(const QString &wildcard, it.value()->wildcard().split(' ', QString::SkipEmptyParts)) {
-            rx.setPattern( wildcard );
-            if( rx.exactMatch(file) )
+        for (const QString &wildcard : it.value()->wildcard().split(' ', Qt::SkipEmptyParts)) {
+            const QRegularExpression rx = QRegularExpression::fromWildcard(wildcard, Qt::CaseSensitive, QRegularExpression::NonPathWildcardConversion);
+            if( rx.match(file).hasMatch() )
                 return it.value()->interpreterName();
         }
     }
@@ -330,7 +323,7 @@ QObject* Manager::module(const QString& modulename)
             return obj;
     }
 
-    if( modulename.isEmpty() || modulename.contains( QRegExp("[^a-zA-Z0-9]") ) ) {
+    if( modulename.isEmpty() || modulename.contains( QRegularExpression("[^a-zA-Z0-9]") ) ) {
         qrosswarning( QString("Invalid module name '%1'").arg(modulename) );
         return 0;
     }
