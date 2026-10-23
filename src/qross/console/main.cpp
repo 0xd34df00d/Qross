@@ -32,11 +32,11 @@
 #include "../core/interpreter.h"
 
 #define ERROR_OK 0
-#define ERROR_HELP -1
-#define ERROR_NOSUCHFILE -2
-#define ERROR_OPENFAILED -3
-#define ERROR_NOINTERPRETER -4
-#define ERROR_EXCEPTION -6
+#define ERROR_HELP 1
+#define ERROR_NOSUCHFILE 2
+#define ERROR_OPENFAILED 3
+#define ERROR_NOINTERPRETER 4
+#define ERROR_EXCEPTION 5
 
 QApplication* app = 0;
 
@@ -59,6 +59,7 @@ int runScriptFile(const QString& scriptfile)
     Qross::InterpreterInfo* interpreterinfo = Qross::Manager::self().interpreterInfo( Qross::Manager::self().interpreternameForFile(scriptfile) );
     if(! interpreterinfo) {
         std::cerr << "No interpreter for file: " << scriptfile.toLatin1().data() << std::endl;
+        std::cerr << "Available interpreters: " << Qross::Manager::self().interpreters().join(", ").toLatin1().data() << std::endl;
         return ERROR_NOINTERPRETER;
     }
 

@@ -27,6 +27,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QRegularExpression>
 #include <QtCore/QFileInfo>
+#include <QtCore/QDir>
 #include <QtCore/QPointer>
 #include <QtCore/QLibrary>
 #include <QtCore/QCoreApplication>
@@ -72,54 +73,52 @@ Manager& Manager::self()
     return *_self();
 }
 
-#include <QtDebug>
-
-void* loadLibrary(const char* libname, const char* functionname)
+namespace
 {
-    QLibrary lib(libname);
-    lib.setLoadHints( QLibrary::ExportExternalSymbolsHint );
-    if( ! lib.load() ) {
-        const QString err = QString("Error: %1").arg(lib.errorString());
+    QStringList librarySearchPaths()
+    {
+        QStringList paths;
+        const QString env = qEnvironmentVariable("QROSS_PLUGIN_PATH");
+        if (!env.isEmpty())
+            paths += env.split(QDir::listSeparator(), Qt::SkipEmptyParts);
+        paths += QStringLiteral(QROSS_INSTALL_LIBDIR);
+        paths += QCoreApplication::libraryPaths();
+        return paths;
+    }
 
-        //TODO move that functionality out of Qross since we like to be Qt-only
-        /*
-        foreach(const QString &dir, KStandardDirs().resourceDirs("module")) {
-            lib.setFileName( QFileInfo(dir, libname).filePath() );
-            lib.setLoadHints( QLibrary::ExportExternalSymbolsHint );
-            if( lib.load() )
+    void* loadLibrary(const char* libname, const char* functionname)
+    {
+        QLibrary lib;
+        lib.setLoadHints(QLibrary::ExportExternalSymbolsHint);
+
+        QStringList candidates;
+        for (const QString& dir : librarySearchPaths())
+            candidates << QDir(dir).filePath(QString::fromLatin1(libname));
+        candidates << QString::fromLatin1(libname);
+
+        for (const QString& candidate : candidates)
+        {
+            lib.setFileName(candidate);
+            if (lib.load())
                 break;
         }
-        */
 
-        if( ! lib.isLoaded() ) {
-        	QStringList paths = QCoreApplication::instance()->libraryPaths();
-#ifdef Q_OS_UNIX
-        	paths += "/usr/local/lib";
-        	paths += "/usr/lib";
+        if (!lib.isLoaded())
+        {
+#ifdef QROSS_INTERPRETER_DEBUG
+            qrossdebug(QString("Library '%1' not available: %2").arg(QString::fromLatin1(libname), lib.errorString()));
 #endif
-            for(const auto& path : paths) {
-                lib.setFileName( QFileInfo(path, libname).filePath() );
-                lib.setLoadHints( QLibrary::ExportExternalSymbolsHint );
-                if( lib.load() )
-                    break;
-            }
+            return nullptr;
         }
 
-        if( ! lib.isLoaded() ) {
-            #ifdef QROSS_INTERPRETER_DEBUG
-                if( strcmp(functionname, "qrossinterpreter") == 0 )
-                    qrossdebug( QString("Qross Interpreter '%1' not available: %2").arg(libname).arg(err) );
-                else if( strcmp(functionname, "qrossmodule") == 0 )
-                    qrossdebug( QString("Qross Module '%1' not available: %2").arg(libname).arg(err) );
-                else
-                    qrosswarning( QString("Failed to load unknown type of '%1' library: %2").arg(libname).arg(err) );
-            #endif
-            return 0;
+        auto* const function = lib.resolve(functionname);
+        if (!function)
+        {
+            qrosswarning(QString("Library '%1' does not export '%2'").arg(lib.fileName(), QString::fromLatin1(functionname)));
+            return nullptr;
         }
+        return reinterpret_cast<void*>(function);
     }
-    void* funcPtr = reinterpret_cast<void*>(lib.resolve(functionname));
-    Q_ASSERT(funcPtr);
-    return funcPtr;
 }
 
 Manager::Manager()

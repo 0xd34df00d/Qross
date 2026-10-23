@@ -37,11 +37,11 @@
 #include <iostream>
 
 #define ERROR_OK 0
-#define ERROR_HELP -1
-#define ERROR_NOSUCHFILE -2
-#define ERROR_OPENFAILED -3
-#define ERROR_NOINTERPRETER -4
-#define ERROR_EXCEPTION -6
+#define ERROR_HELP 1
+#define ERROR_NOSUCHFILE 2
+#define ERROR_OPENFAILED 3
+#define ERROR_NOINTERPRETER 4
+#define ERROR_EXCEPTION 5
 
 QApplication *app = 0;
 
@@ -79,6 +79,7 @@ int runScriptFile(const QString& scriptfile)
     QString interpretername = getInterpreterName(scriptfile);
     if( interpretername.isNull() ) {
         std::cerr << "No interpreter for scriptfile: " << scriptfile.toLatin1().data() << std::endl;
+        std::cerr << "Available interpreters: " << Qross::Manager::self().interpreters().join(", ").toLatin1().data() << std::endl;
         return ERROR_NOINTERPRETER;
     }
 
@@ -101,15 +102,13 @@ int runScriptFile(const QString& scriptfile)
     action->trigger();
     std::cout << "Execution of scriptfile " << scriptfile.toLatin1().data() << " done" << std::endl;
 
-    /*
-    if(action->hadException()) {
-        // We had an exception.
-        QString errormessage = action->getException()->getError();
-        QString tracedetails = action->getException()->getTrace();
-        std::cerr << QString("%2\n%1").arg(tracedetails).arg(errormessage).toLatin1().data() << std::endl;
+    if(action->hadError()) {
+        std::cerr << action->errorMessage().toUtf8().constData() << std::endl;
+        if(! action->errorTrace().isEmpty())
+            std::cerr << action->errorTrace().toUtf8().constData() << std::endl;
+        delete action;
         return ERROR_EXCEPTION;
     }
-    */
 
     delete action;
     return ERROR_OK;
@@ -158,6 +157,5 @@ int main(int argc, char **argv)
     delete testobj2;
     delete app;
 
-    qDebug() << "DONE!!!";
     return result;
 }

@@ -7,12 +7,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_AUTOMOC ON)
 
 include(GNUInstallDirs)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Xml Test)
 
 # Library and executable names carry the Qt major version, and the core
 # derives the interpreter plugin names from the same suffix.
 set(SHLIB_SUFFIX "-qt6")
+
+# One output directory for all interpreter plugins, so that tests can point
+# QROSS_PLUGIN_PATH at it.
+set(QROSS_PLUGIN_BUILD_DIR ${PROJECT_BINARY_DIR}/plugins)
 
 add_compile_definitions(
     SHLIB_SUFFIX="${SHLIB_SUFFIX}"
@@ -27,6 +32,7 @@ add_subdirectory(core)
 add_subdirectory(console)
 # unittests and such stuff
 include(CTest)
+include(QrossTesting)
 if(BUILD_TESTING)
     add_subdirectory(test)
 endif()
