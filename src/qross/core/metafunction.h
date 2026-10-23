@@ -21,93 +21,69 @@
  * Boston, MA 02110-1301, USA.
  ***************************************************************************/
 
-#ifndef QROSS_METAFUNCTION_H
-#define QROSS_METAFUNCTION_H
+#pragma once
 
+#include "qross_export.h"
+
+#include <QtCore/QMetaMethod>
 #include <QtCore/QObject>
-#include <QtCore/QArgument>
 #include <QtCore/QPointer>
+#include <QtCore/QVariant>
 
-#include <private/qmetaobjectbuilder_p.h>
-
-#include <cstring>
-
-namespace Qross {
-
+namespace Qross
+{
     /**
-     * The MetaFunction class implements a QObject to provide an adaptor
-     * between Qt signals+slots and scripting functions.
+     * Receives a Qt signal whose signature is only known at runtime and
+     * forwards its arguments to callback().
      *
-     * For example the Qross::PythonFunction and the Qross::RubyFunction
-     * classes located in kdebindings inherit this class to connect a
-     * QObject signal together with a callable python or ruby method.
+     * Backends subclass this to connect signals of published QObjects to
+     * script functions. The connection goes through QMetaObject::connect to
+     * a slot index no metaobject contains, and the invocation arrives in
+     * qt_metacall(), the way QSignalSpy works, so nothing has to be built
+     * with QMetaObjectBuilder.
      */
-    class MetaFunction : public QObject
+    class QROSSCORE_EXPORT MetaFunction : public QObject
     {
-        public:
+        QPointer<QObject> m_sender;
+        QMetaMethod m_signal;
+        QMetaObject::Connection m_connection;
+    public:
+        /**
+         * Connects to \p signal of \p sender right away. isConnected() tells
+         * whether that worked: a null sender, a method that is not a signal
+         * or a signal of another class are refused.
+         */
+        MetaFunction(QObject* sender, const QMetaMethod& signal, Qt::ConnectionType type = Qt::AutoConnection);
 
-            /**
-            * Constructor.
-            *
-            * \param sender The QObject instance that sends the signal.
-            * \param signal The signature of the signal the QObject emits.
-            * \param callable The callable python function that should
-            * be executed if the QObject emits the signal.
-            */
-            MetaFunction(QObject* sender, const QByteArray& signal)
-                : QObject(), m_sender(sender), m_signature(QMetaObject::normalizedSignature(signal))
-            {
-                QMetaObjectBuilder builder;
-                builder.setClassName("ScriptFunction");
-                builder.addSignal(m_signature);
-                staticMetaObject = *builder.toMetaObject();
-            }
+        /**
+         * Looks the signal up by its \p signature, normalizing it first.
+         */
+        MetaFunction(QObject* sender, const QByteArray& signature, Qt::ConnectionType type = Qt::AutoConnection);
 
-            /**
-            * Destructor.
-            */
-            virtual ~MetaFunction() {}
+        ~MetaFunction() override;
 
-            /**
-            * The static \a QMetaObject instance that provides the
-            * QMeta-information for this QObject class.
-            */
-            QMetaObject staticMetaObject;
+        /// \return true while the connection to the signal is alive.
+        bool isConnected() const;
 
-            /**
-            * \return the dynamic build \a QMetaObject instance
-            * for this QObject instance.
-            */
-            const QMetaObject *metaObject() const {
-                return &staticMetaObject;
-            }
+        /// Disconnects from the signal; callback() is not called any more.
+        void disconnectSignal();
 
-            /**
-            * Try to cast this QObject instance into the class with
-            * name \p _clname and return the casted pointer or NULL
-            * if casting failed.
-            */
-            void *qt_metacast(const char *_clname) {
-                if (! _clname)
-                    return 0;
-                if (! strcmp(_clname, metaObject()->className()))
-                    return static_cast<void*>( const_cast< MetaFunction* >(this) );
-                return QObject::qt_metacast(_clname);
-            }
+        /// \return the object whose signal is relayed, or null once it is gone.
+        QObject* signalSender() const;
 
-            /**
-            * This method got called if a method this QObject instance
-            * defines should be invoked.
-            */
-            int qt_metacall(QMetaObject::Call _c, int _id, void **_a) = 0;
+        /// \return the relayed signal.
+        QMetaMethod signal() const;
 
-        protected:
-            /// The signature.
-            QByteArray m_signature;
-            /// The sender QObject.
-            QPointer<QObject> m_sender;
+        /// \internal receives the invocation of the virtual slot.
+        int qt_metacall(QMetaObject::Call call, int id, void** args) override;
+    protected:
+        /**
+         * Called each time the signal is emitted, with its arguments as
+         * QVariants in declaration order. An argument of a type unknown to
+         * QMetaType arrives as an invalid QVariant.
+         */
+        virtual void callback(const QVariantList& args) = 0;
+    private:
+        void dispatch(void** args);
     };
-
 }
-
-#endif

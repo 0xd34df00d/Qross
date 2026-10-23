@@ -5,6 +5,7 @@ set(qrosscore_SRCS
     action.cpp
     actioncollection.cpp
     manager.cpp
+    metafunction.cpp
     object.cpp
 )
 

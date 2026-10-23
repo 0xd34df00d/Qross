@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 
 include(GNUInstallDirs)
 
-find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Xml)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Xml Test)
 
 # Library and executable names carry the Qt major version, and the core
 # derives the interpreter plugin names from the same suffix.
@@ -26,4 +26,7 @@ add_subdirectory(core)
 # commandline-prog to run scripts
 add_subdirectory(console)
 # unittests and such stuff
-add_subdirectory(test)
+include(CTest)
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()
