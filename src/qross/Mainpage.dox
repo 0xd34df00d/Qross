@@ -25,7 +25,6 @@ Then you can get rid of this comment as well.
 
 The main parts of %Qross:
 - @ref core "The core of Qross"
-- @ref modules "The optional Qross modules"
 - @ref console "The Qross console application"
 - @ref test "The unit- and regression tests"
 

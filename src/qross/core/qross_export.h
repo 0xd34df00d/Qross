@@ -41,16 +41,6 @@
 # endif
 #endif
 
-#ifndef QROSSUI_EXPORT
-# if defined(qrossui_EXPORTS)
-   /* We are building this library */
-#  define QROSSUI_EXPORT Q_DECL_EXPORT
-# else
-   /* We are using this library */
-#  define QROSSUI_EXPORT Q_DECL_IMPORT
-# endif
-#endif
-
 # ifndef QROSS_EXPORT_DEPRECATED
 #  define QROSS_EXPORT_DEPRECATED Q_DECL_DEPRECATED QROSS_EXPORT
 # endif
