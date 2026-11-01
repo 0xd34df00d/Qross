@@ -148,15 +148,11 @@ Manager::Manager()
 #ifdef QROSS_RUBY_LIBRARY
     if (void* funcPtr = loadLibrary(QROSS_RUBY_LIBRARY, "qrossinterpreter"))
     {
-        InterpreterInfo::Option::Map options;
-        options.insert("safelevel", new InterpreterInfo::Option(tr("Level of safety of the Ruby interpreter"),
-                                        QVariant(0))); // 0 -> unsafe, 4 -> very safe
         d->interpreterinfos.insert("ruby",
             new InterpreterInfo("ruby",
                 funcPtr, // library
                 "*.rb", // file filter-wildcard
-                QStringList() << /* "text/x-ruby" << */ "application/x-ruby", // mimetypes
-                options // options
+                QStringList() << "application/x-ruby" << "text/x-ruby" // mimetypes
                 ));
     }
 #endif

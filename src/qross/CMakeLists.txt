@@ -11,6 +11,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 option(QROSS_WITH_JAVASCRIPT "Build the JavaScript backend" ON)
 option(QROSS_WITH_PYTHON "Build the Python backend" ON)
+option(QROSS_WITH_RUBY "Build the Ruby backend" ON)
 
 find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Xml Test)
 if(QROSS_WITH_JAVASCRIPT)
@@ -18,6 +19,9 @@ if(QROSS_WITH_JAVASCRIPT)
 endif()
 if(QROSS_WITH_PYTHON)
     find_package(Python3 3.12 REQUIRED COMPONENTS Development.Embed)
+endif()
+if(QROSS_WITH_RUBY)
+    find_package(Ruby 3.2 REQUIRED)
 endif()
 
 # Library and executable names carry the Qt major version, and the core
@@ -41,6 +45,9 @@ if(QROSS_WITH_JAVASCRIPT)
 endif()
 if(QROSS_WITH_PYTHON)
     add_subdirectory(python)
+endif()
+if(QROSS_WITH_RUBY)
+    add_subdirectory(ruby)
 endif()
 add_subdirectory(console)
 

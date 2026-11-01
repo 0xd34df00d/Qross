@@ -26,3 +26,12 @@ if(QROSS_WITH_PYTHON)
 
     qross_add_script_test(python_unittest ${CMAKE_CURRENT_SOURCE_DIR}/unittest.py)
 endif()
+
+if(QROSS_WITH_RUBY)
+    add_executable(tst_ruby tst_ruby.cpp)
+    target_link_libraries(tst_ruby PRIVATE Qross::Core Qt6::Test)
+    add_test(NAME ruby COMMAND tst_ruby)
+    qross_set_test_environment(ruby)
+
+    qross_add_script_test(ruby_unittest ${CMAKE_CURRENT_SOURCE_DIR}/unittest.rb)
+endif()
