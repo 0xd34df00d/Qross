@@ -17,3 +17,12 @@ if(QROSS_WITH_JAVASCRIPT)
 
     qross_add_script_test(javascript_unittest ${CMAKE_CURRENT_SOURCE_DIR}/unittest.js)
 endif()
+
+if(QROSS_WITH_PYTHON)
+    add_executable(tst_python tst_python.cpp)
+    target_link_libraries(tst_python PRIVATE Qross::Core Qt6::Test)
+    add_test(NAME python COMMAND tst_python)
+    qross_set_test_environment(python)
+
+    qross_add_script_test(python_unittest ${CMAKE_CURRENT_SOURCE_DIR}/unittest.py)
+endif()

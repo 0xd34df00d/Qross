@@ -1,313 +1,219 @@
 #!/usr/bin/env qrosstest
-# -*- coding: utf-8 -*-
-# coding: utf-8
+# Qross - scripting bridge for Qt applications.
+# SPDX-License-Identifier: LGPL-2.0-or-later
 
-"""
-  This Python script is used to test the Qross scripting framework.
-"""
+# Run by qrosstest, which publishes TestObject1 and TestObject2 through
+# the manager and TestObject3 and TestObject4 through the action.
 
+import datetime
 import unittest
-import TestObject1
-from TestObject2 import *
 
-QrossAction = self
+action = self
+
+
+class TestQross(unittest.TestCase):
+    def setUp(self):
+        self.object1 = TestObject1
+        self.object2 = TestObject2
+
+    def testObjects(self):
+        self.assertEqual(self.object1.name(), "TestObject1")
+        self.assertEqual(self.object2.objectName, "TestObject2")
+        self.assertEqual(TestObject3.name(), "TestObject3")
+        self.assertEqual(TestObject4.name(), "TestObject4")
+        self.assertEqual(self.object1.className(), "TestObject")
+        self.assertEqual(self.object1.myself(), self.object1)
+        self.assertEqual(self.object1.myself2(), self.object1)
+        self.assertNotEqual(self.object1, self.object2)
+        self.assertEqual(self.object1.func_qobject_qobject(self.object2), self.object2)
+        self.assertEqual(self.object1.func_testobject_testobject(self.object2), self.object2)
+        self.assertEqual(self.object1.func_testobject_qobject(self.object2), self.object2)
+        self.assertIsNone(self.object1.func_qobject_qobject(None))
+        self.assertIsNone(self.object1.func_qwidget_qwidget(None))
+        self.assertEqual(self.object1.func_createChildTestObject("MyChildObject").name(), "MyChildObject")
+        self.assertIn("func_int_int", dir(self.object1))
+        with self.assertRaises(TypeError):
+            self.object1.func_qobject_qobject("not an object")
+        with self.assertRaises(TypeError):
+            self.object1.func_qwidget_qwidget(self.object2)
+        with self.assertRaises(TypeError):
+            self.object1.func_int_int(1, 2)
+        with self.assertRaises(AttributeError):
+            self.object1.noSuchMethod()
+
+    def testNumbers(self):
+        self.assertIs(self.object1.func_bool_bool(True), True)
+        self.assertIs(self.object1.func_bool_bool(False), False)
+        for value in (0, 177321, -98765):
+            self.assertEqual(self.object1.func_int_int(value), value)
+        for value in (0, 177321):
+            self.assertEqual(self.object1.func_uint_uint(value), value)
+        for value in (0.0, 1773.2177, -548993.271993):
+            self.assertEqual(self.object1.func_double_double(value), value)
+        for value in (0, 7379, -6384673, -2 ** 40):
+            self.assertEqual(self.object1.func_qlonglong_qlonglong(value), value)
+        for value in (0, 378972, 2 ** 63):
+            self.assertEqual(self.object1.func_qulonglong_qulonglong(value), value)
+
+    def testStrings(self):
+        for value in ("", " ", " Another \n\r Test!   $%&\" ", "áêïòñα", "α"):
+            self.assertEqual(self.object1.func_qstring_qstring(value), value)
+        self.assertEqual(self.object1.func_qstring_qstring_int("x", 5), "x,5")
+        self.assertEqual(self.object1.func_qbytearray_qbytearray(b"bytes"), b"bytes")
+        self.assertEqual(self.object1.func_qbytearray_qbytearray("text"), b"text")
+
+    def testLists(self):
+        self.assertEqual(self.object1.func_qstringlist_qstringlist([]), [])
+        self.assertEqual(self.object1.func_qstringlist_qstringlist([" string1", "string2 "]), [" string1", "string2 "])
+        self.assertEqual(self.object1.func_qstringlist_qstringlist(("a", "b")), ["a", "b"])
+        self.assertEqual(self.object1.func_qvariantlist_qvariantlist([]), [])
+        self.assertEqual(self.object1.func_qvariantlist_qvariantlist([[[[]], []]]), [[[[]], []]])
+        self.assertEqual(self.object1.func_qvariantlist_qvariantlist(["A string", [17539, -8591], [5.32, -842.775]]), ["A string", [17539, -8591], [5.32, -842.775]])
+        self.assertEqual(self.object1.func_qvariantlist_qvariantlist([[True, [], False, "Other String"], "test"]), [[True, [], False, "Other String"], "test"])
+        self.assertEqual(self.object1.func_qvariantlist_qvariantlist([[17, 52], [], {}, [84.21, 936.821]]), [[17, 52], [], {}, [84.21, 936.821]])
+        wrapped = self.object1.func_qobject2qvariantlist(self.object2)
+        self.assertEqual(wrapped, [self.object2])
+        self.assertEqual(self.object1.func_qvariantlist2qobject(wrapped), self.object2)
+        self.assertEqual(self.object1.myself3(), [self.object1])
+        self.assertEqual(self.object1.func_testobjectlist_testobjectlist([self.object1, self.object2]), [self.object1, self.object2])
+
+    def testMaps(self):
+        for value in ({}, {"3": -837, "1": 73682, "2": 285}, {"c": 84.24, "a": -6892.957}, {"key1": True, "key2": False},
+                      {"key 2": "  Some String  ", "key 3": "oThEr StRiNg"}, {" key4 ": [12.5, True], " key5 ": [83.002, "test"]},
+                      {"  key7  ": {}, "  key6  ": {}}):
+            self.assertEqual(self.object1.func_qvariantmap_qvariantmap(value), value)
+
+    def testVariants(self):
+        for value in (0.0, True, False, 187937, -69825, 8632.274, -8632.351, " Test \n\r This String $%&\"", None, [1, "a"], {"a": 1}):
+            self.assertEqual(self.object1.func_qvariant_qvariant(value), value)
+        self.assertEqual(self.object1.func_qvariant_qvariant(self.object2), self.object2)
+
+    def testGeometry(self):
+        for value in ((0, 0), (12, -94), (-7264, 6224)):
+            self.assertEqual(self.object1.func_qsize_qsize(value), value)
+            self.assertEqual(self.object1.func_qpoint_qpoint(list(value)), value)
+        for value in ((0.0, 0.0), (-956.0, 75.21), (-14.21, -535.0)):
+            self.assertEqual(self.object1.func_qsizef_qsizef(value), value)
+            self.assertEqual(self.object1.func_qpointf_qpointf(value), value)
+        for value in ((0, 0, 0, 0), (-1, -2, 3, 4), (10, 20, -30, -40)):
+            self.assertEqual(self.object1.func_qrect_qrect(value), value)
+        for value in ((0.0, 0.0, 0.0, 0.0), (-1.1, -2.2, 3.3, 4.4)):
+            self.assertEqual(self.object1.func_qrectf_qrectf(value), value)
+        with self.assertRaises(TypeError):
+            self.object1.func_qrect_qrect((1, 2))
+
+    def testColorsAndUrls(self):
+        self.assertIsNone(self.object1.func_qcolor_qcolor(None))
+        self.assertEqual(self.object1.func_qcolor_qcolor("#0066ff"), "#0066ff")
+        self.assertEqual(self.object1.func_qcolor_qcolor("#800066ff"), "#800066ff")
+        self.assertEqual(self.object1.func_qurl_qurl(None), "")
+        for value in ("/home/myuser", "file:///home/myuser/myfile.txt", "http://myname:mypass@qross.dipe.org?404.cgi?test=123&test2=456"):
+            self.assertEqual(self.object1.func_qurl_qurl(value), value)
+
+    def testDates(self):
+        when = datetime.datetime(2020, 1, 2, 3, 4, 5, 6000)
+        self.assertEqual(self.object1.func_qdatetime_qdatetime(when), when)
+        self.assertEqual(self.object1.func_qdate_qdate(when.date()), when.date())
+        self.assertEqual(self.object1.func_qtime_qtime(when.time()), when.time())
+
+    def testProperties(self):
+        self.object1.boolProperty = True
+        self.assertIs(self.object1.boolProperty, True)
+        self.object1.intProperty = 20
+        self.assertEqual(self.object1.intProperty, 20)
+        self.object1.doubleProperty = 7436.671
+        self.assertEqual(self.object1.doubleProperty, 7436.671)
+        self.object1.stringProperty = " SoMe StRiNg "
+        self.assertEqual(self.object1.stringProperty, " SoMe StRiNg ")
+        self.object1.stringListProperty = ["TestString", " Other String "]
+        self.assertEqual(self.object1.stringListProperty, ["TestString", " Other String "])
+        self.object1.listProperty = [True, [2464, -8295], -572.07516, "test", []]
+        self.assertEqual(self.object1.listProperty, [True, [2464, -8295], -572.07516, "test", []])
+        with self.assertRaises(AttributeError):
+            self.object1.noSuchProperty = 1
+
+        self.object1.setProperty("intProperty", -75825)
+        self.assertEqual(self.object1.property("intProperty"), -75825)
+        self.assertEqual(self.object1.intProperty, -75825)
+        self.assertEqual(self.object1.property("dynamicProperty"), ["Some String", 99])
+        self.assertEqual(self.object1.dynamicProperty, ["Some String", 99])
+        self.object1.setProperty("newDynamicProperty", "New Dynamic Property")
+        self.assertEqual(self.object1.newDynamicProperty, "New Dynamic Property")
+        self.object1.newDynamicProperty = 5
+        self.assertEqual(self.object1.property("newDynamicProperty"), 5)
+
+    def testEnumerations(self):
+        self.assertEqual(self.object1.TESTENUM1, 1)
+        self.assertEqual(self.object1.TESTENUM2, 2)
+        self.assertEqual(self.object1.TESTENUM3, 4)
+        self.assertEqual(self.object1.TESTENUM4, 8)
+        self.assertEqual(self.object1.myself().TESTENUM2, 2)
+
+    def testSignals(self):
+        received = []
+        self.object1.signalString.connect(received.append)
+        self.object1.emitSignalString("more beer")
+        self.assertEqual(received, ["more beer"])
+        self.object1.signalString("direct")
+        self.assertEqual(received[-1], "direct")
+        self.object1.signalObject.connect(lambda o: received.append(o.name()))
+        self.object1.emitSignalObject(self.object2)
+        self.assertEqual(received[-1], "TestObject2")
+
+        def onInt(i):
+            received.append(i)
+
+        self.object1.signalInt.connect(onInt)
+        self.object1.emitSignalInt(9)
+        self.assertEqual(received[-1], 9)
+        self.object1.signalInt.disconnect(onInt)
+        self.object1.emitSignalInt(10)
+        self.assertEqual(received[-1], 9)
+        with self.assertRaises(TypeError):
+            self.object1.func_void.connect(onInt)
+
+    def testAction(self):
+        self.assertIn("testFunction", action.functionNames())
+        for value in ([], [True, False], [524, -958], [524.98, -958.1257], ["", "  Some\nString  "], [["one", 23, "two", None, False]]):
+            self.assertEqual(action.callFunction("testFunction", value), value)
+        self.assertEqual(action.callFunction("testFunction", [action]), [action])
+        self.assertEqual(action.evaluate("1+2"), 3)
+        self.assertEqual(action.evaluate("testFunction(None, 99)"), [None, 99])
+
+    def testScriptObjects(self):
+        class MyClass:
+            def __init__(self, result):
+                self.result = result
+
+            def myMethod(self):
+                return self.result
+
+            def add(self, a, b):
+                return a + b
+
+        instance = MyClass("my string")
+        self.assertEqual(self.object1.call_qrossobject_method(instance, "myMethod"), "my string")
+        self.assertEqual(self.object1.call_qrossobject_method(instance, "add", [40, 2]), 42)
+        self.assertEqual(self.object1.get_qrossobject_methods(instance), ["add", "myMethod"])
+        self.assertIs(self.object1.func_qrossobject_qrossobject(instance), instance)
+
+    def testOtherObject(self):
+        other1 = self.object1.func_otherobject("OtherObject1")
+        other2 = self.object1.func_otherobject("OtherObject2")
+        self.assertEqual(other1.objectName, "OtherObject1_wrapper")
+        self.assertEqual(other2.parentObject().objectName, "OtherObject2")
+        self.assertEqual(self.object1.func_otherobject_otherobject(other1).objectName, other1.objectName)
+        both = self.object1.func_otherobjectlist_otherobjectlist([other1, other2])
+        self.assertEqual(len(both), 2)
+        self.assertEqual(both[0].objectName, "OtherObject1_wrapper")
+        self.assertEqual(both[1].parentObject().objectName, "OtherObject2")
+
 
 def testFunction(*args):
     return args
 
-class TestQross(unittest.TestCase):
-	""" Testcases to test the Qross python functionality for regressions. """
 
-	def setUp(self):
-		self.object1 = TestObject1
-		self.object2 = TestObject2
-
-	def testBool(self):
-		self.assert_( self.object1.func_bool_bool(True) == True )
-		self.assert_( self.object1.func_bool_bool(False) == False )
-
-	def testInt(self):
-		self.assert_( self.object1.func_int_int(0) == 0 )
-		self.assert_( self.object1.func_int_int(177321) == 177321 )
-		self.assert_( self.object1.func_int_int(-98765) == -98765 )
-
-	def testUInt(self):
-		self.assert_( self.object1.func_uint_uint(0) == 0 )
-		self.assert_( self.object1.func_uint_uint(177321) == 177321 )
-		#self.assertRaises(OverflowError, self.object1.func_uint_uint, -1)
-
-	def testDouble(self):
-		self.assert_( self.object1.func_double_double(0.0) == 0.0 )
-		self.assert_( self.object1.func_double_double(1773.2177) == 1773.2177 )
-		self.assert_( self.object1.func_double_double(-548993.271993) == -548993.271993 )
-
-	def testLongLong(self):
-		self.assert_( self.object1.func_qlonglong_qlonglong(0) == 0 )
-		self.assert_( self.object1.func_qlonglong_qlonglong(7379) == 7379 )
-		self.assert_( self.object1.func_qlonglong_qlonglong(-6384673) == -6384673 )
-		#self.assert_( self.object1.func_qlonglong_qlonglong(678324787843223472165) == 678324787843223472165 )
-
-	def testULongLong(self):
-		self.assert_( self.object1.func_qulonglong_qulonglong(0) == 0 )
-		self.assert_( self.object1.func_qulonglong_qulonglong(378972) == 378972 )
-		#self.assert_( self.object1.func_qulonglong_qulonglong(-8540276823902375665225676321823) == -8540276823902375665225676321823 )
-
-	def testByteArray(self):
-		self.assert_( self.object1.func_qbytearray_qbytearray("  Some String as ByteArray  ") == "  Some String as ByteArray  " )
-		self.assert_( self.object1.func_qbytearray_qbytearray(" \0\n\r\t\s\0 test ") == " \0\n\r\t\s\0 test " )
-
-	def testString(self):
-		self.assert_( self.object1.func_qstring_qstring(None) == None )
-		self.assert_( self.object1.func_qstring_qstring("") == "" )
-		self.assert_( self.object1.func_qstring_qstring(" ") == " " )
-		self.assert_( self.object1.func_qstring_qstring(" Another \n\r Test!   $%&\" ") == " Another \n\r Test!   $%&\" " )
-		self.assert_( self.object1.func_qstring_qstring("áêïòñα") == "áêïòñα" )
-		self.assert_( self.object1.func_qstring_qstring(unicode("abcdef")) == "abcdef" )
-		self.assert_( self.object1.func_qstring_qstring(u"\u03B1") == u"\u03B1".encode('utf8') )
-
-	def testStringList(self):
-		self.assert_( self.object1.func_qstringlist_qstringlist( [] ) == [] )
-		self.assert_( self.object1.func_qstringlist_qstringlist( ["string1"] ) == ["string1"] )
-		self.assert_( self.object1.func_qstringlist_qstringlist( [" string1","string2 "] ) == [" string1","string2 "] )
-
-	def testVariantList(self):
-		self.assert_( self.object1.func_qvariantlist_qvariantlist( [] ) == [] )
-		self.assert_( self.object1.func_qvariantlist_qvariantlist( [[[[]],[]]] ) == [[[[]],[]]] )
-		self.assert_( self.object1.func_qvariantlist_qvariantlist( ["A string",[17539,-8591],[5.32,-842.775]] ) == ["A string",[17539,-8591],[5.32,-842.775]] )
-		self.assert_( self.object1.func_qvariantlist_qvariantlist( [[True,[],False,"Other String"],"test"] ) == [[True,[],False,"Other String"],"test"] )
-		self.assert_( self.object1.func_qvariantlist_qvariantlist( [[17,52],[],{},[84.21,936.821]] ) == [[17,52],[],{},[84.21,936.821]] )
-
-		l = TestObject1.func_qobject2qvariantlist(TestObject2)
-		self.assert_( l[0] == TestObject2 )
-		self.assert_( TestObject1.func_qvariantlist2qobject(l) == TestObject2 )
-
-	def testVariantMap(self):
-
-		def doTestVariantMap(vmap):
-			rmap = self.object1.func_qvariantmap_qvariantmap( vmap )
-			self.assert_( len(rmap) == len(vmap) )
-			for k in vmap:
-				#self.assert_( rmap.has_key(k) )
-				self.assert_( rmap[k] == vmap[k] )
-
-		doTestVariantMap( {} )
-		doTestVariantMap( {"3":-837,"1":73682,"2":285} )
-		doTestVariantMap( {"c":84.24,"a":-6892.957,"d":2.02,"b":692.66} )
-		doTestVariantMap( {"key1":True,"key2":False} )
-		doTestVariantMap( {"key 2":"  Some String  ","key 3":"oThEr StRiNg"} )
-		doTestVariantMap( {" key4 ":[12.5,True]," key5 ":[83.002,"test"]} )
-		doTestVariantMap( {'  key7  ':{},'  key6  ':{}} )
-
-	def testSize(self):
-		self.assert_( self.object1.func_qsize_qsize( [0,0] ) == [0,0] )
-		self.assert_( self.object1.func_qsize_qsize( [12,-94] ) == [12,-94] )
-		self.assert_( self.object1.func_qsize_qsize( [-7264,6224] ) == [-7264,6224] )
-
-	def testSizeF(self):
-		self.assert_( self.object1.func_qsizef_qsizef( [0.0,0.0] ) == [0.0,0.0] )
-		self.assert_( self.object1.func_qsizef_qsizef( [-956.0,75.0] ) == [-956.0,75.0] )
-		self.assert_( self.object1.func_qsizef_qsizef( [-14.21,-535.0] ) == [-14.21,-535.0] )
-		self.assert_( self.object1.func_qsizef_qsizef( [26,-525] ) == [26,-525] )
-		self.assert_( self.object1.func_qsizef_qsizef( [-956.0,75.21] ) == [-956.0,75.21] )
-
-	def testPoint(self):
-		self.assert_( self.object1.func_qpoint_qpoint( [0,0] ) == [0,0] )
-		self.assert_( self.object1.func_qpoint_qpoint( [12,-94] ) == [12,-94] )
-		self.assert_( self.object1.func_qpoint_qpoint( [-7264,6224] ) == [-7264,6224] )
-
-	def testPointF(self):
-		self.assert_( self.object1.func_qpointf_qpointf( [0.0,0.0] ) == [0.0,0.0] )
-		self.assert_( self.object1.func_qpointf_qpointf( [-956.0,751.0] ) == [-956.0,751.0] )
-		self.assert_( self.object1.func_qpointf_qpointf( [-82.3172,17.0] ) == [-82.3172,17.0] )
-		self.assert_( self.object1.func_qpointf_qpointf( [1.2,2.3] ) == [1.2,2.3] )
-		self.assert_( self.object1.func_qpointf_qpointf( [-956.03,751.4165] ) == [-956.03,751.4165] )
-
-	def testRect(self):
-		self.assert_( self.object1.func_qrect_qrect( [0,0,0,0] ) == [0,0,0,0] )
-		self.assert_( self.object1.func_qrect_qrect( [-1,-2,3,4] ) == [-1,-2,3,4] )
-		self.assert_( self.object1.func_qrect_qrect( [1,2,-3,-4] ) == [1,2,-3,-4] )
-		self.assert_( self.object1.func_qrect_qrect( [-10,-20,30,40] ) == [-10,-20,30,40] )
-		self.assert_( self.object1.func_qrect_qrect( [10,20,30,40] ) == [10,20,30,40] )
-		self.assert_( self.object1.func_qrect_qrect( [10,20,-30,-40] ) == [10,20,-30,-40] )
-
-	def testRectF(self):
-		self.assert_( self.object1.func_qrectf_qrectf( [0.0,0.0,0.0,0.0] ) == [0.0,0.0,0.0,0.0] )
-		self.assert_( self.object1.func_qrectf_qrectf( [-1.0,-2.0,3.0,4.0] ) == [-1.0,-2.0,3.0,4.0] )
-		self.assert_( self.object1.func_qrectf_qrectf( [-1.1,-2.2,3.3,4.4] ) == [-1.1,-2.2,3.3,4.4] )
-
-	def testUrl(self):
-		self.assert_( self.object1.func_qurl_qurl(None) == None )
-		#self.assert_( self.object1.func_qurl_qurl("") == "" )
-		self.assert_( self.object1.func_qurl_qurl("/home/myuser") == "/home/myuser" )
-		self.assert_( self.object1.func_qurl_qurl("file:///home/myuser/myfile.txt") == "file:///home/myuser/myfile.txt" )
-		self.assert_( self.object1.func_qurl_qurl("http://myname:mypass@qross.dipe.org?404.cgi?test=123&test2=456") == "http://myname:mypass@qross.dipe.org?404.cgi?test=123&test2=456" )
-		self.assert_( self.object1.func_kurl_kurl("http://www.kde.org/whatiskde/") == "http://www.kde.org/whatiskde/" )
-		self.assert_( self.object1.func_kurl_qstring("http://www.kde.org/whatiskde/") == None )
-
-	def testColor(self):
-		self.assert_( self.object1.func_qcolor_qcolor(None) == None )
-		self.assert_( self.object1.func_qcolor_qcolor("") == None )
-		self.assert_( self.object1.func_qcolor_qcolor("#0066ff") == "#0066ff" )
-		#self.assert_( self.object1.func_qcolor_qcolor((0,0,255)) == "#0000ff" )
-		#self.assert_( self.object1.func_qcolor_qcolor((0.0,0.0,1.0)) == "#0000ff" )
-
-		##self.object1.func_qtime_qtime
-		##self.object1.func_qdate_qdate
-
-	def testVariant(self):
-		self.assert_( self.object1.func_qvariant_qvariant(0.0) == 0.0 )
-		self.assert_( self.object1.func_qvariant_qvariant(True) == True )
-		self.assert_( self.object1.func_qvariant_qvariant(False) == False )
-		self.assert_( self.object1.func_qvariant_qvariant(187937) == 187937 )
-		self.assert_( self.object1.func_qvariant_qvariant(-69825) == -69825 )
-		self.assert_( self.object1.func_qvariant_qvariant(8632.274) == 8632.274 )
-		self.assert_( self.object1.func_qvariant_qvariant(-8632.351) == -8632.351 )
-		self.assert_( self.object1.func_qvariant_qvariant(" Test \n\r This String $%&\"") == " Test \n\r This String $%&\"")
-
-	def testFunctions(self):
-		self.assert_( "testFunction" in QrossAction.functionNames() )
-		self.assert_( QrossAction.callFunction("testFunction",[]) == [] )
-		self.assert_( QrossAction.callFunction("testFunction",[True,False]) == [True,False] )
-		self.assert_( QrossAction.callFunction("testFunction",[524,-958]) == [524,-958] )
-		self.assert_( QrossAction.callFunction("testFunction",[524.98,-958.1257]) == [524.98,-958.1257] )
-		self.assert_( QrossAction.callFunction("testFunction",["","  Some\nString  "]) == ["","  Some\nString  "] )
-		self.assert_( QrossAction.callFunction("testFunction",[["one",23,"two",None,False]]) == [["one",23,"two",None,False]] )
-		self.assert_( QrossAction.callFunction("testFunction",[QrossAction]) == [QrossAction] )
-
-	def testObject(self):
-		self.assert_( self.object1.name() == "TestObject1" and self.object2.name() == "TestObject2" )
-		self.assert_( self.object1.objectName == "TestObject1" and self.object2.objectName == "TestObject2" )
-		self.assert_( self.object1.className() == "TestObject" and self.object2.className() == "TestObject" )
-		self.assert_( self.object1.__toPointer__() )
-		self.assert_( self.object1 * 2 == self.object1.__toPointer__() * 2 )
-
-		self.assert_( self.object1.func_qobject_qobject(True) == None )
-		self.assert_( self.object1.func_qobject_qobject("String") == None )
-		self.assert_( self.object1.func_qobject_qobject(None) == None )
-
-		self.assert_( self.object1["TestTimer"].objectName == "TestTimer" )
-
-	def testPropertyMembers(self):
-		self.object1.boolProperty = True
-		self.assert_( self.object1.boolProperty == True )
-		self.object1.boolProperty = False
-		self.assert_( self.object1.boolProperty == False )
-
-		self.object1.intProperty = 20
-		self.assert_( self.object1.intProperty == 20 )
-
-		self.object1.doubleProperty = 7436.671
-		self.assert_( self.object1.doubleProperty == 7436.671 )
-
-		self.object1.stringProperty = " SoMe StRiNg "
-		self.assert_( self.object1.stringProperty == " SoMe StRiNg " )
-
-		self.object1.stringListProperty = [ "TestString", " Other String " ]
-		self.assert_( self.object1.stringListProperty == [ "TestString", " Other String " ] )
-
-		self.object1.listProperty = [ True, [2464, -8295], -572.07516, "test", [] ]
-		self.assert_( self.object1.listProperty == [ True, [2464, -8295], -572.07516, "test", [] ] )
-
-	def testPropertyMethods(self):
-		self.object1.setProperty("boolProperty", False)
-		self.assert_( self.object1.property("boolProperty") == False )
-		self.object1.setProperty("boolProperty", True)
-		self.assert_( self.object1.property("boolProperty") == True )
-
-		self.object1.setProperty("intProperty", -75825)
-		self.assert_( self.object1.property("intProperty") == -75825 )
-
-		self.object1.setProperty("doubleProperty", -9373.8721)
-		self.assert_( self.object1.property("doubleProperty") == -9373.8721 )
-
-		self.object1.setProperty("stringProperty", " AnOtHeR sTrInG ")
-		self.assert_( self.object1.property("stringProperty") == " AnOtHeR sTrInG " )
-
-		self.object1.setProperty("stringListProperty", ["s1","s2",""])
-		self.assert_( self.object1.property("stringListProperty") == ["s1","s2",""] )
-
-		self.object1.setProperty("listProperty", [[True,False],"abc",[846,-573.02],[]])
-		self.assert_( self.object1.property("listProperty") == [[True,False],"abc",[846,-573.02],[]] )
-
-	def testDynamicProperties(self):
-		self.assert_( self.object1.property("dynamicProperty") == ["Some String",99] )
-		self.object1.setProperty("newDynamicProperty","New Dynamic Property")
-		self.assert_( self.object1.property("newDynamicProperty") == "New Dynamic Property" )
-
-	def testEnumerationMembers(self):
-		self.assert_( self.object1.TESTENUM1 == 1 )
-		self.assert_( self.object1.TESTENUM2 == 2 )
-		self.assert_( self.object1.TESTENUM3 == 4 )
-		self.assert_( self.object1.TESTENUM4 == 8 )
-		#self.assert_( self.object1.testEnum( self.object1.TESTENUM3 ) == 4 )
-
-	def testSignalsSlots(self):
-		self.assert_( self.object1.connect("signalBool(bool)", "func_bool_bool(bool)") )
-		self.assert_( self.object1.connect("signalInt(int)", self.object2, "func_int_int(int)") )
-
-		def callback1(obj):
-			self.assert_(obj.name() == "TestObject2")
-			return "CALLBACK1!"
-		self.assert_( self.object1.connect("signalObject(QObject*)", callback1) )
-		self.object1.signalObject(self.object2)
-
-		def callback2(s):
-			self.assert_(s == " The Argument String ")
-			return "CALLBACK2!"
-		self.assert_( self.object1.connect("signalString(const QString&)", callback2) )
-		self.object1.signalString(" The Argument String ")
-
-		self.assert_( self.object1.name() == "TestObject1" )
-		self.assert_( self.object2.name() == "TestObject2" )
-
-	#def testExpectedFailures(self):
-		# to less arguments
-		#self.assertRaises(ValueError, self.pluginobject1.uintfunc)
-		#self.assert_( self.pluginobject1.uintfunc() != 8465 )
-
-	#def testPyQt(self):
-		#pyqtextension = TestObject3.toPyQt()
-		#print "pyqtextension=%s" % pyqtextension
-		#import PyQt4, sip
-		#qobj = pyqtextension.getQObject()
-		#qo = sip.wrapinstance (qobj, QObject)
-		#print ">>>>>>>>>>>>>>>>>>> %s" % qo
-
-	def testClass(self):
-		class MyClass:
-			def __init__(self, result):
-				self.result = result
-			def myMethod(self):
-				return self.result
-		s = "my string"
-		myclass = MyClass(s)
-		self.assert_( self.object1.call_qrossobject_method(myclass, "myMethod") == s )
-
-	def testOtherObject(self):
-		otherobj1 = self.object1.func_otherobject("OtherObject1")
-		otherobj2 = self.object1.func_otherobject("OtherObject2")
-		#print "otherobj1=%s otherobj1.objectName=%s dir(otherobj1)=%s" % (otherobj1, otherobj1.objectName, dir(otherobj1))
-
-		self.assert_( otherobj1.objectName == "OtherObject1_wrapper" )
-		self.assert_( otherobj2.parentObject().objectName == "OtherObject2" )
-		self.assert_( self.object1.func_otherobject_otherobject(otherobj1).objectName == otherobj1.objectName )
-
-		l = self.object1.func_otherobjectlist_otherobjectlist( [otherobj1,otherobj2] )
-		self.assert_( len(l) == 2 )
-		self.assert_( l[0].objectName == "OtherObject1_wrapper" )
-		self.assert_( l[1].parentObject().objectName == "OtherObject2" )
-
-	def testEvaluation(self):
-		self.assert_( QrossAction.evaluate("1+2") == 3 )
-		self.assert_( QrossAction.evaluate("testFunction(None,99)") == [None,99] )
-
-print "__name__ = %s" % __name__
-#print "__main__ = %s %s" % (__main__,dir(__main__))
-#print "TestObject3.name = %s" % TestObject3.name()
-
-suite = unittest.makeSuite(TestQross)
-unittest.TextTestRunner(verbosity=2).run(suite)
-
-#import Qross, TestObject1
-#print "===========> %s" % TestObject1.func_qsize_qsize( [12,-94] )
-#print "===========> %s" % TestObject1.func_qsizef_qsizef( [12.2,-94.2] )
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestQross)
+result = unittest.TextTestRunner(verbosity=2).run(suite)
+if not result.wasSuccessful():
+    raise RuntimeError("%d checks failed" % (len(result.failures) + len(result.errors)))

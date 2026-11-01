@@ -10,10 +10,14 @@ include(GNUInstallDirs)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 option(QROSS_WITH_JAVASCRIPT "Build the JavaScript backend" ON)
+option(QROSS_WITH_PYTHON "Build the Python backend" ON)
 
 find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Xml Test)
 if(QROSS_WITH_JAVASCRIPT)
     find_package(Qt6 6.8 REQUIRED COMPONENTS Qml)
+endif()
+if(QROSS_WITH_PYTHON)
+    find_package(Python3 3.12 REQUIRED COMPONENTS Development.Embed)
 endif()
 
 # Library and executable names carry the Qt major version, and the core
@@ -34,6 +38,9 @@ add_compile_definitions(
 add_subdirectory(core)
 if(QROSS_WITH_JAVASCRIPT)
     add_subdirectory(js)
+endif()
+if(QROSS_WITH_PYTHON)
+    add_subdirectory(python)
 endif()
 add_subdirectory(console)
 
