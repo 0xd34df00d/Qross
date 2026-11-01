@@ -24,7 +24,6 @@
 #include <QtCore/QRect>
 #include <QtCore/QDate>
 #include <QtCore/QTimer>
-#include <QtWidgets/QWidget>
 
 TestObject::TestObject(QObject* parent, const QString& name)
     : QObject(parent)

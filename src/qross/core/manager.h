@@ -65,7 +65,8 @@ namespace Qross
 
         /**
          * \return true if there exists an interpreter with the
-         * name \p interpretername else false.
+         * name \p interpretername else false. A former name of an
+         * interpreter, such as "qtscript" for "javascript", counts too.
          */
         bool hasInterpreterInfo(const QString& interpretername) const;
 
@@ -93,7 +94,7 @@ namespace Qross
          * the interpretername.
          *
          * \param interpretername The name of the interpreter.
-         * e.g. "python" or "kjs".
+         * e.g. "python" or "javascript".
          * \return The Interpreter instance or NULL if there does not exists
          * an interpreter with such an interpretername.
          */
@@ -186,7 +187,7 @@ namespace Qross
 
         /**
          * \return a list of names of all supported scripting interpreters.
-         * The list may contain for example "python", "ruby" and "kjs" depending
+         * The list may contain for example "python", "ruby" and "javascript" depending
          * on what interpreter-plugins are installed.
          */
         QStringList interpreters() const;

@@ -358,7 +358,7 @@ void Action::setInterpreter(const QString& interpretername)
     {
         finalize();
         d->interpretername = interpretername;
-        setEnabled(Manager::self().interpreters().contains(interpretername));
+        setEnabled(Manager::self().hasInterpreterInfo(interpretername));
         if (!isEnabled())
             qrosswarning("Action::setInterpreter: interpreter not found: " + interpretername);
         Q_EMIT dataChanged(this);

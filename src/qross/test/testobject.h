@@ -34,7 +34,6 @@ class QPointF;
 class QRect;
 class QRectF;
 
-class QWidget;
 class QDate;
 
 #include <QtCore/QUrl>
@@ -43,6 +42,7 @@ class QDate;
 #include <QtGui/QColor>
 #include <QtGui/QFont>
 #include <QtGui/QBrush>
+#include <QtWidgets/QWidget>
 
 #include "../core/action.h"
 #include "../core/object.h"

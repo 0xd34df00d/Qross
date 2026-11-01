@@ -74,18 +74,9 @@ namespace Qross
     } \
     }
 
-    // The name of the interpreter's library. Those library got loaded
-    // dynamically during runtime. Comment out to disable compiling of
-    // the interpreter-plugin or to hardcode the location of the lib
-    // like I did at the following line.
-    // #define QROSS_PYTHON_LIBRARY "/home/kde4/koffice/_build/lib/qrosspython.la"
-
+// Library names of the interpreter plugins, looked up at runtime.
 #define QROSS_PYTHON_LIBRARY "qrosspython" SHLIB_SUFFIX
 #define QROSS_RUBY_LIBRARY "qrossruby" SHLIB_SUFFIX
-// #define QROSS_KJS_LIBRARY "qrosskjs"
-#define QROSS_JAVA_LIBRARY "libqrossjava" SHLIB_SUFFIX
-#define QROSS_FALCON_LIBRARY "qrossfalcon" SHLIB_SUFFIX
-#define QROSS_QTSCRIPT_LIBRARY "qrossqts" SHLIB_SUFFIX
-#define QROSS_LUA_LIBRARY "qloss" SHLIB_SUFFIX
+#define QROSS_JAVASCRIPT_LIBRARY "qrossjs" SHLIB_SUFFIX
 
 }

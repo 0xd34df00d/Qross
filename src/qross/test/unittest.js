@@ -1,440 +1,228 @@
 #!/usr/bin/env qrosstest
+/**********************************************************************
+ * Qross - scripting bridge for Qt applications.
+ * SPDX-License-Identifier: LGPL-2.0-or-later
+ **********************************************************************/
 
-// Print something on the console.
-println("Let's start the KjsEmbed Unittest :-)");
+// Run by qrosstest, which publishes TestObject1 and TestObject2 through
+// the manager and TestObject3 and TestObject4 through the action.
 
-function UnitTest()
-{
-    var numpassed = 0;
-    var numfailed = 0;
+function UnitTest() {
+    var passed = 0;
+    var failed = 0;
 
-    this.passed = function() {
-        numpassed = numpassed + 1;
-    }
-
-    this.failed = function(actual, expected) {
-        println("FAILED actual=" + actual + " expected=" + expected);
-        numfailed = numfailed + 1;
-    }
-
-    this.missingException = function(message) {
-        println("MISSING EXCEPTION: " + message);
-        numfailed = numfailed + 1;
-    }
-
-    this.unexpectedException = function(message, exception) {
-        println("UNEXPECTED EXCEPTION: " + message + "\n" + exception);
-        numfailed = numfailed + 1;
-    }
-
-    this.assert = function(actual, expected) {
-        if(actual instanceof Array)
-            this.assertArray(actual, expected);
-        else if(actual == expected)
-            this.passed();
-        else
-            this.failed(actual, expected);
-    }
-
-    this.assertArray = function(actual, expected) {
-        if(actual.length != expected.length) {
-            this.failed(actual, expected);
-            println("Array-Length does not match. Actual=" + actual.length + " Expected=" + expected.length);
+    function same(actual, expected) {
+        if (Array.isArray(expected)) {
+            if (actual === null || actual === undefined || actual.length !== expected.length)
+                return false;
+            for (var i = 0; i < expected.length; ++i)
+                if (!same(actual[i], expected[i]))
+                    return false;
+            return true;
         }
-        else {
-            var failed = false;
-            for(i=0;i<actual.length;i++) {
-                if(actual[i] != expected[i]) {
-                    failed = true;
-                    this.failed(actual, expected);
-                    println("Array-Item actual[i]=" + actual[i] + " expected[i]=" + expected[i]);
-                    break;
-                }
-            }
-            if(! failed)
-                this.passed();
+        if (expected !== null && typeof expected === 'object') {
+            if (actual === null || typeof actual !== 'object')
+                return false;
+            var keys = Object.keys(expected);
+            if (Object.keys(actual).length !== keys.length)
+                return false;
+            return keys.every(function(key) { return same(actual[key], expected[key]); });
         }
+        return actual === expected;
     }
 
-    this.assertMap = function(actual, expected) {
-        var failed = false
-        for(i in actual) {
-            if(expected[i] == undefined) {
-                failed = true;
-                this.failed(actual, expected);
-                println("Map-Item i=" + i + " is unexpected");
-                break;
-            }
-            if(actual[i] != expected[i]) {
-                failed = true;
-                this.failed(actual, expected);
-                println("Map-Item i=" + i + " actual[i]=" + actual[i] + " expected[i]=" + expected[i]);
-                break;
-            }
+    this.assert = function(actual, expected, what) {
+        if (same(actual, expected)) {
+            ++passed;
+        } else {
+            ++failed;
+            print('FAILED ' + what + ': actual=' + JSON.stringify(actual) + ' expected=' + JSON.stringify(expected));
         }
-        if(! failed) {
-            for(i in expected) {
-                if(actual[i] == undefined) {
-                    failed = true;
-                    this.failed(actual, expected);
-                    println("Map-Item i=" + i + " is missing");
-                    break;
-                }
-            }
-            if(! failed)
-                this.passed();
+    };
+
+    this.throws = function(what, fn) {
+        try {
+            fn();
+        } catch (e) {
+            ++passed;
+            return;
         }
-    }
+        ++failed;
+        print('FAILED ' + what + ': no exception');
+    };
 
-    this.printResult = function() {
-        println("--------------------------------------------");
-        println("Tests passed: " + numpassed);
-        println("Tests failed: " + numfailed);
-        println("--------------------------------------------");
-    }
+    this.finish = function() {
+        print('Tests passed: ' + passed + ', failed: ' + failed);
+        if (failed > 0)
+            throw new Error(failed + ' checks failed');
+    };
 }
 
-tester = new UnitTest();
+var test = new UnitTest();
+var obj1 = TestObject1;
+var obj2 = TestObject2;
 
-// We have 2 instances of TestObject which inherit QObject.
-var testobj1 = TestObject1
-var testobj2 = TestObject2
+// objects
+test.assert(obj1.name(), 'TestObject1', 'name of a manager object');
+test.assert(obj2.objectName, 'TestObject2', 'objectName property');
+test.assert(TestObject3.name(), 'TestObject3', 'name of an action object');
+test.assert(TestObject4.name(), 'TestObject4', 'name of an action object');
+test.assert(self.name(), 'MyAction', 'self');
+test.assert(self.interpreter(), 'javascript', 'interpreter name');
+test.assert(Qross.interpreters().indexOf('javascript') >= 0, true, 'Qross.interpreters()');
+test.assert(obj1.myself() === obj1, true, 'identity of a returned QObject');
+test.assert(obj1.myself2() === obj1, true, 'identity through a subclass pointer');
+test.assert(obj1.func_qobject_qobject(obj2) === obj2, true, 'QObject round trip');
+test.assert(obj1.func_testobject_testobject(obj2) === obj2, true, 'TestObject round trip');
+test.assert(obj1.func_testobject_qobject(obj2) === obj2, true, 'QObject in, TestObject out');
+test.assert(obj1.func_qobject_qobject(null), null, 'null QObject');
+test.assert(obj1.func_qwidget_qwidget(null), null, 'null QWidget');
+test.assert(obj1.func_createChildTestObject('MyChildObject').name(), 'MyChildObject', 'created child');
+test.assert(obj1.func_otherobject('other').testObject() === obj1, true, 'OtherObject');
+test.assert(obj1.func_otherobject_otherobject(obj1.func_otherobject('other')).objectName, 'other', 'OtherObject round trip');
+test.throws('unknown method', function() { obj1.noSuchMethod(); });
 
-// object
-{
-    tester.assert(testobj1, "TestObject");
-    tester.assert(testobj2, "TestObject");
-    tester.assert(testobj1.name(), "TestObject1");
-    tester.assert(testobj2.name(), "TestObject2");
+// numbers and strings
+test.assert(obj1.func_bool_bool(true), true, 'bool');
+test.assert(obj1.func_bool_bool(false), false, 'bool');
+test.assert(obj1.func_int_int(0), 0, 'int');
+test.assert(obj1.func_int_int(177321), 177321, 'int');
+test.assert(obj1.func_int_int(-98765), -98765, 'int');
+test.assert(obj1.func_uint_uint(0), 0, 'uint');
+test.assert(obj1.func_uint_uint(177321), 177321, 'uint');
+test.assert(obj1.func_double_double(0.0), 0.0, 'double');
+test.assert(obj1.func_double_double(1773.2177), 1773.2177, 'double');
+test.assert(obj1.func_double_double(-548993.271993), -548993.271993, 'double');
+test.assert(obj1.func_qlonglong_qlonglong(0), 0, 'qlonglong');
+test.assert(obj1.func_qlonglong_qlonglong(7379), 7379, 'qlonglong');
+test.assert(obj1.func_qlonglong_qlonglong(-6384673), -6384673, 'qlonglong');
+test.assert(obj1.func_qulonglong_qulonglong(0), 0, 'qulonglong');
+test.assert(obj1.func_qulonglong_qulonglong(378972), 378972, 'qulonglong');
+test.assert(obj1.func_qstring_qstring(''), '', 'QString');
+test.assert(obj1.func_qstring_qstring(' '), ' ', 'QString');
+test.assert(obj1.func_qstring_qstring(' Another \n\r Test!   $%&" '), ' Another \n\r Test!   $%&" ', 'QString');
+test.assert(obj1.func_qstring_qstring_int('x', 5), 'x,5', 'two arguments');
 
-    try {
-        testobj1.noSuchMethodName()
-        tester.missingException("testobj1.noSuchMethodName()");
-    } catch(error) { tester.passed(); }
+// byte arrays
+var bytes = obj1.func_qbytearray_qbytearray('bytes');
+test.assert(bytes instanceof ArrayBuffer, true, 'QByteArray comes back as an ArrayBuffer');
+test.assert(Array.from(new Uint8Array(bytes), function(b) { return String.fromCharCode(b); }).join(''), 'bytes', 'QByteArray content');
+test.assert(obj1.func_qbytearray_qbytearray(bytes).byteLength, 5, 'ArrayBuffer in');
 
-    try {
-        testobj1.func_void_qobject(testobj2);
-        tester.passed();
-    } catch(error) { tester.unexpectedException("testobj1.func_void_qobject(testobj2)", error); }
+// lists and maps
+test.assert(obj1.func_qstringlist_qstringlist([]), [], 'empty QStringList');
+test.assert(obj1.func_qstringlist_qstringlist(['abc', 'def']), ['abc', 'def'], 'QStringList');
+test.assert(obj1.func_qvariantlist_qvariantlist([]), [], 'empty QVariantList');
+test.assert(obj1.func_qvariantlist_qvariantlist(['abc', 426, -842, 96.23, true, null]), ['abc', 426, -842, 96.23, true, null], 'QVariantList');
+test.assert(obj1.func_qvariantlist_qvariantlist([[1, 2], { k: 'v' }]), [[1, 2], { k: 'v' }], 'nested QVariantList');
+var map = { key1: ' MyValue ', key2: '', key3: 1764, key4: -8772, key5: true, key6: false, key7: 978.216, key8: -692.967, key9: [], key10: ['one', 'two'] };
+test.assert(obj1.func_qvariantmap_qvariantmap(map), map, 'QVariantMap');
+test.assert(obj1.func_qvariantmap_qvariantmap({}), {}, 'empty QVariantMap');
+test.assert(obj1.func_qvariantlist2qobject(obj1.func_qobject2qvariantlist(obj2)) === obj2, true, 'QObject through a QVariantList');
+test.assert(obj1.myself3().length, 1, 'list of subclass pointers');
+test.assert(obj1.func_testobjectlist_testobjectlist([obj1, obj2])[1] === obj2, true, 'list of subclass pointers round trip');
 
-    try {
-        obj1 = testobj1.func_createChildTestObject("MyChildObject")
-        tester.passed();
-        tester.assert(obj1.name(), "MyChildObject");
-    } catch(error) { tester.unexpectedException("testobj1.func_createChildTestObject(\"MyChildObject\")", error); }
+// variants
+test.assert(obj1.func_qvariant_qvariant(true), true, 'QVariant with a bool');
+test.assert(obj1.func_qvariant_qvariant(1892), 1892, 'QVariant with an int');
+test.assert(obj1.func_qvariant_qvariant(8529.54), 8529.54, 'QVariant with a double');
+test.assert(obj1.func_qvariant_qvariant(' String '), ' String ', 'QVariant with a string');
+test.assert(obj1.func_qvariant_qvariant(['One', 'Two']), ['One', 'Two'], 'QVariant with an array');
+test.assert(obj1.func_qvariant_qvariant({ a: 1 }), { a: 1 }, 'QVariant with an object');
+test.assert(obj1.func_qvariant_qvariant(null), null, 'QVariant with null');
+test.assert(obj1.func_qvariant_qvariant(obj2) === obj2, true, 'QVariant with a QObject');
 
-    try {
-        testobj3 = testobj1.func_qobject_qobject(testobj2);
-        tester.passed();
-        tester.assert(testobj2.name(), testobj3.name());
-    } catch(error) { tester.unexpectedException("testobj1.func_qobject_qobject(testobj2)", error); }
-}
+// value types
+test.assert(obj1.func_qcolor_qcolor('#ff0000').toString(), '#ff0000', 'QColor from a string');
+test.assert(obj1.func_qcolor_qcolor(obj1.func_qcolor_qcolor('#00ff00')).toString(), '#00ff00', 'QColor round trip');
+var size = obj1.func_qsize_qsize({ width: 12, height: 34 });
+test.assert([size.width, size.height], [12, 34], 'QSize');
+test.assert(obj1.func_qsize_qsize(Qt.size(5, 6)).height, 6, 'QSize from Qt.size()');
+var sizef = obj1.func_qsizef_qsizef({ width: 12.5, height: 34.25 });
+test.assert([sizef.width, sizef.height], [12.5, 34.25], 'QSizeF');
+var point = obj1.func_qpoint_qpoint({ x: 12, y: 34 });
+test.assert([point.x, point.y], [12, 34], 'QPoint');
+test.assert(obj1.func_qpoint_qpoint(Qt.point(1, 2)).y, 2, 'QPoint from Qt.point()');
+var pointf = obj1.func_qpointf_qpointf({ x: 1.5, y: -2.5 });
+test.assert([pointf.x, pointf.y], [1.5, -2.5], 'QPointF');
+var rect = obj1.func_qrect_qrect({ x: 12, y: 34, width: 56, height: 78 });
+test.assert([rect.x, rect.y, rect.width, rect.height, rect.right, rect.bottom], [12, 34, 56, 78, 67, 111], 'QRect');
+test.assert(obj1.func_qrect_qrect(rect).width, 56, 'QRect round trip');
+test.assert(obj1.func_qrect_qrect(Qt.rect(1, 2, 3, 4)).width, 3, 'QRect from Qt.rect()');
+var rectf = obj1.func_qrectf_qrectf({ x: 1.5, y: 2.5, width: 3.5, height: 4.5 });
+test.assert([rectf.x, rectf.y, rectf.width, rectf.height], [1.5, 2.5, 3.5, 4.5], 'QRectF');
 
-// bool
-{
-    tester.assert(testobj1.func_bool_bool(true), true);
-    tester.assert(testobj1.func_bool_bool(false), false);
+// urls
+test.assert(obj1.func_qurl_qurl('http://nowhere.anywhere/path?arg=val').toString(), 'http://nowhere.anywhere/path?arg=val', 'QUrl from a string');
+test.assert(obj1.func_qurl_qurl('/home/me').toString(), '/home/me', 'QUrl from a path');
+test.assert(obj1.func_qurl_qurl(obj1.func_qurl_qurl('file:///home/me/file.txt')).toString(), 'file:///home/me/file.txt', 'QUrl round trip');
 
-    try {
-        testobj1.func_bool_bool(17);
-        tester.missingException("testobj1.func_bool_bool(17)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_bool_bool("SomeString");
-        tester.missingException("testobj1.func_bool_bool(\"SomeString\")");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_bool_bool([]);
-        tester.missingException("testobj1.func_bool_bool([])");
-    } catch(error) { tester.passed(); }
-}
-
-// int
-{
-    tester.assert(testobj1.func_int_int(0), 0);
-    tester.assert(testobj1.func_int_int(177321), 177321);
-    tester.assert(testobj1.func_int_int(-98765), -98765);
-
-    try {
-        testobj1.func_int_int("SomeString")
-        tester.missingException("testobj1.func_int_int(\"SomeString\")");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_int_int("SomeString")
-        tester.missingException("testobj1.func_int_int(\"SomeString\")");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_int_int(true)
-        tester.missingException("testobj1.func_int_int(true)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_int_int(false)
-        tester.missingException("testobj1.func_int_int(false)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_int_int([])
-        tester.missingException("testobj1.func_int_int([])");
-    } catch(error) { tester.passed(); }
-}
-
-// uint
-{
-    tester.assert(testobj1.func_uint_uint(0), 0);
-    tester.assert(testobj1.func_uint_uint(177321), 177321);
-
-    try {
-        testobj1.func_uint_uint("SomeString")
-        tester.missingException("testobj1.func_uint_uint(\"SomeString\")");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_uint_uint(true)
-        tester.missingException("testobj1.func_uint_uint(true)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_uint_uint(false)
-        tester.missingException("testobj1.func_uint_uint(false)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_uint_uint([])
-        tester.missingException("testobj1.func_uint_uint([])");
-    } catch(error) { tester.passed(); }
-}
-
-// longlong
-{
-    tester.assert(testobj1.func_qlonglong_qlonglong(0), 0);
-    tester.assert(testobj1.func_qlonglong_qlonglong(7379), 7379);
-    tester.assert(testobj1.func_qlonglong_qlonglong(-6384673), -6384673);
-}
-
-// ulonglong
-{
-    tester.assert(testobj1.func_qulonglong_qulonglong(0), 0);
-    tester.assert(testobj1.func_qulonglong_qulonglong(378972), 378972);
-}
-
-// double
-{
-    tester.assert(testobj1.func_double_double(0.0), 0.0);
-    tester.assert(testobj1.func_double_double(1773.2177), 1773.2177);
-    tester.assert(testobj1.func_double_double(-548993.271993), -548993.271993);
-
-    try {
-        testobj1.func_double_double("SomeString")
-        tester.missingException("testobj1.func_double_double(\"SomeString\")");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_double_double(true)
-        tester.missingException("testobj1.func_double_double(true)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_double_double(false)
-        tester.missingException("testobj1.func_double_double(false)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_double_double([])
-        tester.missingException("testobj1.func_double_double([])");
-    } catch(error) { tester.passed(); }
-}
-
-// bytearray
-{
-    tester.assert(testobj1.func_qbytearray_qbytearray("  Some String as ByteArray  "), "  Some String as ByteArray  ");
-    //tester.assert(testobj1.func_qbytearray_qbytearray(" \0\n\r\t\s\0 test "), " \0\n\r\t\s\0 test ");
-}
-
-// string
-{
-    tester.assert(testobj1.func_qstring_qstring(""), "");
-    tester.assert(testobj1.func_qstring_qstring(" "), " ");
-    tester.assert(testobj1.func_qstring_qstring(" Another \n\r Test!   $%&\" "), " Another \n\r Test!   $%&\" ");
-
-    try {
-        testobj1.func_qstring_qstring(-42.331)
-        tester.missingException("testobj1.func_qstring_qstring(-42.331)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_qstring_qstring(true)
-        tester.missingException("testobj1.func_qstring_qstring(true)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_qstring_qstring(false)
-        tester.missingException("testobj1.func_qstring_qstring(false)");
-    } catch(error) { tester.passed(); }
-
-    try {
-        testobj1.func_qstring_qstring([])
-        tester.missingException("testobj1.func_qstring_qstring([])");
-    } catch(error) { tester.passed(); }
-}
-
-// stringlist
-{
-    tester.assertArray(testobj1.func_qstringlist_qstringlist(new Array()), new Array());
-    tester.assertArray(testobj1.func_qstringlist_qstringlist(new Array("s1","s2")), new Array("s1","s2"));
-    tester.assertArray(testobj1.func_qstringlist_qstringlist([]), []);
-    tester.assertArray(testobj1.func_qstringlist_qstringlist(["abc","def"]), ["abc","def"]);
-}
-
-// color
-{
-    tester.assert(testobj1.func_qcolor_qcolor("#0066ff"), "#0066ff");
-
-    var c = new QColor();
-    c.setNamedColor("#caffee");
-    tester.assert(testobj1.func_qcolor_qcolor(c), "#caffee");
-}
-
-// size
-{
-    var s = new QSize(11,22);
-    t = testobj1.func_qsize_qsize(s);
-    tester.assert(t.width()+":"+t.height(), s.width()+":"+s.height());
-}
-
-// point
-{
-    var p = new QPoint(11,22);
-    q = testobj1.func_qpoint_qpoint(p);
-    tester.assert(q.x()+":"+q.y(), p.x()+":"+p.y());
-}
-
-// rect
-{
-    var r = new QRect(11,22,33,44);
-    s = testobj1.func_qrect_qrect(r);
-    tester.assert(r.left()+":"+r.top()+":"+r.right()+":"+r.bottom(), s.left()+":"+s.top()+":"+s.right()+":"+s.bottom());
-}
-
-// variantlist
-{
-    tester.assertArray(testobj1.func_qvariantlist_qvariantlist(new Array()), new Array());
-    tester.assertArray(testobj1.func_qvariantlist_qvariantlist(new Array("s1","s2",17,-95)), new Array("s1","s2",17,-95));
-    tester.assertArray(testobj1.func_qvariantlist_qvariantlist([]), []);
-    tester.assertArray(testobj1.func_qvariantlist_qvariantlist(["abc","def",426,-842,96.23,-275.637]), ["abc","def",426,-842,96.23,-275.637]);
-
-    obj = TestObject1.func_qvariantlist2qobject( TestObject1.func_qobject2qvariantlist(TestObject2) )
-    tester.assert(obj.name(), TestObject2.name());
-    obj = TestObject1.func_qvariantlist2qobject( TestObject1.func_qobject2qvariantlist(TestObject2.myself()) )
-    tester.assert(obj.name(), TestObject2.myself().name());
-}
-
-// variantmap
-{
-    var v = new Array;
-    v["key2"] = "";
-    v["key1"] = " MyValue ";
-    v["key5"] = true;
-    v["key6"] = false;
-    v["key3"] = 1764;
-    v["key4"] = -8772;
-    v["key7"] = 978.216;
-    v["key8"] = -692.967;
-    //v["key9"] = [];
-    //v["key10"] = ["one","two"];
-    tester.assertMap(testobj1.func_qvariantmap_qvariantmap(v), v)
-    tester.assertMap(testobj1.func_qvariantmap_qvariantmap([]), [])
-}
-
-// variant
-{
-    tester.assert(testobj1.func_qvariant_qvariant(true), true);
-    tester.assert(testobj1.func_qvariant_qvariant(1892), 1892);
-    tester.assert(testobj1.func_qvariant_qvariant(8529.54), 8529.54);
-    tester.assert(testobj1.func_qvariant_qvariant(" String "), " String ");
-    tester.assert(testobj1.func_qvariant_qvariant(["One","Two"]), ["One","Two"]);
-    //tester.assert(testobj1.func_qvariant_qvariant(null), null);
-}
-
-// url
-{
-    tester.assert(testobj1.func_qurl_qurl("/home/me"), "/home/me");
-    tester.assert(testobj1.func_qurl_qurl("file://home/me/myfile.txt"), "file://home/me/myfile.txt");
-    tester.assert(testobj1.func_qurl_qurl("http://nowhere.anywhere/path/file?arg=val"), "http://nowhere.anywhere/path/file?arg=val");
-
-    tester.assert(testobj1.func_qurl_kurl("/home/otheruser/"), "/home/otheruser/");
-
-    //TODO following crashes in kjsembed;
-    //tester.assert(testobj1.func_kurl_kurl("/home/otheruser/"), "/home/otheruser/");
-    //tester.assert(testobj1.func_kurl_kurl("http://www.kde.org/whatiskde/test?123"), "http://www.kde.org/whatiskde/test?123");
-}
+// dates and times
+var when = new Date(2020, 0, 2, 3, 4, 5);
+test.assert(obj1.func_qdatetime_qdatetime(when).getTime(), when.getTime(), 'QDateTime');
+test.assert(obj1.func_qtime_qtime(when).getMinutes(), 4, 'QTime');
+var day = new Date(Date.UTC(2020, 0, 2));
+test.assert(obj1.func_qdate_qdate(day).getTime(), day.getTime(), 'QDate');
 
 // properties
-{
-    testobj1.intProperty = 5278;
-    tester.assert(testobj1.intProperty, 5278);
-
-    testobj1.doubleProperty = 928.581;
-    tester.assert(testobj1.doubleProperty, 928.581);
-
-    testobj1.stringProperty = "StRiNg";
-    tester.assert(testobj1.stringProperty, "StRiNg");
-}
+obj1.boolProperty = true;
+test.assert(obj1.boolProperty, true, 'bool property');
+obj1.intProperty = 5278;
+test.assert(obj1.intProperty, 5278, 'int property');
+obj1.doubleProperty = 928.581;
+test.assert(obj1.doubleProperty, 928.581, 'double property');
+obj1.stringProperty = 'StRiNg';
+test.assert(obj1.stringProperty, 'StRiNg', 'QString property');
+obj1.stringListProperty = ['a', 'b'];
+test.assert(obj1.stringListProperty, ['a', 'b'], 'QStringList property');
+obj1.listProperty = [1, 'x'];
+test.assert(obj1.listProperty, [1, 'x'], 'QVariantList property');
 
 // enumerations
-{
-    tester.assert(testobj1.TESTENUM1, 1);
-    tester.assert(testobj1.TESTENUM2, 2);
+test.assert(obj1.TESTENUM1, 1, 'enum key');
+test.assert(obj2.TESTENUM4, 8, 'enum key');
+test.assert(obj1.myself().TESTENUM2, 2, 'enum key on a returned object');
+
+// signals
+var received = null;
+obj1.signalString.connect(function(s) { received = s; });
+obj1.emitSignalString('more beer');
+test.assert(received, 'more beer', 'signal with a string');
+obj1.signalObject.connect(function(o) { received = o; });
+obj1.emitSignalObject(obj2);
+test.assert(received === obj2, true, 'signal with an object');
+function onInt(i) { received = i; }
+obj1.signalInt.connect(onInt);
+obj1.signalInt(9);
+test.assert(received, 9, 'signal emitted from the script');
+obj1.signalInt.disconnect(onInt);
+obj1.emitSignalInt(10);
+test.assert(received, 9, 'disconnected signal');
+
+// the action
+function myValueFunction(arg) { return arg; }
+function myEmptyFunction() {}
+test.assert(self.functionNames().indexOf('myValueFunction') >= 0, true, 'functionNames()');
+test.assert(self.callFunction('myEmptyFunction'), undefined, 'callFunction() without a result');
+test.assert(self.callFunction('myValueFunction', [true]), true, 'callFunction() with a bool');
+test.assert(self.callFunction('myValueFunction', [1892]), 1892, 'callFunction() with an int');
+test.assert(self.callFunction('myValueFunction', [8529.54]), 8529.54, 'callFunction() with a double');
+test.assert(self.callFunction('myValueFunction', ['Some String Again']), 'Some String Again', 'callFunction() with a string');
+test.assert(self.callFunction('myValueFunction', [[]]), [], 'callFunction() with an empty array');
+test.assert(self.callFunction('myValueFunction', [['One', 'Two']]), ['One', 'Two'], 'callFunction() with an array');
+test.assert(self.evaluate('1 + 2'), 3, 'evaluate()');
+function evalCalc(arg) { return arg; }
+test.assert(self.evaluate('evalCalc(null)'), null, 'evaluate() returning null');
+test.assert(self.evaluate('evalCalc(99)'), 99, 'evaluate() calling a function');
+
+// script objects handed to C++
+function MyClass(result) {
+    this.myMethod = function() { return result; };
 }
+var instance = new MyClass('my string');
+test.assert(obj1.call_qrossobject_method(instance, 'myMethod'), 'my string', 'Qross::Object method call');
+test.assert(obj1.get_qrossobject_methods(instance), ['myMethod'], 'Qross::Object method names');
+test.assert(obj1.call_qrossobject_method(obj1.func_qrossobject_qrossobject(instance), 'myMethod'), 'my string', 'Qross::Object round trip');
+test.assert(obj1.call_qrossobject_method({ add: function(a, b) { return a + b; } }, 'add', [40, 2]), 42, 'Qross::Object method call with arguments');
 
-// callback functions
-{
-    function myEmptyFunction() {}
-    tester.assert(self.callFunction("myEmptyFunction"), null);
-
-    function myValueFunction(arg) { return arg; }
-    tester.assert(self.callFunction("myValueFunction", [true]), true);
-    tester.assert(self.callFunction("myValueFunction", [1892]), 1892); // take care here, something like "new Array(12)" means array with 12 elements while "new Array(12,13)" means the 2 elements 12 and 13 :-/
-    tester.assert(self.callFunction("myValueFunction", [8529.54]), 8529.54);
-    tester.assert(self.callFunction("myValueFunction", ["Some String Again"]), "Some String Again");
-
-    tester.assertArray(self.callFunction("myValueFunction", [ new Array() ]), new Array());
-    tester.assertArray(self.callFunction("myValueFunction", [ [] ]), []);
-    tester.assertArray(self.callFunction("myValueFunction", [ ["One","Two"] ]), ["One","Two"]);
-}
-
-// signals and slots
-{
-    var slottestresult = null;
-    function mySlotFunction(arg) { slottestresult = arg; }
-
-    connect(testobj1, "signalString(QString)", this, "mySlotFunction(QString)");
-    testobj1.signalString("more beer");
-    tester.assert(slottestresult, "more beer");
-
-    connect(testobj1, "signalObject(QObject*)", this, "mySlotFunction(QObject*)");
-    testobj1.signalObject(testobj2);
-    tester.assert(slottestresult.objectName, testobj2.objectName);
-}
-
-// evaluate functionality
-{
-    tester.assert(self.evaluate("1+2"), 3);
-    function evalCalc(arg) { return arg; }
-    tester.assert(self.evaluate("evalCalc(null)"), null);
-    tester.assert(self.evaluate("evalCalc(99)"), 99);
-}
-
-// print the test-results
-tester.printResult();
-
-/*
-f = Qross.module('forms');
-d = f.createDialog('TestGuiFormDialog');
-d.setButtons('Ok|Cancel');
-d.exec_loop();
-*/
+test.finish();

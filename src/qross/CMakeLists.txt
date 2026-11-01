@@ -9,7 +9,12 @@ set(CMAKE_AUTOMOC ON)
 include(GNUInstallDirs)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+option(QROSS_WITH_JAVASCRIPT "Build the JavaScript backend" ON)
+
 find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Xml Test)
+if(QROSS_WITH_JAVASCRIPT)
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Qml)
+endif()
 
 # Library and executable names carry the Qt major version, and the core
 # derives the interpreter plugin names from the same suffix.
@@ -26,11 +31,12 @@ add_compile_definitions(
     QT_DISABLE_DEPRECATED_UP_TO=0x060800
 )
 
-# the core library
 add_subdirectory(core)
-# commandline-prog to run scripts
+if(QROSS_WITH_JAVASCRIPT)
+    add_subdirectory(js)
+endif()
 add_subdirectory(console)
-# unittests and such stuff
+
 include(CTest)
 include(QrossTesting)
 if(BUILD_TESTING)

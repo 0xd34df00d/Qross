@@ -51,6 +51,9 @@ namespace Qross
         /// List of the interpreter names.
         QStringList interpreters;
 
+        /// Former names of interpreters, still accepted on lookup.
+        QHash<QString, QString> aliases;
+
         /// Loaded modules.
         QHash<QString, QPointer<QObject>> modules;
 
@@ -158,63 +161,16 @@ Manager::Manager()
     }
 #endif
 
-#ifdef QROSS_JAVA_LIBRARY
-    if (void* funcPtr = loadLibrary(QROSS_JAVA_LIBRARY, "qrossinterpreter"))
-    {
-        d->interpreterinfos.insert("java",
-            new InterpreterInfo("java",
-                funcPtr, // library
-                "*.java *.class *.jar", // file filter-wildcard
-                QStringList() << "application/java" // mimetypes
-                ));
-    }
-#endif
-
-#ifdef QROSS_KJS_LIBRARY
-    if (void* funcPtr = loadLibrary(QROSS_KJS_LIBRARY, "qrossinterpreter"))
+#ifdef QROSS_JAVASCRIPT_LIBRARY
+    if (void* funcPtr = loadLibrary(QROSS_JAVASCRIPT_LIBRARY, "qrossinterpreter"))
     {
         d->interpreterinfos.insert("javascript",
             new InterpreterInfo("javascript",
                 funcPtr, // library
-                "*.js", // file filter-wildcard
-                QStringList() << "application/javascript" // mimetypes
+                "*.js *.es", // file filter-wildcard
+                QStringList() << "text/javascript" << "application/javascript" << "application/ecmascript" // mimetypes
                 ));
-    }
-#endif
-
-#ifdef QROSS_FALCON_LIBRARY
-    if (void* funcPtr = loadLibrary(QROSS_FALCON_LIBRARY, "qrossinterpreter"))
-    {
-        d->interpreterinfos.insert("falcon",
-            new InterpreterInfo("falcon",
-                funcPtr, // library
-                "*.fal", // file filter-wildcard
-                QStringList() << "application/x-falcon" // mimetypes
-                ));
-    }
-#endif
-
-#ifdef QROSS_QTSCRIPT_LIBRARY
-    if (void* funcPtr = loadLibrary(QROSS_QTSCRIPT_LIBRARY, "qrossinterpreter"))
-    {
-        d->interpreterinfos.insert("qtscript",
-            new InterpreterInfo("qtscript",
-                funcPtr, // library
-                "*.es", // file filter-wildcard
-                QStringList() << "application/ecmascript" // mimetypes
-                ));
-    }
-#endif
-
-#ifdef QROSS_LUA_LIBRARY
-    if (void* funcPtr = loadLibrary(QROSS_LUA_LIBRARY, "qrossinterpreter"))
-    {
-        d->interpreterinfos.insert("lua",
-            new InterpreterInfo("lua",
-                funcPtr, // library
-                "*.lua *.luac", // file filter-wildcard
-                QStringList() << "application/x-lua" // mimetypes
-                ));
+        d->aliases.insert("qtscript", "javascript");
     }
 #endif
 
@@ -243,12 +199,12 @@ QHash<QString, InterpreterInfo*> Manager::interpreterInfos() const
 
 bool Manager::hasInterpreterInfo(const QString& interpretername) const
 {
-    return d->interpreterinfos.contains(interpretername) && d->interpreterinfos[interpretername];
+    return interpreterInfo(interpretername) != nullptr;
 }
 
 InterpreterInfo* Manager::interpreterInfo(const QString& interpretername) const
 {
-    return hasInterpreterInfo(interpretername) ? d->interpreterinfos[interpretername] : 0;
+    return d->interpreterinfos.value(d->aliases.value(interpretername, interpretername));
 }
 
 const QString Manager::interpreternameForFile(const QString& file)
@@ -269,12 +225,13 @@ const QString Manager::interpreternameForFile(const QString& file)
 
 Interpreter* Manager::interpreter(const QString& interpretername) const
 {
-    if (!hasInterpreterInfo(interpretername))
+    InterpreterInfo* const info = interpreterInfo(interpretername);
+    if (!info)
     {
         qrosswarning(QString("No such interpreter '%1'").arg(interpretername));
-        return 0;
+        return nullptr;
     }
-    return d->interpreterinfos[interpretername]->interpreter();
+    return info->interpreter();
 }
 
 void Manager::finalize()

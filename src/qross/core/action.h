@@ -53,7 +53,7 @@ namespace Qross
      * \code
      * # Create a new Qross::Action instance.
      * Qross::Action* action = new Qross::Action(0,"MyFirstScript");
-     * # Set the interpreter we like to use. This could be e.g. "python", "ruby" or "kjs".
+     * # Set the interpreter we like to use. This could be e.g. "python", "ruby" or "javascript".
      * action->setInterpreter("python");
      * # Set the scripting code.
      * action->setCode("print \"Hello World.\"");
