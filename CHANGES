@@ -1,0 +1,108 @@
+== Qross CHANGES ==
+
+Unreleased
+* Port to Qt 6 and C++26: Qt 6.8 or later, CMake 3.21 and GCC 16. The
+  library, the plugins and the console carry a -qt6 suffix, and the new
+  pkg-config file qrosscore declares its Qt requirements. Qt 4 and Qt 5
+  are no longer supported.
+* Everything that depended on KDE is gone: the kdebindings tree vendored
+  under src/bindings with its Smoke bindings and the Falcon and Java
+  backends, the forms and translation modules, the action collection
+  model and view, the GUI demo scripts, and the KJS, Lua, Java and
+  Falcon interpreter entries.
+* Core: Action and Manager no longer derive from QScriptable.
+* Core: MetaFunction, the signal relay, connects through
+  QMetaObject::connect and receives invocations in qt_metacall instead
+  of building a metaobject per connection, so the core needs no private
+  Qt headers. Backends get the arguments of a signal as QVariants.
+* Core: interpreter plugins are looked up in QROSS_PLUGIN_PATH, the
+  installation's library directory and Qt's library paths. Former
+  interpreter names remain valid as aliases; qtscript names javascript.
+* Core: the version attribute of an action was serialized as a
+  one-character string.
+* JavaScript: the QtScript backend is replaced by one on QQmlEngine. The
+  interpreter is called javascript and claims *.js and *.es. Scripts see
+  the action as self, the manager as Qross and every published object
+  with its enum keys as properties; signals have connect(). Object
+  literals convert to QRect, QPoint and QSize, and the qml option, on by
+  default, imports QtQml so that QModelIndex and its relatives are usable.
+  Script objects travel to C++ as Qross::Object::Ptr. Every run starts
+  from a fresh engine. The widget constructors of the QtScript plugin
+  are gone.
+* Python: rewritten on the C API for Python 3.12 or later, without PyCXX
+  and PyQt. Published objects are globals of a fresh __main__ module per
+  run, which replaces the import hook; signals have connect() and
+  disconnect(); script objects travel to C++ as Qross::Object::Ptr and
+  come back as the same object; lists of QObject subclasses convert
+  through the metatype system. The interpreter starts on first use,
+  releases the GIL between calls so that signals reach callables from
+  any thread, and finalizes with the Manager. The directory of the
+  script is appended to sys.path.
+* Ruby: rewritten on the C API for Ruby 3.2 or later. Ruby starts the way
+  the ruby binary does, with RubyGems and the load path available.
+  Scripts run with the action as self in a binding that keeps local
+  variables across evaluate(); each QMetaObject gets a Ruby class under
+  Qross:: with slots, signals, properties and enum keys as methods;
+  connect() and disconnect() take a signal name or signature and a block
+  or callable. Ruby runs only on the thread that started it, and the
+  signal handlers it would install stay with the application. The
+  safelevel option is gone with $SAFE, as is the QtRuby bridge.
+* Tests: a CTest suite with QtTest units for the core and each backend
+  plus the unittest scripts run through qrosstest, which now fails on
+  script errors. BUILD_TESTING, on by default, replaces KDE4_BUILD_TESTS.
+* Sources follow the style in .clang-format and use #pragma once.
+
+0.3.2
+* Qt 5 support alongside Qt 4; C++11; automoc.
+* QtScript: values added to the engine get Auto ownership by default.
+* Python: Qt import hook check and PythonInterpreter::setImportException.
+* Fix a spurious crash.
+
+0.3.1
+* Python: QVariantList and QVariantMap can be passed to scripts.
+* Python 2.7 is required.
+
+0.3.0
+* Python: capsules replace CObjects; QString casting fixes.
+
+0.2.2
+* Respect LIB_SUFFIX and libdir when installing.
+
+0.2.1
+* Do not use QFileIconProvider, which is not thread-safe.
+* First tagged release of the fork: Kross from kdelibs 4 as Qross, with
+  the KDE dependencies and the KJS backend removed, Ruby 1.8, and Python
+  with PyQt4 conversions.
+
+2.0 (Kross)
+* The whole backend got replaced and is build up on Qt's metatypes now.
+  This means we are able to throw any QObject/QVariant in and just use
+  the slots as script-functions and the properties as script-members.
+  So, we don't need wrappers/bindings any longer (and provided
+  scripting-interfaces don't need to depend on Qross) on the one hand
+  and and earn a more cleaner interface on the other. Beside the try
+  to follow KISS, we should earn much more speed that way cause
+  everything talks now Qt internal :)
+* Port to Qt4 and KDE4
+* Improved Python and Ruby backends a lot
+* Added KDE JavaScript support using KjsEmbed
+* Moved core from koffice/libs to kdelibs
+* Moved backends to kdebindings
+
+1.6
+* Added qrossdebug and qrosswarning.
+* Integrated ProxyFunction's.
+* Python: Added unittest.
+* Removed Argument class.
+* Refactor of the tree-handling to improve the performance.
+* Tweaks on Object and Value to improve the performance.
+
+1.5.2
+* API: Fix possible crash in Manager::getInterpreternameForFile()
+
+1.5.1
+* Python: Fix compile with gcc 3.3.6
+
+1.5
+* Ruby: Fix 124649: libruby-devel lost when build.
+* Ruby: Fix crash cause of invalid rNode.

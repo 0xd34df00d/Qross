@@ -1,0 +1,153 @@
+# Qross
+
+Qross embeds scripting into Qt 6 applications. The application publishes
+QObjects, and scripts in JavaScript, Python or Ruby call their slots and
+invokables, read and write their properties, connect to their signals and
+use their enums, all through the metaobject system. The C++ side needs no
+binding generator and no dependency on Qross: any QObject will do.
+
+Qross is a fork of KDE's Kross with the KDE parts removed. It depends on
+Qt only.
+
+## Backends
+
+| Language   | Interpreter name | Files           | Built on                |
+| ---------- | ---------------- | --------------- | ----------------------- |
+| JavaScript | `javascript`     | `*.js`, `*.es`  | QQmlEngine              |
+| Python     | `python`         | `*.py`          | CPython 3.12 or later   |
+| Ruby       | `ruby`           | `*.rb`          | Ruby 3.2 or later       |
+
+`qtscript` is still accepted as a name for the JavaScript backend. Each
+backend is a plugin loaded on first use, so an application pays only for
+the languages its scripts use, and each can be left out of the build with
+the matching option: `QROSS_WITH_JAVASCRIPT`, `QROSS_WITH_PYTHON`,
+`QROSS_WITH_RUBY`.
+
+## Building
+
+Qross needs CMake 3.21, a C++26 compiler (GCC 16 is the one it is
+developed and tested with), Qt 6.8 or later with Core, Gui, Widgets, Xml
+and Test, plus Qml for the JavaScript backend, the Python 3.12 embedding
+development files for the Python backend and Ruby 3.2 for the Ruby backend.
+
+    cmake -S src/qross -B build -G Ninja
+    cmake --build build
+    ctest --test-dir build
+
+Installing provides:
+
+- `libqrosscore-qt6`, the headers under `qross/core/` and the pkg-config
+  file `qrosscore`;
+- the backend plugins `qrossjs-qt6`, `qrosspython-qt6` and `qrossruby-qt6`
+  in the library directory;
+- `qross-qt6`, which runs the script files named on its command line with
+  the backend their extension selects.
+
+Plugins are looked up in the directories listed in `QROSS_PLUGIN_PATH`,
+then in the installation's library directory, then in Qt's library paths.
+The tests of a build tree point the variable at its `plugins/` directory.
+
+## From the application
+
+```cpp
+#include <qross/core/action.h>
+#include <qross/core/manager.h>
+
+// Visible to every script, under its object name.
+Qross::Manager::self().addObject(document);
+
+Qross::Action action(nullptr, QStringLiteral("greeter"));
+action.setInterpreter(QStringLiteral("python"));
+action.setCode("def greet(name):\n    return 'hello ' + name + ' from ' + Document.title\n");
+// Visible to this script only; a script function named like one of the
+// view's signals is connected to it.
+action.addObject(view, QStringLiteral("View"), Qross::ChildrenInterface::AutoConnectSignals);
+
+action.trigger();
+if (action.hadError())
+    qWarning() << action.errorMessage() << "at line" << action.errorLineNo();
+const QVariant greeting = action.callFunction(QStringLiteral("greet"), { QStringLiteral("world") });
+```
+
+An `Action` holds one script: its code or file, its interpreter and the
+objects it publishes. `trigger()` runs it; afterwards `callFunction()`
+calls a function the script defined, `evaluate()` runs code in the
+script's context and `functionNames()` lists what can be called. Every
+run starts the script afresh.
+
+Slots and properties exchange the Qt value types, containers of them,
+pointers to QObjects and `Qross::Object::Ptr`. The latter carries a
+script object, such as a Python instance or a Ruby object, into C++, where
+`callMethod()` calls its methods; handed back to the script, it is the
+same object again. For return types the metatype system cannot convert,
+such as pointers to classes that are not QObjects, a `MetaTypeHandler`
+registered with the `Manager` produces something scripts can use, usually
+a QObject implementing `WrapperInterface` so that it unwraps on the way
+back.
+
+## From the scripts
+
+Scripts see the action as `self`, the manager as `Qross` and every
+published object under its name. Slots, invokables and signals are
+methods, calling a signal emits it, properties are attributes and enum
+keys are attributes of the object. Given a `Player` with a `volume`
+property, a `play(QString)` slot and a `finished(int)` signal:
+
+```js
+Player.volume = 50;
+Player.play("song.ogg");
+Player.finished.connect(function(code) { Player.play("next.ogg"); });
+```
+
+```python
+Player.volume = 50
+Player.play("song.ogg")
+Player.finished.connect(lambda code: Player.play("next.ogg"))
+```
+
+```ruby
+Player.volume = 50
+Player.play("song.ogg")
+Player.connect(:finished) { |code| Player.play("next.ogg") }
+```
+
+A function defined at the top level of the script and named like a signal
+of an object published with `AutoConnectSignals` is connected to that
+signal once the script has run, in all three languages.
+
+| C++                       | JavaScript                        | Python                 | Ruby                      |
+| ------------------------- | --------------------------------- | ---------------------- | ------------------------- |
+| QString                   | string                            | str                    | String                    |
+| QUrl, QColor              | string in, object with toString() out | str                | String                    |
+| QByteArray                | ArrayBuffer                       | bytes                  | String, binary encoding   |
+| QVariantList, QStringList | Array                             | list                   | Array                     |
+| QVariantMap               | object                            | dict                   | Hash                      |
+| QSize, QPoint, QRect      | object with x, y, width, height   | tuple                  | Array of numbers          |
+| QDateTime, QDate, QTime   | Date                              | datetime, date, time   | Time, Date, ISO string    |
+| QObject*                  | wrapper                           | wrapper                | wrapper                   |
+| Qross::Object::Ptr        | the script object                 | the script object      | the script object         |
+
+Objects stay owned by the application; a wrapper of an object that has
+been deleted raises an error when used. The JavaScript engine follows the
+QML ownership rules, so a parentless QObject returned from a slot becomes
+garbage-collectable by the engine unless it is given a parent or
+`QJSEngine::CppOwnership`.
+
+A script runs on the thread that triggers its action. Python callables can
+be called from any thread. Ruby runs only on the thread that started it,
+and signals emitted elsewhere reach their Ruby handlers through that
+thread's event loop. JavaScript engines must stay on their thread.
+
+The JavaScript backend imports QtQml into every engine, which makes
+QModelIndex and its relatives usable from scripts; `setOption("qml",
+false)` on an action turns that off.
+
+## Status
+
+The API around `Action` and `Manager` is the one inherited from Kross and
+will be redesigned before the next release, so expect source changes.
+The last tagged release, 0.3.2, is the Qt 4 and Qt 5 code base; CHANGES
+lists what has happened since.
+
+Qross is distributed under the GNU Lesser General Public License,
+version 2.0 or later.
