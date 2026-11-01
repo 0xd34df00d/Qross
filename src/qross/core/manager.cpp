@@ -164,11 +164,14 @@ Manager::Manager()
 #ifdef QROSS_JAVASCRIPT_LIBRARY
     if (void* funcPtr = loadLibrary(QROSS_JAVASCRIPT_LIBRARY, "qrossinterpreter"))
     {
+        InterpreterInfo::Option::Map options;
+        options.insert("qml", new InterpreterInfo::Option(tr("Import the QtQml module into the engine"), QVariant(true)));
         d->interpreterinfos.insert("javascript",
             new InterpreterInfo("javascript",
                 funcPtr, // library
                 "*.js *.es", // file filter-wildcard
-                QStringList() << "text/javascript" << "application/javascript" << "application/ecmascript" // mimetypes
+                QStringList() << "text/javascript" << "application/javascript" << "application/ecmascript", // mimetypes
+                options // options
                 ));
         d->aliases.insert("qtscript", "javascript");
     }

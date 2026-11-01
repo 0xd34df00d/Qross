@@ -10,12 +10,24 @@
 #include <QtCore/QMetaMethod>
 #include <QtCore/QSet>
 #include <QtQml/QJSManagedValue>
+#include <QtQml/QQmlComponent>
 #include <QtQml/QQmlEngine>
 #include "../core/action.h"
 #include "../core/manager.h"
 #include "object.h"
 
 using namespace Qross;
+
+namespace
+{
+    // Loading any QML that imports the module registers its value types,
+    // QModelIndex among them, for the whole process; nothing else does.
+    void importQtQml(QQmlEngine& engine)
+    {
+        QQmlComponent component(&engine);
+        component.setData("import QtQml\nQtObject {}", {});
+    }
+}
 
 JsScript::JsScript(Interpreter* interpreter, Action* action)
     : Script(interpreter, action)
@@ -37,6 +49,8 @@ QQmlEngine& JsScript::ensureEngine()
 QQmlEngine& JsScript::createEngine()
 {
     m_engine = std::make_unique<QQmlEngine>();
+    if (action()->option(QStringLiteral("qml"), true).toBool())
+        importQtQml(*m_engine);
     JsObject::prepareEngine(*m_engine);
 
     QJSValue global = m_engine->globalObject();

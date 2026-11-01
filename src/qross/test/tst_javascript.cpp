@@ -7,8 +7,10 @@
 #include <qross/core/manager.h>
 #include <qross/core/object.h>
 #include <qross/core/script.h>
+#include <QtCore/QAbstractItemModel>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QPointer>
+#include <QtCore/QStringListModel>
 #include <QtQml/QJSEngine>
 #include <QtTest/QTest>
 
@@ -17,6 +19,7 @@ class Host : public QObject
     Q_OBJECT
 
     Qross::Object::Ptr m_kept;
+    QStringListModel m_model { QStringList({ QStringLiteral("alpha"), QStringLiteral("beta") }), this };
 public:
     enum Mode
     {
@@ -32,6 +35,7 @@ Q_SIGNALS:
     void named(const QString& name);
 public Q_SLOTS:
     QObject* self() { return this; }
+    QAbstractItemModel* model() { return &m_model; }
     void keep(Qross::Object::Ptr object) { m_kept = object; }
     bool isNull(Qross::Object::Ptr object) { return object.isNull(); }
     QStringList methods(Qross::Object::Ptr object) { return object ? object->methodNames() : QStringList(); }
@@ -72,6 +76,28 @@ private Q_SLOTS:
         QCOMPARE(manager.interpreternameForFile(QStringLiteral("dir/test.js")), QStringLiteral("javascript"));
         QCOMPARE(manager.interpreternameForFile(QStringLiteral("test.es")), QStringLiteral("javascript"));
         QVERIFY(manager.interpreter(QStringLiteral("javascript")));
+    }
+
+    void importsQtQml()
+    {
+        // Runs before any other script: the import registers the value types
+        // for the whole process.
+        Host local;
+        {
+            Qross::Action action(nullptr, QStringLiteral("plain"));
+            action.setInterpreter(QStringLiteral("javascript"));
+            QVERIFY(action.setOption(QStringLiteral("qml"), false));
+            action.setCode("var row = Local.model().index(1, 0).row;");
+            action.addObject(&local, QStringLiteral("Local"));
+            action.trigger();
+            QVERIFY(!action.hadError());
+            QVERIFY(!action.evaluate("row").isValid());
+        }
+
+        const auto action = run("var index = Local.model().index(1, 0);", &local);
+        QVERIFY(!action->hadError());
+        QCOMPARE(action->evaluate("index.row").toInt(), 1);
+        QCOMPARE(action->evaluate("index.data()").toString(), QStringLiteral("beta"));
     }
 
     void acceptsTheOldName()

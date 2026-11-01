@@ -27,6 +27,12 @@ namespace Qross
      * Published objects stay owned by C++. For everything else Qt's rule
      * applies: an object without a parent that a slot returns is owned by the
      * engine unless the host sets QJSEngine::CppOwnership on it.
+     *
+     * The \c qml option, on by default, imports the QtQml module first, which
+     * gives QModelIndex and its relatives members such as \c row, \c column
+     * and \c data(). The import registers those types for the whole process,
+     * so switching the option off only spares the import once any script has
+     * done it.
      */
     class JsScript : public Script
     {
