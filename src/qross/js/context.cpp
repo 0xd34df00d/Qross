@@ -78,9 +78,8 @@ void JsContext::publish(QJSValue& global, const QString& name, QObject* object)
     global.setProperty(name, wrapper);
 }
 
-void JsContext::execute()
+std::expected<void, Error> JsContext::execute()
 {
-    clearError();
     QQmlEngine& engine = createEngine();
 
     // A shebang is not JavaScript; its newline stays so that line numbers do.
@@ -95,12 +94,10 @@ void JsContext::execute()
     QStringList trace;
     const QJSValue result = engine.evaluate(code, file, 1, &trace);
     if (result.isError() || !trace.isEmpty())
-    {
-        storeException(*this, result, trace);
-        return;
-    }
+        return std::unexpected(errorOf(result, trace));
 
     connectSignals(engine);
+    return {};
 }
 
 void JsContext::connectSignals(QQmlEngine& engine)
@@ -143,17 +140,13 @@ QStringList JsContext::functionNames()
     return names.toVariant().toStringList();
 }
 
-QVariant JsContext::callFunction(const QString& name, const QVariantList& args)
+std::expected<QVariant, Error> JsContext::callFunction(const QString& name, const QVariantList& args)
 {
-    clearError();
     QQmlEngine& engine = ensureEngine();
 
     const QJSValue function = engine.globalObject().property(name);
     if (!function.isCallable())
-    {
-        setError(QStringLiteral("No such function \"%1\"").arg(name));
-        return {};
-    }
+        return std::unexpected(Error { QStringLiteral("No such function \"%1\"").arg(name) });
 
     QJSValueList arguments;
     for (const QVariant& arg : args)
@@ -161,22 +154,15 @@ QVariant JsContext::callFunction(const QString& name, const QVariantList& args)
 
     const QJSValue result = QJSManagedValue(function, &engine).call(arguments);
     if (engine.hasError())
-    {
-        storeException(*this, engine.catchError());
-        return {};
-    }
+        return std::unexpected(errorOf(engine.catchError()));
     return result.toVariant();
 }
 
-QVariant JsContext::evaluate(const QByteArray& code)
+std::expected<QVariant, Error> JsContext::evaluate(const QByteArray& code)
 {
-    clearError();
     QStringList trace;
     const QJSValue result = ensureEngine().evaluate(QString::fromUtf8(code), {}, 1, &trace);
     if (result.isError() || !trace.isEmpty())
-    {
-        storeException(*this, result, trace);
-        return {};
-    }
+        return std::unexpected(errorOf(result, trace));
     return result.toVariant();
 }

@@ -15,8 +15,8 @@ class QJSEngine;
 
 namespace Qross
 {
-    /// Stores \p thrown, which may be any JavaScript value, as the error of \p target.
-    void storeException(ErrorInterface& target, const QJSValue& thrown, const QStringList& trace = {});
+    /// The error \p thrown stands for, which may be any JavaScript value; \p trace is used when it has no stack.
+    Error errorOf(const QJSValue& thrown, const QStringList& trace = {});
 
     /**
      * A JavaScript object handed to C++ as an \a Object::Ptr.
@@ -39,7 +39,7 @@ namespace Qross
         static void registerConverters();
         static void prepareEngine(QJSEngine& engine);
 
-        QVariant callMethod(const QString& name, const QVariantList& args = QVariantList()) override;
+        std::expected<QVariant, Error> callMethod(const QString& name, const QVariantList& args = QVariantList()) override;
         QStringList methodNames() override;
     private:
         static Object::Ptr fromValue(const QJSValue& value);

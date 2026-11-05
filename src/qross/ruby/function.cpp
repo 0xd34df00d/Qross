@@ -64,14 +64,13 @@ void RubyFunction::callback(const QVariantList& args)
     }
 
     // Nothing awaits the result, so errors can only be logged.
-    ErrorInterface log;
     VALUE arguments = rb_ary_new_capa(args.size());
     for (const QVariant& arg : args)
     {
         const Result value = toRuby(arg);
         if (!value)
         {
-            storeException(log, value.error());
+            qrosswarning(errorOf(value.error()).toString());
             return;
         }
         rb_ary_push(arguments, *value);
@@ -79,5 +78,5 @@ void RubyFunction::callback(const QVariantList& args)
     const Result result = callProtected(m_callable, rb_intern("call"), RARRAY_LEN(arguments), RARRAY_CONST_PTR(arguments));
     RB_GC_GUARD(arguments);
     if (!result)
-        storeException(log, result.error());
+        qrosswarning(errorOf(result.error()).toString());
 }

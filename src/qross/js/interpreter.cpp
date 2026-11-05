@@ -19,7 +19,7 @@ JsInterpreter::JsInterpreter(InterpreterInfo* info)
     JsObject::registerConverters();
 }
 
-Context* JsInterpreter::createContext(Script* script)
+std::expected<std::unique_ptr<Context>, Error> JsInterpreter::createContext(Script* script)
 {
-    return new JsContext(this, script);
+    return std::make_unique<JsContext>(this, script);
 }

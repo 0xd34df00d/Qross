@@ -19,16 +19,15 @@
 
 #pragma once
 
+#include <expected>
+#include <QtCore/QMap>
+#include <QtCore/QSharedData>
+#include <QtCore/QSharedPointer>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
-#include <QtCore/QMap>
 #include <QtCore/QVariant>
-#include <QtCore/QSharedData>
-
+#include "error.h"
 #include "qrossconfig.h"
-#include "errorinterface.h"
-
-#include <qsharedpointer.h>
 
 namespace Qross
 {
@@ -49,7 +48,7 @@ namespace Qross
      *     public Q_SLOTS:
      *         QVariant myFunction(Qross::Object::Ptr obj) {
      *             QVariantList args;
-     *             return obj->callMethod("myMethod", args);
+     *             return obj->callMethod("myMethod", args).value_or(QVariant());
      *         }
      * };
      * \endcode
@@ -66,9 +65,7 @@ namespace Qross
      *
      * \since 4.1
      */
-    class QROSSCORE_EXPORT Object
-        : public QSharedData
-        , public ErrorInterface
+    class QROSSCORE_EXPORT Object : public QSharedData
     {
     public:
         /**
@@ -91,17 +88,8 @@ namespace Qross
          */
         virtual ~Object();
 
-        /**
-         * Pass a call to the object and evaluated it.
-         *
-         * \param name Each call has a name that says what
-         * should be called.
-         * \param args The optional list of arguments
-         * passed to the call.
-         * \return The call-result as QVariant.
-         */
-        virtual QVariant callMethod(const QString& name,
-            const QVariantList& args = QVariantList());
+        /// Calls \p name on the script object, or tells why it could not.
+        virtual std::expected<QVariant, Error> callMethod(const QString& name, const QVariantList& args = QVariantList());
 
         /**
          * Return a list of supported callable objects.
@@ -109,12 +97,6 @@ namespace Qross
          * \return List of supported calls.
          */
         virtual QStringList methodNames();
-
-        /**
-         * \internal used virtual hook to easier the job to keep
-         * binary compatibility.
-         */
-        virtual void virtual_hook(int id, void* ptr);
     private:
         /// \internal d-pointer class.
         class Private;

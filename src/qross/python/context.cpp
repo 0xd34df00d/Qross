@@ -22,8 +22,6 @@ using namespace Qross;
 PythonContext::PythonContext(Interpreter* interpreter, Script* script)
     : Context(interpreter, script)
 {
-    if (interpreter->hadError())
-        setError(interpreter);
 }
 
 PythonContext::~PythonContext()
@@ -85,9 +83,8 @@ void PythonContext::publish(PyObject* dict, const QString& name, QObject* object
     PyDict_SetItemString(dict, name.toUtf8().constData(), wrapper.get());
 }
 
-void PythonContext::execute()
+std::expected<void, Error> PythonContext::execute()
 {
-    clearError();
     const Gil gil;
     resetModule();
     PyObject* const dict = PyModule_GetDict(ensureModule());
@@ -96,11 +93,9 @@ void PythonContext::execute()
     const Ref code(Py_CompileString(script()->code().constData(), file.constData(), Py_file_input));
     const Ref result(code ? PyEval_EvalCode(code.get(), dict, dict) : nullptr);
     if (!result)
-    {
-        storeException(*this);
-        return;
-    }
+        return std::unexpected(takeException());
     connectSignals();
+    return {};
 }
 
 void PythonContext::connectSignals()
@@ -150,43 +145,32 @@ QStringList PythonContext::functionNames()
     return names;
 }
 
-QVariant PythonContext::callFunction(const QString& name, const QVariantList& args)
+std::expected<QVariant, Error> PythonContext::callFunction(const QString& name, const QVariantList& args)
 {
-    clearError();
     const Gil gil;
     PyObject* const dict = PyModule_GetDict(ensureModule());
 
     PyObject* const function = PyDict_GetItemString(dict, name.toUtf8().constData());
     if (!function || !PyCallable_Check(function))
-    {
-        setError(QStringLiteral("No such function \"%1\"").arg(name));
-        return {};
-    }
+        return std::unexpected(Error { QStringLiteral("No such function \"%1\"").arg(name) });
 
     Ref arguments(PyTuple_New(args.size()));
     for (qsizetype i = 0; i < args.size(); ++i)
     {
         PyObject* const argument = toPython(args[i]);
         if (!argument)
-        {
-            storeException(*this);
-            return {};
-        }
+            return std::unexpected(takeException());
         PyTuple_SET_ITEM(arguments.get(), i, argument);
     }
 
     const Ref result(PyObject_CallObject(function, arguments.get()));
     if (!result)
-    {
-        storeException(*this);
-        return {};
-    }
+        return std::unexpected(takeException());
     return toVariant(result.get());
 }
 
-QVariant PythonContext::evaluate(const QByteArray& code)
+std::expected<QVariant, Error> PythonContext::evaluate(const QByteArray& code)
 {
-    clearError();
     const Gil gil;
     PyObject* const dict = PyModule_GetDict(ensureModule());
 
@@ -199,9 +183,6 @@ QVariant PythonContext::evaluate(const QByteArray& code)
     }
     const Ref result(compiled ? PyEval_EvalCode(compiled.get(), dict, dict) : nullptr);
     if (!result)
-    {
-        storeException(*this);
-        return {};
-    }
+        return std::unexpected(takeException());
     return toVariant(result.get());
 }

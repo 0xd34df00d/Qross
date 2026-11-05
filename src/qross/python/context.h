@@ -36,10 +36,10 @@ namespace Qross
         PythonContext(Interpreter* interpreter, Script* script);
         ~PythonContext() override;
 
-        void execute() override;
+        std::expected<void, Error> execute() override;
         QStringList functionNames() override;
-        QVariant callFunction(const QString& name, const QVariantList& args = QVariantList()) override;
-        QVariant evaluate(const QByteArray& code) override;
+        std::expected<QVariant, Error> callFunction(const QString& name, const QVariantList& args = QVariantList()) override;
+        std::expected<QVariant, Error> evaluate(const QByteArray& code) override;
     private:
         PyObject* ensureModule();
         void resetModule();

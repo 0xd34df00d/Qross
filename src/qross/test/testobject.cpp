@@ -203,7 +203,7 @@ QStringList TestObject::get_qrossobject_methods(Qross::Object::Ptr object)
 QVariant TestObject::call_qrossobject_method(Qross::Object::Ptr object, const QString& methodname, const QVariantList& args)
 {
     // kDebug() << "TestObject::call_qrossobject_method";
-    return object->callMethod(methodname, args);
+    return object->callMethod(methodname, args).value_or(QVariant());
 }
 
 QObject* TestObject::func_createChildTestObject(const QString& objectname)
@@ -306,8 +306,7 @@ void TestThread::emitStepDone(int step)
 QVariant TestThread::callFunction(QObject* action, const QString& functionname, QVariantList arguments)
 {
     Qross::Script* a = dynamic_cast<Qross::Script*>(action);
-    Q_ASSERT(a);
-    return a->callFunction(functionname, arguments);
+    return a ? a->callFunction(functionname, arguments).value_or(QVariant()) : QVariant();
 }
 
 void TestThread::run()

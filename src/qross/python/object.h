@@ -24,7 +24,7 @@ namespace Qross
         /// \return a new reference.
         PyObject* object() const;
 
-        QVariant callMethod(const QString& name, const QVariantList& args = QVariantList()) override;
+        std::expected<QVariant, Error> callMethod(const QString& name, const QVariantList& args = QVariantList()) override;
         QStringList methodNames() override;
     };
 }

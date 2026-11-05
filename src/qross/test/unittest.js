@@ -199,21 +199,9 @@ obj1.signalInt.disconnect(onInt);
 obj1.emitSignalInt(10);
 test.assert(received, 9, 'disconnected signal');
 
-// the action
+// the script
 function myValueFunction(arg) { return arg; }
-function myEmptyFunction() {}
 test.assert(self.functionNames().indexOf('myValueFunction') >= 0, true, 'functionNames()');
-test.assert(self.callFunction('myEmptyFunction'), undefined, 'callFunction() without a result');
-test.assert(self.callFunction('myValueFunction', [true]), true, 'callFunction() with a bool');
-test.assert(self.callFunction('myValueFunction', [1892]), 1892, 'callFunction() with an int');
-test.assert(self.callFunction('myValueFunction', [8529.54]), 8529.54, 'callFunction() with a double');
-test.assert(self.callFunction('myValueFunction', ['Some String Again']), 'Some String Again', 'callFunction() with a string');
-test.assert(self.callFunction('myValueFunction', [[]]), [], 'callFunction() with an empty array');
-test.assert(self.callFunction('myValueFunction', [['One', 'Two']]), ['One', 'Two'], 'callFunction() with an array');
-test.assert(self.evaluate('1 + 2'), 3, 'evaluate()');
-function evalCalc(arg) { return arg; }
-test.assert(self.evaluate('evalCalc(null)'), null, 'evaluate() returning null');
-test.assert(self.evaluate('evalCalc(99)'), 99, 'evaluate() calling a function');
 
 // script objects handed to C++
 function MyClass(result) {

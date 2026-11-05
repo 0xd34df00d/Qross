@@ -30,7 +30,7 @@ PythonInterpreter::PythonInterpreter(InterpreterInfo* info)
     PyConfig_Clear(&config);
     if (PyStatus_Exception(status))
     {
-        setError(QStringLiteral("Python failed to start: %1").arg(QString::fromUtf8(status.err_msg ? status.err_msg : "no details")));
+        m_failure = Error { QStringLiteral("Python failed to start: %1").arg(QString::fromUtf8(status.err_msg ? status.err_msg : "no details")) };
         return;
     }
     // Released here and taken per call, so that callbacks work from any thread.
@@ -46,19 +46,18 @@ PythonInterpreter::~PythonInterpreter()
     Py_FinalizeEx();
 }
 
-Context* PythonInterpreter::createContext(Script* script)
+std::expected<std::unique_ptr<Context>, Error> PythonInterpreter::createContext(Script* script)
 {
-    return new PythonContext(this, script);
+    if (m_failure)
+        return std::unexpected(*m_failure);
+    return std::make_unique<PythonContext>(this, script);
 }
 
-void Qross::storeException(ErrorInterface& target)
+Error Qross::takeException()
 {
     const Ref exception(PyErr_GetRaisedException());
     if (!exception)
-    {
-        target.setError(QStringLiteral("Python failed without raising an exception"));
-        return;
-    }
+        return Error { QStringLiteral("Python failed without raising an exception") };
 
     const Ref typeName(PyObject_GetAttrString(reinterpret_cast<PyObject*>(Py_TYPE(exception.get())), "__name__"));
     const Ref text(PyObject_Str(exception.get()));
@@ -85,5 +84,5 @@ void Qross::storeException(ErrorInterface& target)
     }
     PyErr_Clear();
 
-    target.setError(message, trace, line);
+    return Error { message, trace, int(line) };
 }

@@ -8,12 +8,13 @@
 #pragma once
 
 #include <Python.h>
+#include <optional>
 #include "../core/interpreter.h"
 
 namespace Qross
 {
-    /// Moves the raised Python exception into \p target, with the traceback as the trace.
-    void storeException(ErrorInterface& target);
+    /// Takes the raised Python exception as an error, with the traceback as the trace.
+    Error takeException();
 
     /**
      * Starts Python on first use and shuts it down with the interpreter,
@@ -25,10 +26,11 @@ namespace Qross
     class PythonInterpreter : public Interpreter
     {
         PyThreadState* m_mainThread = nullptr;
+        std::optional<Error> m_failure;
     public:
         explicit PythonInterpreter(InterpreterInfo* info);
         ~PythonInterpreter() override;
 
-        Context* createContext(Script* script) override;
+        std::expected<std::unique_ptr<Context>, Error> createContext(Script* script) override;
     };
 }

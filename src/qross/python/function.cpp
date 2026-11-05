@@ -73,10 +73,7 @@ void PythonFunction::callback(const QVariantList& args)
         PyTuple_SET_ITEM(arguments.get(), i, argument);
     }
     const Ref result(PyErr_Occurred() ? nullptr : PyObject_CallObject(m_callable, arguments.get()));
+    // Nothing awaits the result, so the error can only be logged.
     if (!result)
-    {
-        // Nothing awaits the result, so the error can only be logged.
-        ErrorInterface log;
-        storeException(log);
-    }
+        qrosswarning(takeException().toString());
 }

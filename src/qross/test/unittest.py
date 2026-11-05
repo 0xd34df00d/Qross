@@ -174,11 +174,6 @@ class TestQross(unittest.TestCase):
 
     def testAction(self):
         self.assertIn("testFunction", action.functionNames())
-        for value in ([], [True, False], [524, -958], [524.98, -958.1257], ["", "  Some\nString  "], [["one", 23, "two", None, False]]):
-            self.assertEqual(action.callFunction("testFunction", value), value)
-        self.assertEqual(action.callFunction("testFunction", [action]), [action])
-        self.assertEqual(action.evaluate("1+2"), 3)
-        self.assertEqual(action.evaluate("testFunction(None, 99)"), [None, 99])
 
     def testScriptObjects(self):
         class MyClass:

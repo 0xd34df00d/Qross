@@ -163,7 +163,6 @@ namespace Qross
 
 Interpreter::Interpreter(InterpreterInfo* info)
     : QObject()
-    , ErrorInterface()
     , d(new Private(info))
 {
 }

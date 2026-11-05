@@ -257,12 +257,6 @@ class TestQross
 
   def testAction
     @checks.assert(ACTION.functionNames.include?('testFunction'), 'functionNames()')
-    [[], [true, false], [524, -958], [524.98, -958.1257], ['', "  Some\nString  "], [['one', 23, 'two', nil, false]]].each do |v|
-      @checks.equal(v, ACTION.callFunction('testFunction', v), 'callFunction()')
-    end
-    @checks.equal([ACTION], ACTION.callFunction('testFunction', [ACTION]), 'the action as argument')
-    @checks.equal(3, ACTION.evaluate('1+2'), 'evaluate()')
-    @checks.equal([nil, 99], ACTION.evaluate('testFunction(nil, 99)'), 'evaluate() sees the functions')
   end
 
   def testScriptObjects

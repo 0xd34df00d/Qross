@@ -34,17 +34,15 @@ PyObject* PythonObject::object() const
     return m_object;
 }
 
-QVariant PythonObject::callMethod(const QString& name, const QVariantList& args)
+std::expected<QVariant, Error> PythonObject::callMethod(const QString& name, const QVariantList& args)
 {
-    clearError();
     const Gil gil;
 
     const Ref method(PyObject_GetAttrString(m_object, name.toUtf8().constData()));
     if (!method || !PyCallable_Check(method.get()))
     {
         PyErr_Clear();
-        setError(QStringLiteral("No such method \"%1\"").arg(name));
-        return {};
+        return std::unexpected(Error { QStringLiteral("No such method \"%1\"").arg(name) });
     }
 
     Ref arguments(PyTuple_New(args.size()));
@@ -52,19 +50,13 @@ QVariant PythonObject::callMethod(const QString& name, const QVariantList& args)
     {
         PyObject* const argument = toPython(args[i]);
         if (!argument)
-        {
-            storeException(*this);
-            return {};
-        }
+            return std::unexpected(takeException());
         PyTuple_SET_ITEM(arguments.get(), i, argument);
     }
 
     const Ref result(PyObject_CallObject(method.get(), arguments.get()));
     if (!result)
-    {
-        storeException(*this);
-        return {};
-    }
+        return std::unexpected(takeException());
     return toVariant(result.get());
 }
 

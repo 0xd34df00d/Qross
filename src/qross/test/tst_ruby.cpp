@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: LGPL-2.0-or-later
  **********************************************************************/
 
-#include <qross/core/context.h>
 #include <qross/core/manager.h>
 #include <qross/core/object.h>
 #include <qross/core/script.h>
 #include <csignal>
+#include <expected>
 #include <thread>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QPointer>
@@ -42,7 +42,7 @@ public Q_SLOTS:
     QStringList methods(Qross::Object::Ptr object) { return object ? object->methodNames() : QStringList(); }
     QVariant call(Qross::Object::Ptr object, const QString& method, const QVariantList& args = QVariantList())
     {
-        return object ? object->callMethod(method, args) : QVariant();
+        return object ? object->callMethod(method, args).value_or(QVariant()) : QVariant();
     }
 };
 
@@ -62,6 +62,11 @@ class tst_Ruby : public QObject
             action->addObject(local, QStringLiteral("Local"), options);
         action->trigger();
         return action;
+    }
+
+    static QByteArray describe(const Qross::Script& script)
+    {
+        return script.error() ? script.error()->toString().toUtf8() : QByteArray();
     }
 private Q_SLOTS:
     void initTestCase()
@@ -90,9 +95,9 @@ private Q_SLOTS:
     void reportsSyntaxErrors()
     {
         const auto action = run("ok = 1\nif (");
-        QVERIFY(action->hadError());
-        QVERIFY2(action->errorMessage().startsWith(QStringLiteral("SyntaxError")), qPrintable(action->errorMessage()));
-        QCOMPARE(action->errorLineNo(), 2);
+        QVERIFY(action->error());
+        QVERIFY2(action->error()->message.startsWith(QStringLiteral("SyntaxError")), qPrintable(action->error()->message));
+        QCOMPARE(action->error()->line, 2);
     }
 
     void reportsExceptions()
@@ -104,11 +109,11 @@ end
 
 boom
 )rb");
-        QVERIFY(action->hadError());
-        QCOMPARE(action->errorMessage(), QStringLiteral("ArgumentError: boom"));
-        QCOMPARE(action->errorLineNo(), 3);
-        QVERIFY2(action->errorTrace().contains(QStringLiteral("boom")), qPrintable(action->errorTrace()));
-        QVERIFY2(action->errorTrace().contains(QStringLiteral("tst:3")), qPrintable(action->errorTrace()));
+        QVERIFY(action->error());
+        QCOMPARE(action->error()->message, QStringLiteral("ArgumentError: boom"));
+        QCOMPARE(action->error()->line, 3);
+        QVERIFY2(action->error()->trace.contains(QStringLiteral("boom")), qPrintable(action->error()->trace));
+        QVERIFY2(action->error()->trace.contains(QStringLiteral("tst:3")), qPrintable(action->error()->trace));
     }
 
     void listsFunctions()
@@ -128,7 +133,7 @@ def fourth(x) = x
 
 not_a_function = 1
 )rb");
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
+        QVERIFY2(!action->error(), describe(*action).constData());
         QStringList names = action->functionNames();
         names.sort();
         QCOMPARE(names, QStringList({ QStringLiteral("first"), QStringLiteral("fourth") }));
@@ -144,23 +149,22 @@ def same(x) = x
 def nothing
 end
 )rb");
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
-        QCOMPARE(action->callFunction(QStringLiteral("add"), { 40, 2 }).toInt(), 42);
-        QCOMPARE(action->callFunction(QStringLiteral("same"), { QStringLiteral("text") }).toString(), QStringLiteral("text"));
+        QVERIFY2(!action->error(), describe(*action).constData());
+        QCOMPARE(action->callFunction(QStringLiteral("add"), { 40, 2 })->toInt(), 42);
+        QCOMPARE(action->callFunction(QStringLiteral("same"), { QStringLiteral("text") })->toString(), QStringLiteral("text"));
         const QVariantList list({ 1, QStringLiteral("a") });
-        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(list) }).toList(), list);
+        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(list) })->toList(), list);
         const QVariantMap map({ { QStringLiteral("k"), 1 } });
-        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(map) }).toMap(), map);
-        QVERIFY(!action->callFunction(QStringLiteral("nothing")).isValid());
-        QVERIFY(!action->context()->hadError());
+        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(map) })->toMap(), map);
+        QVERIFY(!action->callFunction(QStringLiteral("nothing"))->isValid());
+        QVERIFY(!action->error());
 
-        QVERIFY(!action->callFunction(QStringLiteral("missing")).isValid());
-        QVERIFY(action->context()->hadError());
-        QVERIFY(action->context()->errorMessage().contains(QStringLiteral("missing")));
+        const auto failed = action->callFunction(QStringLiteral("missing"));
+        QVERIFY(!failed);
+        QVERIFY(failed.error().message.contains(QStringLiteral("missing")));
 
         // Qt methods of the action are not functions of the script.
-        QVERIFY(!action->callFunction(QStringLiteral("trigger")).isValid());
-        QVERIFY(action->context()->hadError());
+        QVERIFY(!action->callFunction(QStringLiteral("trigger")));
     }
 
     void reportsExceptionsFromCalls()
@@ -170,26 +174,26 @@ def bad(x)
   raise TypeError, 'bad ' + x.to_s
 end
 )rb");
-        QVERIFY(!action->callFunction(QStringLiteral("bad"), { 1 }).isValid());
-        QVERIFY(action->context()->hadError());
-        QCOMPARE(action->context()->errorMessage(), QStringLiteral("TypeError: bad 1"));
-        QCOMPARE(action->context()->errorLineNo(), 3);
+        const auto failed = action->callFunction(QStringLiteral("bad"), { 1 });
+        QVERIFY(!failed);
+        QCOMPARE(failed.error().message, QStringLiteral("TypeError: bad 1"));
+        QCOMPARE(failed.error().line, 3);
     }
 
     void evaluates()
     {
         const auto action = run("base = 40");
-        QCOMPARE(action->evaluate("base + 2").toInt(), 42);
-        QVERIFY(!action->context()->hadError());
-        QVERIFY(!action->evaluate("nil").isValid());
+        QCOMPARE(action->evaluate("base + 2")->toInt(), 42);
+        QVERIFY(!action->error());
+        QVERIFY(!action->evaluate("nil")->isValid());
 
-        QCOMPARE(action->evaluate("extra = 5").toInt(), 5);
-        QVERIFY2(!action->context()->hadError(), qPrintable(action->context()->errorMessage()));
-        QCOMPARE(action->evaluate("extra").toInt(), 5);
+        QCOMPARE(action->evaluate("extra = 5")->toInt(), 5);
+        QVERIFY2(!action->error(), describe(*action).constData());
+        QCOMPARE(action->evaluate("extra")->toInt(), 5);
 
-        QVERIFY(!action->evaluate("(").isValid());
-        QVERIFY(action->context()->hadError());
-        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("SyntaxError")));
+        const auto failed = action->evaluate("(");
+        QVERIFY(!failed);
+        QVERIFY(failed.error().message.startsWith(QStringLiteral("SyntaxError")));
     }
 
     void publishesObjects()
@@ -219,8 +223,8 @@ checks = [
 ok = checks.all?
 )rb",
             &local);
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
-        QVERIFY2(action->evaluate("ok").toBool(), qPrintable(action->evaluate("checks.inspect").toString()));
+        QVERIFY2(!action->error(), describe(*action).constData());
+        QVERIFY2(action->evaluate("ok")->toBool(), qPrintable(action->evaluate("checks.inspect")->toString()));
     }
 
     void connectsSignalsAutomatically()
@@ -234,10 +238,10 @@ def fired(n)
 end
 )rb",
             &local, Qross::ChildrenInterface::AutoConnectSignals);
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
+        QVERIFY2(!action->error(), describe(*action).constData());
         Q_EMIT local.fired(7);
         Q_EMIT local.named(QStringLiteral("ignored"));
-        QCOMPARE(action->evaluate("@got").toInt(), 7);
+        QCOMPARE(action->evaluate("@got")->toInt(), 7);
     }
 
     void connectsSignalsFromScripts()
@@ -265,13 +269,15 @@ Local.disconnect(:fired)
 Local.fired(7)
 )rb",
             &local);
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
-        QCOMPARE(action->evaluate("@got").toList(), QVariantList({ 3, 50 }));
+        QVERIFY2(!action->error(), describe(*action).constData());
+        QCOMPARE(action->evaluate("@got")->toList(), QVariantList({ 3, 50 }));
 
-        QVERIFY(!action->evaluate("Local.connect(:named)").isValid());
-        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("ArgumentError")));
-        QVERIFY(!action->evaluate("Local.connect(:self) {}").isValid());
-        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("ArgumentError")));
+        const auto noHandler = action->evaluate("Local.connect(:named)");
+        QVERIFY(!noHandler);
+        QVERIFY(noHandler.error().message.startsWith(QStringLiteral("ArgumentError")));
+        const auto noSignal = action->evaluate("Local.connect(:self) {}");
+        QVERIFY(!noSignal);
+        QVERIFY(noSignal.error().message.startsWith(QStringLiteral("ArgumentError")));
     }
 
     void deliversSignalsFromOtherThreads()
@@ -285,21 +291,21 @@ def fired(n)
 end
 )rb",
             &local, Qross::ChildrenInterface::AutoConnectSignals);
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
+        QVERIFY2(!action->error(), describe(*action).constData());
         std::thread([&local] { Q_EMIT local.fired(9); }).join();
         QCoreApplication::processEvents();
-        QCOMPARE(action->evaluate("@got").toInt(), 9);
+        QCOMPARE(action->evaluate("@got")->toInt(), 9);
     }
 
     void refusesOtherThreads()
     {
         const auto action = run("answer = 42");
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
-        QVariant result;
+        QVERIFY2(!action->error(), describe(*action).constData());
+        std::expected<QVariant, Qross::Error> result;
         std::thread([&] { result = action->evaluate("answer"); }).join();
-        QVERIFY(!result.isValid());
-        QVERIFY2(action->context()->errorMessage().contains(QStringLiteral("thread")), qPrintable(action->context()->errorMessage()));
-        QCOMPARE(action->evaluate("answer").toInt(), 42);
+        QVERIFY(!result);
+        QVERIFY2(result.error().message.contains(QStringLiteral("thread")), qPrintable(result.error().message));
+        QCOMPARE(action->evaluate("answer")->toInt(), 42);
     }
 
     void wrapsScriptObjects()
@@ -330,14 +336,14 @@ results = {
   'missing' => Global.call(counter, 'nope'),
 }
 )rb");
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
-        QCOMPARE(action->evaluate("results['first']").toInt(), 42);
-        QCOMPARE(action->evaluate("results['second']").toInt(), 43);
-        QCOMPARE(action->evaluate("results['greeting']").toString(), QStringLiteral("hi bob"));
-        QCOMPARE(action->evaluate("results['methods']").toStringList(), QStringList(QStringLiteral("greet")));
-        QCOMPARE(action->evaluate("results['identity']").toBool(), true);
-        QCOMPARE(action->evaluate("results['nullObject']").toBool(), true);
-        QVERIFY(!action->evaluate("results['missing']").isValid());
+        QVERIFY2(!action->error(), describe(*action).constData());
+        QCOMPARE(action->evaluate("results['first']")->toInt(), 42);
+        QCOMPARE(action->evaluate("results['second']")->toInt(), 43);
+        QCOMPARE(action->evaluate("results['greeting']")->toString(), QStringLiteral("hi bob"));
+        QCOMPARE(action->evaluate("results['methods']")->toStringList(), QStringList(QStringLiteral("greet")));
+        QCOMPARE(action->evaluate("results['identity']")->toBool(), true);
+        QCOMPARE(action->evaluate("results['nullObject']")->toBool(), true);
+        QVERIFY(!action->evaluate("results['missing']")->isValid());
     }
 
     void callsScriptObjectsFromOutside()
@@ -349,17 +355,15 @@ end
 
 Global.keep(Answer.new)
 )rb");
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
+        QVERIFY2(!action->error(), describe(*action).constData());
         const Qross::Object::Ptr kept = m_global.kept();
         m_global.forget();
         QVERIFY(kept);
-        QCOMPARE(kept->callMethod(QStringLiteral("answer")).toInt(), 42);
-        QVERIFY(!kept->hadError());
+        QCOMPARE(kept->callMethod(QStringLiteral("answer"))->toInt(), 42);
 
         action->finalize();
-        QCOMPARE(kept->callMethod(QStringLiteral("answer")).toInt(), 42);
-        QVERIFY(!kept->callMethod(QStringLiteral("nope")).isValid());
-        QVERIFY(kept->hadError());
+        QCOMPARE(kept->callMethod(QStringLiteral("answer"))->toInt(), 42);
+        QVERIFY(!kept->callMethod(QStringLiteral("nope")));
     }
 
     void survivesGarbageCollection()
@@ -381,22 +385,22 @@ GC.start
 Local.fired(1)
 )rb",
             &local);
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
-        QCOMPARE(action->evaluate("@got").toList(), QVariantList({ 1 }));
-        QCOMPARE(action->evaluate("wrapper.objectName").toString(), QString());
-        QCOMPARE(action->evaluate("wrapper == Local").toBool(), true);
+        QVERIFY2(!action->error(), describe(*action).constData());
+        QCOMPARE(action->evaluate("@got")->toList(), QVariantList({ 1 }));
+        QCOMPARE(action->evaluate("wrapper.objectName")->toString(), QString());
+        QCOMPARE(action->evaluate("wrapper == Local")->toBool(), true);
         const Qross::Object::Ptr kept = m_global.kept();
         m_global.forget();
-        QCOMPARE(kept->callMethod(QStringLiteral("answer")).toInt(), 42);
+        QCOMPARE(kept->callMethod(QStringLiteral("answer"))->toInt(), 42);
     }
 
     void startsAfreshOnRerun()
     {
         const auto action = run("@runs = (@runs || 0) + 1");
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
+        QVERIFY2(!action->error(), describe(*action).constData());
         action->trigger();
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
-        QCOMPARE(action->evaluate("@runs").toInt(), 1);
+        QVERIFY2(!action->error(), describe(*action).constData());
+        QCOMPARE(action->evaluate("@runs")->toInt(), 1);
     }
 
     void refusesDeletedObjects()
@@ -406,10 +410,11 @@ Local.fired(1)
 def name_of = Local.objectName
 )rb",
             local);
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
+        QVERIFY2(!action->error(), describe(*action).constData());
         delete local;
-        QVERIFY(!action->callFunction(QStringLiteral("name_of")).isValid());
-        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("RuntimeError")));
+        const auto failed = action->callFunction(QStringLiteral("name_of"));
+        QVERIFY(!failed);
+        QVERIFY(failed.error().message.startsWith(QStringLiteral("RuntimeError")));
     }
 };
 

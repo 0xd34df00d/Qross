@@ -19,12 +19,14 @@
 
 #pragma once
 
-#include "errorinterface.h"
-
-#include <QtCore/QStringList>
-#include <QtCore/QVariant>
+#include <expected>
+#include <memory>
 #include <QtCore/QMap>
 #include <QtCore/QObject>
+#include <QtCore/QStringList>
+#include <QtCore/QVariant>
+#include "error.h"
+#include "qrossconfig.h"
 
 namespace Qross
 {
@@ -174,9 +176,7 @@ namespace Qross
      * class and does provide a factory method to create
      * \a Context implementations.
      */
-    class QROSSCORE_EXPORT Interpreter
-        : public QObject
-        , public ErrorInterface
+    class QROSSCORE_EXPORT Interpreter : public QObject
     {
         Q_OBJECT
     public:
@@ -199,8 +199,8 @@ namespace Qross
          */
         InterpreterInfo* interpreterInfo() const;
 
-        /// \return a new context for \p script, owned by the caller.
-        virtual Context* createContext(Script* script) = 0;
+        /// A context for \p script, or why this interpreter cannot provide one.
+        virtual std::expected<std::unique_ptr<Context>, Error> createContext(Script* script) = 0;
     private:
         /// \internal d-pointer class.
         class Private;

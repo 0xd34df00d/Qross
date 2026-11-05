@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <expected>
+#include <optional>
 #include "../core/interpreter.h"
 #include "rubyapi.h"
 
@@ -19,14 +21,14 @@ namespace Qross
     /// \return whether the current thread is the one that started Ruby, the only one that may run it.
     bool onRubyThread();
 
-    /// \return onRubyThread(), setting the error of \p target when it is false.
-    bool requireRubyThread(ErrorInterface& target);
+    /// Succeeds on the thread Ruby runs on; elsewhere says why Ruby cannot be used.
+    std::expected<void, Error> requireRubyThread();
 
     /**
-     * Moves \p exception into \p target: "Class: message" as the message,
+     * The error \p exception stands for: "Class: message" as the message,
      * Ruby's full report as the trace, and the line the report names.
      */
-    void storeException(ErrorInterface& target, VALUE exception);
+    Error errorOf(VALUE exception);
 
     /**
      * Starts Ruby on first use and shuts it down with the interpreter, which
@@ -43,10 +45,11 @@ namespace Qross
     class RubyInterpreter : public Interpreter
     {
         bool m_owner = false;
+        std::optional<Error> m_failure;
     public:
         explicit RubyInterpreter(InterpreterInfo* info);
         ~RubyInterpreter() override;
 
-        Context* createContext(Script* script) override;
+        std::expected<std::unique_ptr<Context>, Error> createContext(Script* script) override;
     };
 }

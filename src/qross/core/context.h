@@ -7,10 +7,11 @@
 
 #pragma once
 
+#include <expected>
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
-#include "errorinterface.h"
+#include "error.h"
 #include "qrossconfig.h"
 
 namespace Qross
@@ -25,11 +26,9 @@ namespace Qross
      * A \a Script creates its context through the \a Interpreter on first
      * use and drops it on finalize(). execute() runs the code of the script
      * afresh; callFunction() and evaluate() work on what the last run left
-     * behind.
+     * behind. Each returns the error the script raised instead of a value.
      */
-    class QROSSCORE_EXPORT Context
-        : public QObject
-        , public ErrorInterface
+    class QROSSCORE_EXPORT Context : public QObject
     {
         Q_OBJECT
 
@@ -41,9 +40,9 @@ namespace Qross
         Interpreter* interpreter() const;
         Script* script() const;
 
-        virtual void execute() = 0;
+        virtual std::expected<void, Error> execute() = 0;
         virtual QStringList functionNames() = 0;
-        virtual QVariant callFunction(const QString& name, const QVariantList& args = {}) = 0;
-        virtual QVariant evaluate(const QByteArray& code) = 0;
+        virtual std::expected<QVariant, Error> callFunction(const QString& name, const QVariantList& args = {}) = 0;
+        virtual std::expected<QVariant, Error> evaluate(const QByteArray& code) = 0;
     };
 }

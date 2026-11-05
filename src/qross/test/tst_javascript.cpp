@@ -41,7 +41,7 @@ public Q_SLOTS:
     QStringList methods(Qross::Object::Ptr object) { return object ? object->methodNames() : QStringList(); }
     QVariant call(Qross::Object::Ptr object, const QString& method, const QVariantList& args = QVariantList())
     {
-        return object ? object->callMethod(method, args) : QVariant();
+        return object ? object->callMethod(method, args).value_or(QVariant()) : QVariant();
     }
 };
 
@@ -60,6 +60,11 @@ class tst_JavaScript : public QObject
             action->addObject(local, QStringLiteral("Local"), options);
         action->trigger();
         return action;
+    }
+
+    static QByteArray describe(const Qross::Script& script)
+    {
+        return script.error() ? script.error()->toString().toUtf8() : QByteArray();
     }
 private Q_SLOTS:
     void initTestCase()
@@ -90,14 +95,14 @@ private Q_SLOTS:
             action.setCode("var row = Local.model().index(1, 0).row;");
             action.addObject(&local, QStringLiteral("Local"));
             action.trigger();
-            QVERIFY(!action.hadError());
-            QVERIFY(!action.evaluate("row").isValid());
+            QVERIFY(!action.error());
+            QVERIFY(!action.evaluate("row")->isValid());
         }
 
         const auto action = run("var index = Local.model().index(1, 0);", &local);
-        QVERIFY(!action->hadError());
-        QCOMPARE(action->evaluate("index.row").toInt(), 1);
-        QCOMPARE(action->evaluate("index.data()").toString(), QStringLiteral("beta"));
+        QVERIFY(!action->error());
+        QCOMPARE(action->evaluate("index.row")->toInt(), 1);
+        QCOMPARE(action->evaluate("index.data()")->toString(), QStringLiteral("beta"));
     }
 
     void acceptsTheOldName()
@@ -110,16 +115,16 @@ private Q_SLOTS:
         action.setInterpreter(QStringLiteral("qtscript"));
         action.setCode("var answer = 42;");
         action.trigger();
-        QVERIFY(!action.hadError());
-        QCOMPARE(action.evaluate("answer").toInt(), 42);
+        QVERIFY(!action.error());
+        QCOMPARE(action.evaluate("answer")->toInt(), 42);
     }
 
     void reportsSyntaxErrors()
     {
         const auto action = run("var ok = 1;\nfoo(");
-        QVERIFY(action->hadError());
-        QVERIFY(action->errorMessage().startsWith(QStringLiteral("SyntaxError")));
-        QCOMPARE(action->errorLineNo(), 2);
+        QVERIFY(action->error());
+        QVERIFY(action->error()->message.startsWith(QStringLiteral("SyntaxError")));
+        QCOMPARE(action->error()->line, 2);
     }
 
     void reportsThrownErrors()
@@ -130,25 +135,25 @@ private Q_SLOTS:
             }
             boom();
         )js");
-        QVERIFY(action->hadError());
-        QCOMPARE(action->errorMessage(), QStringLiteral("Error: boom"));
-        QCOMPARE(action->errorLineNo(), 3);
-        QVERIFY(action->errorTrace().contains(QStringLiteral("boom")));
+        QVERIFY(action->error());
+        QCOMPARE(action->error()->message, QStringLiteral("Error: boom"));
+        QCOMPARE(action->error()->line, 3);
+        QVERIFY(action->error()->trace.contains(QStringLiteral("boom")));
     }
 
     void reportsThrownValues()
     {
         const auto action = run("throw 42;");
-        QVERIFY(action->hadError());
-        QCOMPARE(action->errorMessage(), QStringLiteral("42"));
-        QVERIFY(!action->errorTrace().isEmpty());
+        QVERIFY(action->error());
+        QCOMPARE(action->error()->message, QStringLiteral("42"));
+        QVERIFY(!action->error()->trace.isEmpty());
     }
 
     void skipsTheShebang()
     {
         const auto action = run("#!/usr/bin/env qross\nvar line = 2;\nfoo(");
-        QVERIFY(action->hadError());
-        QCOMPARE(action->errorLineNo(), 3);
+        QVERIFY(action->error());
+        QCOMPARE(action->error()->line, 3);
     }
 
     void listsFunctions()
@@ -159,7 +164,7 @@ private Q_SLOTS:
             var notAFunction = 1;
             let third = () => 0;
         )js");
-        QVERIFY(!action->hadError());
+        QVERIFY(!action->error());
         QCOMPARE(action->functionNames(), QStringList({ QStringLiteral("first"), QStringLiteral("second") }));
     }
 
@@ -170,19 +175,19 @@ private Q_SLOTS:
             function same(x) { return x; }
             function nothing() {}
         )js");
-        QVERIFY(!action->hadError());
-        QCOMPARE(action->callFunction(QStringLiteral("add"), { 40, 2 }).toInt(), 42);
-        QCOMPARE(action->callFunction(QStringLiteral("same"), { QStringLiteral("text") }).toString(), QStringLiteral("text"));
+        QVERIFY(!action->error());
+        QCOMPARE(action->callFunction(QStringLiteral("add"), { 40, 2 })->toInt(), 42);
+        QCOMPARE(action->callFunction(QStringLiteral("same"), { QStringLiteral("text") })->toString(), QStringLiteral("text"));
         const QVariantList list({ 1, QStringLiteral("a") });
-        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(list) }).toList(), list);
+        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(list) })->toList(), list);
         const QVariantMap map({ { QStringLiteral("k"), 1 } });
-        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(map) }).toMap(), map);
-        QVERIFY(!action->callFunction(QStringLiteral("nothing")).isValid());
-        QVERIFY(!action->context()->hadError());
+        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(map) })->toMap(), map);
+        QVERIFY(!action->callFunction(QStringLiteral("nothing"))->isValid());
+        QVERIFY(!action->error());
 
-        QVERIFY(!action->callFunction(QStringLiteral("missing")).isValid());
-        QVERIFY(action->context()->hadError());
-        QVERIFY(action->context()->errorMessage().contains(QStringLiteral("missing")));
+        const auto failed = action->callFunction(QStringLiteral("missing"));
+        QVERIFY(!failed);
+        QVERIFY(failed.error().message.contains(QStringLiteral("missing")));
     }
 
     void reportsExceptionsFromCalls()
@@ -193,29 +198,30 @@ private Q_SLOTS:
             }
             function plain() { throw 'plain'; }
         )js");
-        QVERIFY(!action->callFunction(QStringLiteral("bad"), { 1 }).isValid());
-        QVERIFY(action->context()->hadError());
-        QCOMPARE(action->context()->errorMessage(), QStringLiteral("TypeError: bad 1"));
-        QCOMPARE(action->context()->errorLineNo(), 3);
+        const auto bad = action->callFunction(QStringLiteral("bad"), { 1 });
+        QVERIFY(!bad);
+        QCOMPARE(bad.error().message, QStringLiteral("TypeError: bad 1"));
+        QCOMPARE(bad.error().line, 3);
 
-        QVERIFY(!action->callFunction(QStringLiteral("plain")).isValid());
-        QCOMPARE(action->context()->errorMessage(), QStringLiteral("plain"));
+        const auto plain = action->callFunction(QStringLiteral("plain"));
+        QVERIFY(!plain);
+        QCOMPARE(plain.error().message, QStringLiteral("plain"));
     }
 
     void evaluates()
     {
         const auto action = run("var base = 40;");
-        QCOMPARE(action->evaluate("base + 2").toInt(), 42);
-        QVERIFY(!action->context()->hadError());
+        QCOMPARE(action->evaluate("base + 2")->toInt(), 42);
+        QVERIFY(!action->error());
 
-        const QVariant null = action->evaluate("null");
+        const QVariant null = action->evaluate("null").value_or(QVariant());
         QVERIFY(null.isValid());
         QVERIFY(null.isNull());
-        QVERIFY(!action->evaluate("undefined").isValid());
+        QVERIFY(!action->evaluate("undefined")->isValid());
 
-        QVERIFY(!action->evaluate("(").isValid());
-        QVERIFY(action->context()->hadError());
-        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("SyntaxError")));
+        const auto failed = action->evaluate("(");
+        QVERIFY(!failed);
+        QVERIFY(failed.error().message.startsWith(QStringLiteral("SyntaxError")));
     }
 
     void publishesObjects()
@@ -231,8 +237,8 @@ private Q_SLOTS:
                 && Global.Fast === 1 && Local.Slow === 2 && Global.self().Slow === 2;
         )js",
             &local);
-        QVERIFY(!action->hadError());
-        QVERIFY(action->evaluate("ok").toBool());
+        QVERIFY(!action->error());
+        QVERIFY(action->evaluate("ok")->toBool());
     }
 
     void connectsSignalsAutomatically()
@@ -243,10 +249,10 @@ private Q_SLOTS:
             function fired(n) { got = n; }
         )js",
             &local, Qross::ChildrenInterface::AutoConnectSignals);
-        QVERIFY(!action->hadError());
+        QVERIFY(!action->error());
         Q_EMIT local.fired(7);
         Q_EMIT local.named(QStringLiteral("ignored"));
-        QCOMPARE(action->evaluate("got").toInt(), 7);
+        QCOMPARE(action->evaluate("got")->toInt(), 7);
     }
 
     void keepsPublishedObjectsAlive()
@@ -258,8 +264,8 @@ private Q_SLOTS:
             gc();
         )js",
             orphan);
-        QVERIFY(!action->hadError());
-        action->evaluate("gc()");
+        QVERIFY(!action->error());
+        (void)action->evaluate("gc()");
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QVERIFY(orphan);
         delete orphan;
@@ -281,29 +287,27 @@ private Q_SLOTS:
                 missing: Global.call(counter, 'nope'),
             };
         )js");
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
-        QCOMPARE(action->evaluate("results.first").toInt(), 42);
-        QCOMPARE(action->evaluate("results.second").toInt(), 43);
-        QCOMPARE(action->evaluate("results.greeting").toString(), QStringLiteral("hi bob"));
-        QCOMPARE(action->evaluate("results.methods").toStringList(), QStringList(QStringLiteral("greet")));
-        QCOMPARE(action->evaluate("results.plain").toInt(), 42);
-        QCOMPARE(action->evaluate("results.nullObject").toBool(), true);
-        QVERIFY(!action->evaluate("results.missing").isValid());
+        QVERIFY2(!action->error(), describe(*action).constData());
+        QCOMPARE(action->evaluate("results.first")->toInt(), 42);
+        QCOMPARE(action->evaluate("results.second")->toInt(), 43);
+        QCOMPARE(action->evaluate("results.greeting")->toString(), QStringLiteral("hi bob"));
+        QCOMPARE(action->evaluate("results.methods")->toStringList(), QStringList(QStringLiteral("greet")));
+        QCOMPARE(action->evaluate("results.plain")->toInt(), 42);
+        QCOMPARE(action->evaluate("results.nullObject")->toBool(), true);
+        QVERIFY(!action->evaluate("results.missing")->isValid());
     }
 
     void callsScriptObjectsFromOutside()
     {
         const auto action = run("Global.keep({ answer: function() { return 42; } });");
-        QVERIFY(!action->hadError());
+        QVERIFY(!action->error());
         const Qross::Object::Ptr kept = m_global.kept();
         m_global.forget();
         QVERIFY(kept);
-        QCOMPARE(kept->callMethod(QStringLiteral("answer")).toInt(), 42);
-        QVERIFY(!kept->hadError());
+        QCOMPARE(kept->callMethod(QStringLiteral("answer"))->toInt(), 42);
 
         action->finalize();
-        QVERIFY(!kept->callMethod(QStringLiteral("answer")).isValid());
-        QVERIFY(kept->hadError());
+        QVERIFY(!kept->callMethod(QStringLiteral("answer")));
         QVERIFY(kept->methodNames().isEmpty());
     }
 
@@ -313,10 +317,10 @@ private Q_SLOTS:
             var runs = (typeof runs === 'number' ? runs : 0) + 1;
             let fresh = true;
         )js");
-        QVERIFY(!action->hadError());
+        QVERIFY(!action->error());
         action->trigger();
-        QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
-        QCOMPARE(action->evaluate("runs").toInt(), 1);
+        QVERIFY2(!action->error(), describe(*action).constData());
+        QCOMPARE(action->evaluate("runs")->toInt(), 1);
     }
 
     void exposesTheEngine()

@@ -25,44 +25,31 @@ RubyObject::~RubyObject()
         rb_gc_unregister_address(&m_value);
 }
 
-QVariant RubyObject::callMethod(const QString& name, const QVariantList& args)
+std::expected<QVariant, Error> RubyObject::callMethod(const QString& name, const QVariantList& args)
 {
-    clearError();
-    if (!requireRubyThread(*this))
-        return {};
+    if (const auto thread = requireRubyThread(); !thread)
+        return std::unexpected(thread.error());
 
     const QByteArray utf8 = name.toUtf8();
     const ID method = rb_intern2(utf8.constData(), utf8.size());
     const Result known = callProtected(m_value, rb_intern("respond_to?"), { ID2SYM(method) });
     if (!known)
-    {
-        storeException(*this, known.error());
-        return {};
-    }
+        return std::unexpected(errorOf(known.error()));
     if (!RTEST(*known))
-    {
-        setError(QStringLiteral("No such method \"%1\"").arg(name));
-        return {};
-    }
+        return std::unexpected(Error { QStringLiteral("No such method \"%1\"").arg(name) });
 
     VALUE arguments = rb_ary_new_capa(args.size());
     for (const QVariant& arg : args)
     {
         const Result value = toRuby(arg);
         if (!value)
-        {
-            storeException(*this, value.error());
-            return {};
-        }
+            return std::unexpected(errorOf(value.error()));
         rb_ary_push(arguments, *value);
     }
     const Result result = callProtected(m_value, method, RARRAY_LEN(arguments), RARRAY_CONST_PTR(arguments));
     RB_GC_GUARD(arguments);
     if (!result)
-    {
-        storeException(*this, result.error());
-        return {};
-    }
+        return std::unexpected(errorOf(result.error()));
     return toVariant(*result);
 }
 

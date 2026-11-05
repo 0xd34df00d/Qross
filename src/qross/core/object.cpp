@@ -28,14 +28,12 @@ public:
 
 Object::Object()
     : QSharedData()
-    , ErrorInterface()
     , d(new Private)
 {
 }
 
 Object::Object(const Object& other)
     : QSharedData()
-    , ErrorInterface()
     , d(new Private)
 {
     Q_UNUSED(other);
@@ -46,20 +44,13 @@ Object::~Object()
     delete d;
 }
 
-QVariant Object::callMethod(const QString& name, const QVariantList& args)
+std::expected<QVariant, Error> Object::callMethod(const QString& name, const QVariantList& args)
 {
-    Q_UNUSED(name);
     Q_UNUSED(args);
-    return QVariant();
+    return std::unexpected(Error { QStringLiteral("No such method \"%1\"").arg(name) });
 }
 
 QStringList Object::methodNames()
 {
     return QStringList();
-}
-
-void Object::virtual_hook(int id, void* ptr)
-{
-    Q_UNUSED(id);
-    Q_UNUSED(ptr);
 }

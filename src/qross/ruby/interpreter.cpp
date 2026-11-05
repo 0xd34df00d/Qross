@@ -88,15 +88,14 @@ bool Qross::onRubyThread()
     return state == State::Up && QThread::currentThread() == rubyThread;
 }
 
-bool Qross::requireRubyThread(ErrorInterface& target)
+std::expected<void, Error> Qross::requireRubyThread()
 {
     if (onRubyThread())
-        return true;
-    target.setError(rubyRunning() ? QStringLiteral("Ruby runs only on the thread that started it") : QStringLiteral("Ruby is not running"));
-    return false;
+        return {};
+    return std::unexpected(Error { rubyRunning() ? QStringLiteral("Ruby runs only on the thread that started it") : QStringLiteral("Ruby is not running") });
 }
 
-void Qross::storeException(ErrorInterface& target, VALUE exception)
+Error Qross::errorOf(VALUE exception)
 {
     const QString type = toString(rb_class_name(rb_obj_class(exception)));
     const Result message = callProtected(exception, rb_intern("message"), {});
@@ -114,7 +113,7 @@ void Qross::storeException(ErrorInterface& target, VALUE exception)
     const Result report = runProtected(fullMessage, exception);
     const QString trace = report && RB_TYPE_P(*report, T_STRING) ? toString(*report).trimmed() : QString();
 
-    target.setError(QStringLiteral("%1: %2").arg(type, text), trace, line);
+    return Error { QStringLiteral("%1: %2").arg(type, text), trace, int(line) };
 }
 
 RubyInterpreter::RubyInterpreter(InterpreterInfo* info)
@@ -124,7 +123,7 @@ RubyInterpreter::RubyInterpreter(InterpreterInfo* info)
         return;
     if (state == State::Gone)
     {
-        setError(QStringLiteral("Ruby cannot start again in this process"));
+        m_failure = Error { QStringLiteral("Ruby cannot start again in this process") };
         return;
     }
 
@@ -142,7 +141,7 @@ RubyInterpreter::RubyInterpreter(InterpreterInfo* info)
     if (ruby_setup() != 0)
     {
         state = State::Gone;
-        setError(QStringLiteral("Ruby failed to start"));
+        m_failure = Error { QStringLiteral("Ruby failed to start") };
         return;
     }
     // An empty program: ruby_options sets up the load path, RubyGems and
@@ -156,7 +155,7 @@ RubyInterpreter::RubyInterpreter(InterpreterInfo* info)
     int status = 0;
     if (!ruby_executable_node(program, &status))
     {
-        setError(QStringLiteral("Ruby failed to start, status %1").arg(status));
+        m_failure = Error { QStringLiteral("Ruby failed to start, status %1").arg(status) };
         return;
     }
     ruby_script("qross");
@@ -180,7 +179,9 @@ RubyInterpreter::~RubyInterpreter()
     ruby_cleanup(0);
 }
 
-Context* RubyInterpreter::createContext(Script* script)
+std::expected<std::unique_ptr<Context>, Error> RubyInterpreter::createContext(Script* script)
 {
-    return new RubyContext(this, script);
+    if (m_failure)
+        return std::unexpected(*m_failure);
+    return std::make_unique<RubyContext>(this, script);
 }

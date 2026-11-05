@@ -17,12 +17,11 @@ namespace
     const auto EngineLookup = QStringLiteral("__qrossEngine");
 }
 
-void Qross::storeException(ErrorInterface& target, const QJSValue& thrown, const QStringList& trace)
+Error Qross::errorOf(const QJSValue& thrown, const QStringList& trace)
 {
     if (thrown.isError())
-        target.setError(thrown.toString(), thrown.property(QStringLiteral("stack")).toString(), thrown.property(QStringLiteral("lineNumber")).toInt());
-    else
-        target.setError(thrown.toString(), trace.join(QLatin1Char('\n')));
+        return Error { thrown.toString(), thrown.property(QStringLiteral("stack")).toString(), thrown.property(QStringLiteral("lineNumber")).toInt() };
+    return Error { thrown.toString(), trace.join(QLatin1Char('\n')) };
 }
 
 JsObject::JsObject(QJSEngine* engine, const QJSValue& value)
@@ -65,21 +64,14 @@ Object::Ptr JsObject::fromValue(const QJSValue& value)
     return Object::Ptr(new JsObject(engine, value));
 }
 
-QVariant JsObject::callMethod(const QString& name, const QVariantList& args)
+std::expected<QVariant, Error> JsObject::callMethod(const QString& name, const QVariantList& args)
 {
-    clearError();
     if (!m_engine)
-    {
-        setError(QStringLiteral("JsObject: the engine of this object is gone"));
-        return {};
-    }
+        return std::unexpected(Error { QStringLiteral("JsObject: the engine of this object is gone") });
 
     const QJSValue method = m_value.property(name);
     if (!method.isCallable())
-    {
-        setError(QStringLiteral("JsObject: no method \"%1\"").arg(name));
-        return {};
-    }
+        return std::unexpected(Error { QStringLiteral("JsObject: no method \"%1\"").arg(name) });
 
     QJSValueList arguments;
     for (const QVariant& arg : args)
@@ -87,10 +79,7 @@ QVariant JsObject::callMethod(const QString& name, const QVariantList& args)
 
     const QJSValue result = QJSManagedValue(method, m_engine).callWithInstance(m_value, arguments);
     if (m_engine->hasError())
-    {
-        storeException(*this, m_engine->catchError());
-        return {};
-    }
+        return std::unexpected(errorOf(m_engine->catchError()));
     return result.toVariant();
 }
 

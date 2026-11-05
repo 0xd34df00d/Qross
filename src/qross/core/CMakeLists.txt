@@ -11,7 +11,7 @@ set(qrosscore_SRCS
 set(qrosscore_HEADERS
     qross_export.h
     qrossconfig.h
-    errorinterface.h
+    error.h
     childreninterface.h
     wrapperinterface.h
     metatype.h

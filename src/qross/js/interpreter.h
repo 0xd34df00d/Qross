@@ -17,6 +17,6 @@ namespace Qross
     public:
         explicit JsInterpreter(InterpreterInfo* info);
 
-        Context* createContext(Script* script) override;
+        std::expected<std::unique_ptr<Context>, Error> createContext(Script* script) override;
     };
 }

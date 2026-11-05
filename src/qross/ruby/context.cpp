@@ -38,8 +38,6 @@ namespace
 RubyContext::RubyContext(Interpreter* interpreter, Script* script)
     : Context(interpreter, script)
 {
-    if (interpreter->hadError())
-        setError(interpreter);
     if (rubyRunning())
     {
         rb_gc_register_address(&m_self);
@@ -56,9 +54,11 @@ RubyContext::~RubyContext()
     rb_gc_unregister_address(&m_binding);
 }
 
-bool RubyContext::prepare()
+std::expected<void, Error> RubyContext::prepare()
 {
-    return requireRubyThread(*this) && ensureContext();
+    if (const auto thread = requireRubyThread(); !thread)
+        return thread;
+    return ensureContext();
 }
 
 void RubyContext::resetContext()
@@ -70,10 +70,10 @@ void RubyContext::resetContext()
     m_binding = Qnil;
 }
 
-bool RubyContext::ensureContext()
+std::expected<void, Error> RubyContext::ensureContext()
 {
     if (!NIL_P(m_self))
-        return true;
+        return {};
 
     m_self = wrapObject(script());
     rb_ivar_set(m_self, objectsKey(), rb_hash_new());
@@ -89,13 +89,12 @@ bool RubyContext::ensureContext()
     const Result binding = callProtected(m_self, rb_intern("instance_eval"), std::size(arguments), arguments);
     if (!binding)
     {
-        storeException(*this, binding.error());
         resetContext();
-        return false;
+        return std::unexpected(errorOf(binding.error()));
     }
     m_binding = *binding;
     appendLoadPath();
-    return true;
+    return {};
 }
 
 void RubyContext::publish(VALUE accessors, const QString& name, QObject* object)
@@ -122,29 +121,26 @@ void RubyContext::appendLoadPath()
         rb_ary_push(path, entry);
 }
 
-QVariant RubyContext::run(const QByteArray& code, const QString& file)
+std::expected<QVariant, Error> RubyContext::run(const QByteArray& code, const QString& file)
 {
     const VALUE arguments[] = { rb_utf8_str_new(code.constData(), code.size()), fromString(file), INT2FIX(1) };
     const Result result = callProtected(m_binding, rb_intern("eval"), std::size(arguments), arguments);
     if (!result)
-    {
-        storeException(*this, result.error());
-        return {};
-    }
+        return std::unexpected(errorOf(result.error()));
     return toVariant(*result);
 }
 
-void RubyContext::execute()
+std::expected<void, Error> RubyContext::execute()
 {
-    clearError();
-    if (!requireRubyThread(*this))
-        return;
+    if (const auto thread = requireRubyThread(); !thread)
+        return thread;
     resetContext();
-    if (!ensureContext())
-        return;
-    run(script()->code(), script()->file().isEmpty() ? script()->name() : script()->file());
-    if (!hadError())
-        connectSignals();
+    if (const auto context = ensureContext(); !context)
+        return context;
+    if (const auto result = run(script()->code(), script()->file().isEmpty() ? script()->name() : script()->file()); !result)
+        return std::unexpected(result.error());
+    connectSignals();
+    return {};
 }
 
 VALUE RubyContext::functions()
@@ -196,45 +192,34 @@ QStringList RubyContext::functionNames()
     return result;
 }
 
-QVariant RubyContext::callFunction(const QString& name, const QVariantList& args)
+std::expected<QVariant, Error> RubyContext::callFunction(const QString& name, const QVariantList& args)
 {
-    clearError();
-    if (!prepare())
-        return {};
+    if (const auto ready = prepare(); !ready)
+        return std::unexpected(ready.error());
 
     const QByteArray utf8 = name.toUtf8();
     const ID id = rb_intern2(utf8.constData(), utf8.size());
     if (!RTEST(rb_ary_includes(functions(), ID2SYM(id))))
-    {
-        setError(QStringLiteral("No such function \"%1\"").arg(name));
-        return {};
-    }
+        return std::unexpected(Error { QStringLiteral("No such function \"%1\"").arg(name) });
 
     VALUE arguments = rb_ary_new_capa(args.size());
     for (const QVariant& arg : args)
     {
         const Result value = toRuby(arg);
         if (!value)
-        {
-            storeException(*this, value.error());
-            return {};
-        }
+            return std::unexpected(errorOf(value.error()));
         rb_ary_push(arguments, *value);
     }
     const Result result = callProtected(m_self, id, RARRAY_LEN(arguments), RARRAY_CONST_PTR(arguments));
     RB_GC_GUARD(arguments);
     if (!result)
-    {
-        storeException(*this, result.error());
-        return {};
-    }
+        return std::unexpected(errorOf(result.error()));
     return toVariant(*result);
 }
 
-QVariant RubyContext::evaluate(const QByteArray& code)
+std::expected<QVariant, Error> RubyContext::evaluate(const QByteArray& code)
 {
-    clearError();
-    if (!prepare())
-        return {};
+    if (const auto ready = prepare(); !ready)
+        return std::unexpected(ready.error());
     return run(code, QStringLiteral("<evaluate>"));
 }

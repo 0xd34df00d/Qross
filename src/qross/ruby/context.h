@@ -42,17 +42,17 @@ namespace Qross
         RubyContext(Interpreter* interpreter, Script* script);
         ~RubyContext() override;
 
-        void execute() override;
+        std::expected<void, Error> execute() override;
         QStringList functionNames() override;
-        QVariant callFunction(const QString& name, const QVariantList& args = QVariantList()) override;
-        QVariant evaluate(const QByteArray& code) override;
+        std::expected<QVariant, Error> callFunction(const QString& name, const QVariantList& args = QVariantList()) override;
+        std::expected<QVariant, Error> evaluate(const QByteArray& code) override;
     private:
-        bool prepare();
-        bool ensureContext();
+        std::expected<void, Error> prepare();
+        std::expected<void, Error> ensureContext();
         void resetContext();
         void publish(VALUE accessors, const QString& name, QObject* object);
         void appendLoadPath();
-        QVariant run(const QByteArray& code, const QString& file);
+        std::expected<QVariant, Error> run(const QByteArray& code, const QString& file);
         VALUE functions();
         void connectSignals();
     };

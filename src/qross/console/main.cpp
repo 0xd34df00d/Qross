@@ -74,10 +74,10 @@ int runScriptFile(const QString& scriptfile)
     // Now execute the Script.
     action->trigger();
 
-    if (action->hadError())
+    if (const auto error = action->error())
     {
         // We had an exception.
-        std::cerr << QString("%2\n%1").arg(action->errorTrace()).arg(action->errorMessage()).toLatin1().data() << std::endl;
+        std::cerr << qPrintable(error->toString()) << std::endl;
         delete action;
         return ERROR_EXCEPTION;
     }

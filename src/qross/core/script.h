@@ -7,12 +7,14 @@
 
 #pragma once
 
+#include <expected>
+#include <optional>
 #include <QVariant>
 #include <QObject>
 #include <QUrl>
 #include <QAction>
 
-#include "errorinterface.h"
+#include "error.h"
 #include "childreninterface.h"
 
 namespace Qross
@@ -75,7 +77,6 @@ namespace Qross
     class QROSSCORE_EXPORT Script
         : public QAction
         , public ChildrenInterface
-        , public ErrorInterface
     {
         Q_OBJECT
     public:
@@ -144,6 +145,36 @@ namespace Qross
          * functionality.
          */
         Context* context() const;
+
+        /// The error of the latest trigger(), callFunction(), evaluate() or functionNames(), if it failed.
+        std::optional<Error> error() const;
+
+        /**
+         * Call a function in the script.
+         *
+         * \param name The name of the function which should be called.
+         * \param args The optional list of arguments.
+         * \return The return value of the function, or the error it raised.
+         */
+        std::expected<QVariant, Error> callFunction(const QString& name, const QVariantList& args = QVariantList());
+
+        /**
+         * Evaluate some scripting code.
+         *
+         * Example how this can be used:
+         * \code
+         * Qross::Script* a = new Qross::Script(0, "MyScript");
+         * a->setInterpreter("python");
+         * a->setCode("def myFunc(x): return x");
+         * a->trigger();
+         * int three = a->evaluate("1+2").value_or(QVariant()).toInt(); // returns 3
+         * int nine = a->evaluate("myFunc(9)").value_or(QVariant()).toInt(); // returns 9
+         * \endcode
+         *
+         * \param code The scripting code to evaluate.
+         * \return The value of the evaluation, or the error it raised.
+         */
+        std::expected<QVariant, Error> evaluate(const QByteArray& code);
 
     public Q_SLOTS:
 
@@ -228,32 +259,6 @@ namespace Qross
          * \return the list of functionnames.
          */
         QStringList functionNames();
-
-        /**
-         * Call a function in the script.
-         *
-         * \param name The name of the function which should be called.
-         * \param args The optional list of arguments.
-         */
-        QVariant callFunction(const QString& name, const QVariantList& args = QVariantList());
-
-        /**
-         * Evaluate some scripting code.
-         *
-         * Example how this can be used:
-         * \code
-         * Qross::Script* a = new Qross::Script(0, "MyScript");
-         * a->setInterpreter("python");
-         * a->setCode("def myFunc(x): return x");
-         * a->execute();
-         * int three = a->evaluate("1+2").toInt(); // returns 3
-         * int nine = a->evaluate("myFunc(9)").toInt(); // returns 9
-         * \endcode
-         *
-         * \param code The scripting code to evaluate.
-         * \return The return value of the evaluation.
-         */
-        QVariant evaluate(const QByteArray& code);
 
     Q_SIGNALS:
 
