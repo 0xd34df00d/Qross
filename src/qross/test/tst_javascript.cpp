@@ -148,6 +148,15 @@ private Q_SLOTS:
         QVERIFY(!script->error()->trace.isEmpty());
     }
 
+    void acceptsErrorValues()
+    {
+        const auto script = run("var error = new Error('normal data');\nerror;");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QVERIFY(script->evaluate("error"));
+        QCOMPARE(script->evaluate("error.message")->toString(), QStringLiteral("normal data"));
+        QVERIFY(!script->evaluate("throw error"));
+    }
+
     void skipsTheShebang()
     {
         const auto script = run("#!/usr/bin/env qross\nvar line = 2;\nfoo(");
@@ -187,6 +196,33 @@ private Q_SLOTS:
         const auto failed = script->call(QStringLiteral("missing"));
         QVERIFY(!failed);
         QVERIFY(failed.error().message.contains(QStringLiteral("missing")));
+    }
+
+    void reportsInterruptedCalls()
+    {
+        const auto script = run(R"js(
+            function spin() { for (var i = 0; i < 10000000; i++) {} return i; }
+            Global.keep({ spin: spin });
+        )js");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QObject* engine = nullptr;
+        QVERIFY(QMetaObject::invokeMethod(script->context(), "engine", Q_RETURN_ARG(QObject*, engine)));
+        auto* const jsEngine = qobject_cast<QJSEngine*>(engine);
+        QVERIFY(jsEngine);
+
+        jsEngine->setInterrupted(true);
+        const auto call = script->call(QStringLiteral("spin"));
+        QVERIFY(!call);
+        QVERIFY2(call.error().message.contains(QStringLiteral("Interrupted")), qPrintable(call.error().message));
+        QVERIFY(script->error());
+        const auto method = m_global.kept()->callMethod(QStringLiteral("spin"));
+        QVERIFY(!method);
+        QVERIFY2(method.error().message.contains(QStringLiteral("Interrupted")), qPrintable(method.error().message));
+        jsEngine->setInterrupted(false);
+        QCOMPARE(script->call(QStringLiteral("spin"))->toInt(), 10000000);
+        QVERIFY(!script->error());
+        QCOMPARE(m_global.kept()->callMethod(QStringLiteral("spin"))->toInt(), 10000000);
+        m_global.forget();
     }
 
     void reportsExceptionsFromCalls()

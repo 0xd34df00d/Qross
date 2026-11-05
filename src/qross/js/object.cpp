@@ -24,6 +24,16 @@ Error Qross::errorOf(const QJSValue& thrown, const QStringList& trace)
     return Error { thrown.toString(), trace.join(QLatin1Char('\n')) };
 }
 
+std::expected<void, Error> Qross::checkCall(QJSEngine& engine)
+{
+    if (engine.hasError())
+        return std::unexpected(errorOf(engine.catchError()));
+    // An interrupted call ends without an exception; the error object is the one evaluate() gets from the engine.
+    if (engine.isInterrupted())
+        return std::unexpected(errorOf(engine.newErrorObject(QJSValue::GenericError, QStringLiteral("Interrupted"))));
+    return {};
+}
+
 JsObject::JsObject(QJSEngine* engine, const QJSValue& value)
     : m_engine(engine)
     , m_value(value)
@@ -78,8 +88,8 @@ std::expected<QVariant, Error> JsObject::callMethod(const QString& name, const Q
         arguments << m_engine->toScriptValue(arg);
 
     const QJSValue result = QJSManagedValue(method, m_engine).callWithInstance(m_value, arguments);
-    if (m_engine->hasError())
-        return std::unexpected(errorOf(m_engine->catchError()));
+    if (const auto ended = checkCall(*m_engine); !ended)
+        return std::unexpected(ended.error());
     return result.toVariant();
 }
 

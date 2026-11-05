@@ -87,9 +87,12 @@ std::expected<void, Error> JsContext::execute()
         code.remove(0, eol < 0 ? code.size() : eol);
     }
 
+    // The trace is empty exactly when nothing was thrown: even a syntax
+    // error carries the frame of its location. An Error object is a value
+    // like any other.
     QStringList trace;
     const QJSValue result = engine.evaluate(code, script()->name(), 1, &trace);
-    if (result.isError() || !trace.isEmpty())
+    if (!trace.isEmpty() || engine.isInterrupted())
         return std::unexpected(errorOf(result, trace));
 
     connectSignals(engine);
@@ -146,16 +149,17 @@ std::expected<QVariant, Error> JsContext::callFunction(const QString& name, cons
         arguments << engine.toScriptValue(arg);
 
     const QJSValue result = QJSManagedValue(function, &engine).call(arguments);
-    if (engine.hasError())
-        return std::unexpected(errorOf(engine.catchError()));
+    if (const auto ended = checkCall(engine); !ended)
+        return std::unexpected(ended.error());
     return result.toVariant();
 }
 
 std::expected<QVariant, Error> JsContext::evaluate(const QByteArray& code)
 {
+    QQmlEngine& engine = ensureEngine();
     QStringList trace;
-    const QJSValue result = ensureEngine().evaluate(QString::fromUtf8(code), {}, 1, &trace);
-    if (result.isError() || !trace.isEmpty())
+    const QJSValue result = engine.evaluate(QString::fromUtf8(code), {}, 1, &trace);
+    if (!trace.isEmpty() || engine.isInterrupted())
         return std::unexpected(errorOf(result, trace));
     return result.toVariant();
 }

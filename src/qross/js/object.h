@@ -18,6 +18,9 @@ namespace Qross
     /// The error \p thrown stands for, which may be any JavaScript value; \p trace is used when it has no stack.
     Error errorOf(const QJSValue& thrown, const QStringList& trace = {});
 
+    /// \return the failure of the call that just ended in \p engine, which threw or was interrupted, if any.
+    std::expected<void, Error> checkCall(QJSEngine& engine);
+
     /**
      * A JavaScript object handed to C++ as an \a Object::Ptr.
      *
