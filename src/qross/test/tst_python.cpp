@@ -313,6 +313,35 @@ Global.keep(Answer())
         QCOMPARE(script->evaluate("runs")->toInt(), 1);
     }
 
+    void registersModules()
+    {
+        const auto first = run(R"py(
+import pickle
+import sys
+
+class Item:
+    def __init__(self, n):
+        self.n = n
+
+registered = sys.modules[__name__].Item is Item
+copy = pickle.loads(pickle.dumps(Item(7)))
+)py");
+        QVERIFY2(!first->error(), describe(*first).constData());
+        QCOMPARE(first->evaluate("registered")->toBool(), true);
+        QCOMPARE(first->evaluate("type(copy) is Item")->toBool(), true);
+        QCOMPARE(first->evaluate("copy.n")->toInt(), 7);
+        const QString name = first->evaluate("__name__")->toString();
+        QCOMPARE(name, QStringLiteral("qross_tst"));
+
+        const auto second = run("import sys");
+        QVERIFY2(!second->error(), describe(*second).constData());
+        QCOMPARE(second->evaluate("__name__")->toString(), QStringLiteral("qross_tst_2"));
+        const QByteArray registered = QStringLiteral("'%1' in sys.modules").arg(name).toUtf8();
+        QCOMPARE(second->evaluate(registered)->toBool(), true);
+        first->reset();
+        QCOMPARE(second->evaluate(registered)->toBool(), false);
+    }
+
     void refusesDeletedObjects()
     {
         auto* const local = new Host;

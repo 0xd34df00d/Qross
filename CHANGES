@@ -51,8 +51,9 @@ Unreleased
   from a fresh engine. The widget constructors of the QtScript plugin
   are gone.
 * Python: rewritten on the C API for Python 3.12 or later, without PyCXX
-  and PyQt. Published objects are globals of a fresh __main__ module per
-  run, which replaces the import hook; signals have connect() and
+  and PyQt. Published objects are globals of a fresh module per run,
+  registered in sys.modules under a name derived from the script's,
+  which replaces the import hook; signals have connect() and
   disconnect(); script objects travel to C++ as Qross::Object::Ptr and
   come back as the same object; lists of QObject subclasses convert
   through the metatype system. The interpreter starts on first use,

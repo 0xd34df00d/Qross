@@ -8,6 +8,7 @@
 #pragma once
 
 #include <Python.h>
+#include <QtCore/QByteArray>
 #include <QtCore/QList>
 #include <QtCore/QPointer>
 #include "../core/context.h"
@@ -19,17 +20,20 @@ namespace Qross
     /**
      * Runs the code of a \a Script as a module of its own.
      *
-     * Every execute() starts from a fresh module called \c __main__ whose
-     * globals are the script as \c self, the objects of the \a Manager
-     * (\c Qross among them) and the objects of the script. The directory of
-     * the script file is appended to \c sys.path, so that scripts can import
-     * their neighbours.
+     * Every execute() starts from a fresh module whose globals are the
+     * script as \c self, the objects of the \a Manager (\c Qross among them)
+     * and the objects of the script. The module is registered in
+     * \c sys.modules under a name of its own, derived from the name of the
+     * script, so that pickle and dataclasses find the classes it defines
+     * through their \c __module__. The directory of the script file is
+     * appended to \c sys.path, so that scripts can import their neighbours.
      *
      * Objects stay owned by C++; a wrapper of a deleted object raises
      * RuntimeError.
      */
     class PythonContext : public Context
     {
+        QByteArray m_name;
         PyObject* m_module = nullptr;
         QList<QPointer<PythonFunction>> m_connections;
     public:

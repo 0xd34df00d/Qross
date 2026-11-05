@@ -6,7 +6,9 @@
  **********************************************************************/
 
 #include "context.h"
+#include <QtCore/QFileInfo>
 #include <QtCore/QMetaMethod>
+#include <QtCore/QRegularExpression>
 #include <QtCore/QSet>
 #include "../core/script.h"
 #include "function.h"
@@ -17,6 +19,26 @@
 #include "wrapper.h"
 
 using namespace Qross;
+
+namespace
+{
+    /// \return qross_ and the name of \p script as an identifier, numbered while sys.modules has it.
+    QByteArray moduleName(const QString& script)
+    {
+        QString stem = QFileInfo(script).completeBaseName();
+        stem.replace(QRegularExpression(QStringLiteral("\\W")), QStringLiteral("_"));
+        stem.remove(QRegularExpression(QStringLiteral("^_+|_+$")));
+        if (stem.isEmpty())
+            stem = QStringLiteral("script");
+
+        const QByteArray base = "qross_" + stem.toUtf8();
+        PyObject* const modules = PyImport_GetModuleDict();
+        QByteArray name = base;
+        for (int n = 2; PyDict_GetItemString(modules, name.constData()); ++n)
+            name = base + '_' + QByteArray::number(n);
+        return name;
+    }
+}
 
 PythonContext::PythonContext(Interpreter* interpreter, Script* script)
     : Context(interpreter, script)
@@ -36,6 +58,12 @@ void PythonContext::resetModule()
     for (const QPointer<PythonFunction>& relay : std::as_const(m_connections))
         delete relay.data();
     m_connections.clear();
+    if (m_module)
+    {
+        PyObject* const modules = PyImport_GetModuleDict();
+        if (PyDict_GetItemString(modules, m_name.constData()) == m_module)
+            PyDict_DelItemString(modules, m_name.constData());
+    }
     Py_CLEAR(m_module);
 }
 
@@ -44,7 +72,8 @@ PyObject* PythonContext::ensureModule()
     if (m_module)
         return m_module;
 
-    Ref module(PyModule_New("__main__"));
+    m_name = moduleName(script()->name());
+    Ref module(PyModule_New(m_name.constData()));
     PyObject* const dict = PyModule_GetDict(module.get());
     PyDict_SetItemString(dict, "__builtins__", PyEval_GetBuiltins());
     if (!script()->file().isEmpty())
@@ -70,6 +99,7 @@ PyObject* PythonContext::ensureModule()
     }
     PyErr_Clear();
 
+    PyDict_SetItemString(PyImport_GetModuleDict(), m_name.constData(), module.get());
     m_module = module.release();
     return m_module;
 }
