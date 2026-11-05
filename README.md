@@ -135,6 +135,11 @@ signal once the script has run, in all three languages.
 | QObject*                  | wrapper                           | wrapper                | wrapper                   |
 | Qross::Object::Ptr        | value whose value() is the object | the script object      | the script object         |
 
+A `QDateTime` in local time is a naive `datetime` in Python and comes
+back as one; any other `QDateTime` carries its offset from UTC both ways.
+An offset Qt cannot hold, beyond sixteen hours or with a fraction of a
+second, arrives as UTC at the same instant.
+
 Objects stay owned by the application; a wrapper of an object that has
 been deleted raises an error when used. The JavaScript engine follows the
 QML ownership rules, so a parentless QObject returned from a slot becomes

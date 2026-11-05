@@ -37,6 +37,7 @@ public Q_SLOTS:
     void keep(Qross::Object::Ptr object) { m_kept = object; }
     bool isNull(Qross::Object::Ptr object) { return object.isNull(); }
     Qross::Object::Ptr same(Qross::Object::Ptr object) { return object; }
+    QVariant echo(const QVariant& value) { return value; }
     QStringList methods(Qross::Object::Ptr object) { return object ? object->methodNames() : QStringList(); }
     QVariant call(Qross::Object::Ptr object, const QString& method, const QVariantList& args = QVariantList())
     {
@@ -311,6 +312,33 @@ Global.keep(Answer())
         (void)script->run();
         QVERIFY2(!script->error(), describe(*script).constData());
         QCOMPARE(script->evaluate("runs")->toInt(), 1);
+    }
+
+    void keepsTimeZones()
+    {
+        const auto script = run(R"py(
+from datetime import datetime, timedelta, timezone
+
+utc = datetime(2024, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+east = datetime(2024, 1, 2, 3, 4, 5, tzinfo=timezone(timedelta(hours=3)))
+naive = datetime(2024, 1, 2, 3, 4, 5)
+far = datetime(2024, 1, 2, 3, 4, 5, tzinfo=timezone(timedelta(hours=23)))
+fine = datetime(2024, 1, 2, 3, 4, 5, tzinfo=timezone(timedelta(microseconds=500000)))
+checks = [
+    Global.echo(utc) == utc,
+    Global.echo(utc).utcoffset() == timedelta(0),
+    Global.echo(east) == east,
+    Global.echo(east).utcoffset() == timedelta(hours=3),
+    Global.echo(naive) == naive,
+    Global.echo(naive).tzinfo is None,
+    Global.echo(far) == far,
+    Global.echo(far).utcoffset() == timedelta(0),
+    Global.echo(fine) == fine,
+    Global.echo(fine).utcoffset() == timedelta(0),
+]
+)py");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("checks")->toList(), QVariantList({ true, true, true, true, true, true, true, true, true, true }));
     }
 
     void registersModules()

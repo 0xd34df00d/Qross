@@ -10,6 +10,7 @@
 #include <limits>
 #include <QtCore/QDateTime>
 #include <QtCore/QRect>
+#include <QtCore/QTimeZone>
 #include <QtCore/QUrl>
 #include <QtGui/QColor>
 #include "../core/manager.h"
@@ -70,7 +71,16 @@ namespace
             Py_RETURN_NONE;
         const QDate date = dateTime.date();
         const QTime time = dateTime.time();
-        return PyDateTime_FromDateAndTime(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second(), time.msec() * 1000);
+        // Local time stays naive, which Python reads as local time too; anything else carries its offset.
+        Ref zone = Ref::borrowed(Py_None);
+        if (dateTime.timeSpec() != Qt::LocalTime)
+        {
+            const Ref offset(PyDelta_FromDSU(0, dateTime.offsetFromUtc(), 0));
+            zone = Ref(offset ? PyTimeZone_FromOffset(offset.get()) : nullptr);
+            if (!zone)
+                return nullptr;
+        }
+        return PyDateTimeAPI->DateTime_FromDateAndTime(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second(), time.msec() * 1000, zone.get(), PyDateTimeAPI->DateTimeType);
     }
 
     PyObject* fromColor(const QColor& color)
@@ -276,7 +286,20 @@ QVariant Qross::toVariant(PyObject* object)
     {
         const QDate date(PyDateTime_GET_YEAR(object), PyDateTime_GET_MONTH(object), PyDateTime_GET_DAY(object));
         const QTime time(PyDateTime_DATE_GET_HOUR(object), PyDateTime_DATE_GET_MINUTE(object), PyDateTime_DATE_GET_SECOND(object), PyDateTime_DATE_GET_MICROSECOND(object) / 1000);
-        return QDateTime(date, time);
+        if (PyDateTime_DATE_GET_TZINFO(object) == Py_None)
+            return QDateTime(date, time);
+        const Ref offset(PyObject_CallMethod(object, "utcoffset", nullptr));
+        if (!offset || !PyDelta_Check(offset.get()))
+        {
+            PyErr_Clear();
+            return QDateTime(date, time);
+        }
+        const int seconds = PyDateTime_DELTA_GET_DAYS(offset.get()) * 86400 + PyDateTime_DELTA_GET_SECONDS(offset.get());
+        const int microseconds = PyDateTime_DELTA_GET_MICROSECONDS(offset.get());
+        // Qt holds whole-second offsets within sixteen hours of UTC; any other datetime becomes UTC at the same instant.
+        if (const QTimeZone zone = QTimeZone::fromSecondsAheadOfUtc(seconds); zone.isValid() && !microseconds)
+            return QDateTime(date, time, zone);
+        return QDateTime(date, time, QTimeZone::UTC).addMSecs(-(qint64(seconds) * 1000 + microseconds / 1000));
     }
     if (PyDate_Check(object))
         return QDate(PyDateTime_GET_YEAR(object), PyDateTime_GET_MONTH(object), PyDateTime_GET_DAY(object));
