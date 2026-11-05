@@ -30,12 +30,12 @@
 namespace Qross
 {
 
-    class Script;
+    class Context;
 
     /**
      * The Action class is an abstract container to deal with scripts
      * like a single standalone script file. Each action holds a reference
-     * to the matching @a Qross::Interpreter created @a Qross::Script
+     * to the matching @a Qross::Interpreter created @a Qross::Context
      * instance.
      *
      * Once you've such a Action instance you're able to perform actions
@@ -120,7 +120,7 @@ namespace Qross
         virtual ~Action();
 
         /**
-         * Initialize the \a Script instance.
+         * Initialize the \a Context instance.
          *
          * Normally there is no need to call this function directly because
          * if will be called internally if needed (e.g. on \a execute ).
@@ -131,7 +131,7 @@ namespace Qross
         bool initialize();
 
         /**
-         * Finalize the \a Script instance and frees any cached or still
+         * Finalize the \a Context instance and frees any cached or still
          * running executions. Normally there is no need to call this
          * function directly because the \a Action will take care
          * of calling it if needed.
@@ -145,17 +145,17 @@ namespace Qross
         bool isFinalized() const;
 
         /**
-         * \return the \a Qross::Script implementation used by the scripting
+         * \return the \a Qross::Context implementation used by the scripting
          * backend. This returns NULL until the action got triggered or if
          * there was an error before that.
          *
          * Normaly it shouldn't be necessary to deal with the scripting backend
-         * depending instance of a \a Qross::Script implementation since this
+         * depending instance of a \a Qross::Context implementation since this
          * \a Action class already decorates all the things needed. It
          * may however be useful to provide additional interpreter dependent
          * functionality.
          */
-        Script* script() const;
+        Context* context() const;
 
     public Q_SLOTS:
 

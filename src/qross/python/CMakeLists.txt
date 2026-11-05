@@ -1,8 +1,8 @@
 add_library(qrosspython${SHLIB_SUFFIX} MODULE
     interpreter.cpp
     interpreter.h
-    script.cpp
-    script.h
+    context.cpp
+    context.h
     object.cpp
     object.h
     wrapper.cpp

@@ -10,7 +10,7 @@
 
 #include <QtCore/QList>
 #include <QtCore/QPointer>
-#include "../core/script.h"
+#include "../core/context.h"
 #include "rubyapi.h"
 
 namespace Qross
@@ -33,14 +33,14 @@ namespace Qross
      * Objects stay owned by C++; a wrapper of a deleted object raises
      * RuntimeError.
      */
-    class RubyScript : public Script
+    class RubyContext : public Context
     {
         VALUE m_self = Qnil;
         VALUE m_binding = Qnil;
         QList<QPointer<RubyFunction>> m_connections;
     public:
-        RubyScript(Interpreter* interpreter, Action* action);
-        ~RubyScript() override;
+        RubyContext(Interpreter* interpreter, Action* action);
+        ~RubyContext() override;
 
         void execute() override;
         QStringList functionNames() override;

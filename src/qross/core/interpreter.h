@@ -32,7 +32,7 @@ namespace Qross
     // Forward declaration.
     class Manager;
     class Action;
-    class Script;
+    class Context;
     class Interpreter;
 
     /**
@@ -172,7 +172,7 @@ namespace Qross
      *
      * The Interpreter will be managed by the \a Manager
      * class and does provide a factory method to create
-     * \a Script implementations.
+     * \a Context implementations.
      */
     class QROSSCORE_EXPORT Interpreter
         : public QObject
@@ -199,15 +199,8 @@ namespace Qross
          */
         InterpreterInfo* interpreterInfo() const;
 
-        /**
-         * Create and return a new interpreter dependent
-         * \a Script instance.
-         *
-         * \param Action The \a Action
-         *        to use for the \a Script instance.
-         * \return The from \a Script inherited instance.
-         */
-        virtual Script* createScript(Action* Action) = 0;
+        /// \return a new context for \p action, owned by the caller.
+        virtual Context* createContext(Action* action) = 0;
     private:
         /// \internal d-pointer class.
         class Private;

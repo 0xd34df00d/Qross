@@ -6,8 +6,8 @@
  **********************************************************************/
 
 #include "interpreter.h"
+#include "context.h"
 #include "object.h"
-#include "script.h"
 
 QROSS_EXPORT_INTERPRETER(Qross::JsInterpreter)
 
@@ -19,7 +19,7 @@ JsInterpreter::JsInterpreter(InterpreterInfo* info)
     JsObject::registerConverters();
 }
 
-Script* JsInterpreter::createScript(Action* action)
+Context* JsInterpreter::createContext(Action* action)
 {
-    return new JsScript(this, action);
+    return new JsContext(this, action);
 }

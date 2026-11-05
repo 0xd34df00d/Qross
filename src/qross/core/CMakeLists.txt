@@ -1,7 +1,7 @@
 set(qrosscore_SRCS
     qrossconfig.cpp
     interpreter.cpp
-    script.cpp
+    context.cpp
     action.cpp
     manager.cpp
     metafunction.cpp
@@ -17,7 +17,7 @@ set(qrosscore_HEADERS
     metatype.h
     metafunction.h
     interpreter.h
-    script.h
+    context.h
     action.h
     manager.h
     object.h

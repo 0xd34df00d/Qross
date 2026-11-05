@@ -8,7 +8,7 @@
 #pragma once
 
 #include <memory>
-#include "../core/script.h"
+#include "../core/context.h"
 
 class QJSValue;
 class QQmlEngine;
@@ -34,14 +34,14 @@ namespace Qross
      * so switching the option off only spares the import once any script has
      * done it.
      */
-    class JsScript : public Script
+    class JsContext : public Context
     {
         Q_OBJECT
 
         std::unique_ptr<QQmlEngine> m_engine;
     public:
-        JsScript(Interpreter* interpreter, Action* action);
-        ~JsScript() override;
+        JsContext(Interpreter* interpreter, Action* action);
+        ~JsContext() override;
 
         /**
          * \return the engine, created on first use and replaced by every

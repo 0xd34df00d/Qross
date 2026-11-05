@@ -19,7 +19,7 @@
 
 #include "action.h"
 #include "interpreter.h"
-#include "script.h"
+#include "context.h"
 #include "manager.h"
 #include "wrapperinterface.h"
 
@@ -36,11 +36,11 @@ namespace Qross
     {
     public:
         /**
-         * The \a Script instance the \a Action uses if initialized. It will
+         * The \a Context instance the \a Action uses if initialized. It will
          * be NULL as long as we didn't initialized it what will be done on
          * demand.
          */
-        Script* script;
+        Context* context;
 
         /**
          * The scripting code.
@@ -68,7 +68,7 @@ namespace Qross
         QMap<QString, QVariant> options;
 
         Private()
-            : script(0)
+            : context(0)
         {
         }
     };
@@ -119,9 +119,9 @@ Action::~Action()
     delete d;
 }
 
-Qross::Script* Action::script() const
+Context* Action::context() const
 {
-    return d->script;
+    return d->context;
 }
 
 QString Action::name() const
@@ -240,32 +240,32 @@ bool Action::setOption(const QString& name, const QVariant& value)
 
 QStringList Action::functionNames()
 {
-    if (!d->script)
+    if (!d->context)
     {
         if (!initialize())
             return QStringList();
     }
-    return d->script->functionNames();
+    return d->context->functionNames();
 }
 
 QVariant Action::callFunction(const QString& name, const QVariantList& args)
 {
-    if (!d->script)
+    if (!d->context)
     {
         if (!initialize())
             return QVariant();
     }
-    return d->script->callFunction(name, args);
+    return d->context->callFunction(name, args);
 }
 
 QVariant Action::evaluate(const QByteArray& code)
 {
-    if (!d->script)
+    if (!d->context)
     {
         if (!initialize())
             return QVariant();
     }
-    return d->script->evaluate(code);
+    return d->context->evaluate(code);
 }
 
 bool Action::initialize()
@@ -305,16 +305,16 @@ bool Action::initialize()
         return false;
     }
 
-    d->script = interpreter->createScript(this);
-    if (!d->script)
+    d->context = interpreter->createContext(this);
+    if (!d->context)
     {
         setError(tr("Failed to create script for interpreter \"%1\"").arg(d->interpretername));
         return false;
     }
 
-    if (d->script->hadError())
+    if (d->context->hadError())
     {
-        setError(d->script);
+        setError(d->context);
         finalize();
         return false;
     }
@@ -325,13 +325,13 @@ bool Action::initialize()
 
 void Action::finalize()
 {
-    delete d->script;
-    d->script = 0;
+    delete d->context;
+    d->context = 0;
 }
 
 bool Action::isFinalized() const
 {
-    return d->script == 0;
+    return d->context == 0;
 }
 
 void Action::slotTriggered()
@@ -342,7 +342,7 @@ void Action::slotTriggered()
 
     Q_EMIT started(this);
 
-    if (!d->script)
+    if (!d->context)
     {
         if (!initialize())
             Q_ASSERT(hadError());
@@ -356,13 +356,13 @@ void Action::slotTriggered()
     }
     else
     {
-        d->script->execute();
-        if (d->script->hadError())
+        d->context->execute();
+        if (d->context->hadError())
         {
 #ifdef QROSS_ACTION_DEBUG
             qrossdebug(QString("Action::slotTriggered() after exec, errorMessage=%2").arg(errorMessage()));
 #endif
-            setError(d->script);
+            setError(d->context);
             // emit finished(this);
             finalize();
             // return;

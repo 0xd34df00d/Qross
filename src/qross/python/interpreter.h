@@ -29,6 +29,6 @@ namespace Qross
         explicit PythonInterpreter(InterpreterInfo* info);
         ~PythonInterpreter() override;
 
-        Script* createScript(Action* action) override;
+        Context* createContext(Action* action) override;
     };
 }

@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.0-or-later
  **********************************************************************/
 
-#include "script.h"
+#include "context.h"
 #include <QtCore/QMetaMethod>
 #include <QtCore/QSet>
 #include "../core/action.h"
@@ -19,14 +19,14 @@
 
 using namespace Qross;
 
-PythonScript::PythonScript(Interpreter* interpreter, Action* action)
-    : Script(interpreter, action)
+PythonContext::PythonContext(Interpreter* interpreter, Action* action)
+    : Context(interpreter, action)
 {
     if (interpreter->hadError())
         setError(interpreter);
 }
 
-PythonScript::~PythonScript()
+PythonContext::~PythonContext()
 {
     if (!Py_IsInitialized())
         return;
@@ -34,7 +34,7 @@ PythonScript::~PythonScript()
     resetModule();
 }
 
-void PythonScript::resetModule()
+void PythonContext::resetModule()
 {
     for (const QPointer<PythonFunction>& relay : std::as_const(m_connections))
         delete relay.data();
@@ -42,7 +42,7 @@ void PythonScript::resetModule()
     Py_CLEAR(m_module);
 }
 
-PyObject* PythonScript::ensureModule()
+PyObject* PythonContext::ensureModule()
 {
     if (m_module)
         return m_module;
@@ -79,13 +79,13 @@ PyObject* PythonScript::ensureModule()
     return m_module;
 }
 
-void PythonScript::publish(PyObject* dict, const QString& name, QObject* object)
+void PythonContext::publish(PyObject* dict, const QString& name, QObject* object)
 {
     const Ref wrapper(wrapObject(object));
     PyDict_SetItemString(dict, name.toUtf8().constData(), wrapper.get());
 }
 
-void PythonScript::execute()
+void PythonContext::execute()
 {
     clearError();
     const Gil gil;
@@ -103,7 +103,7 @@ void PythonScript::execute()
     connectSignals();
 }
 
-void PythonScript::connectSignals()
+void PythonContext::connectSignals()
 {
     PyObject* const dict = PyModule_GetDict(m_module);
     const QHash<QString, ChildrenInterface::Options> options = action()->objectOptions();
@@ -132,7 +132,7 @@ void PythonScript::connectSignals()
     }
 }
 
-QStringList PythonScript::functionNames()
+QStringList PythonContext::functionNames()
 {
     const Gil gil;
     PyObject* const dict = PyModule_GetDict(ensureModule());
@@ -150,7 +150,7 @@ QStringList PythonScript::functionNames()
     return names;
 }
 
-QVariant PythonScript::callFunction(const QString& name, const QVariantList& args)
+QVariant PythonContext::callFunction(const QString& name, const QVariantList& args)
 {
     clearError();
     const Gil gil;
@@ -184,7 +184,7 @@ QVariant PythonScript::callFunction(const QString& name, const QVariantList& arg
     return toVariant(result.get());
 }
 
-QVariant PythonScript::evaluate(const QByteArray& code)
+QVariant PythonContext::evaluate(const QByteArray& code)
 {
     clearError();
     const Gil gil;

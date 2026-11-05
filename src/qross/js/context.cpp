@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.0-or-later
  **********************************************************************/
 
-#include "script.h"
+#include "context.h"
 #include <QtCore/QMetaEnum>
 #include <QtCore/QMetaMethod>
 #include <QtCore/QSet>
@@ -29,24 +29,24 @@ namespace
     }
 }
 
-JsScript::JsScript(Interpreter* interpreter, Action* action)
-    : Script(interpreter, action)
+JsContext::JsContext(Interpreter* interpreter, Action* action)
+    : Context(interpreter, action)
 {
 }
 
-JsScript::~JsScript() = default;
+JsContext::~JsContext() = default;
 
-QObject* JsScript::engine()
+QObject* JsContext::engine()
 {
     return &ensureEngine();
 }
 
-QQmlEngine& JsScript::ensureEngine()
+QQmlEngine& JsContext::ensureEngine()
 {
     return m_engine ? *m_engine : createEngine();
 }
 
-QQmlEngine& JsScript::createEngine()
+QQmlEngine& JsContext::createEngine()
 {
     m_engine = std::make_unique<QQmlEngine>();
     if (action()->option(QStringLiteral("qml"), true).toBool())
@@ -62,7 +62,7 @@ QQmlEngine& JsScript::createEngine()
     return *m_engine;
 }
 
-void JsScript::publish(QJSValue& global, const QString& name, QObject* object)
+void JsContext::publish(QJSValue& global, const QString& name, QObject* object)
 {
     QJSEngine::setObjectOwnership(object, QJSEngine::CppOwnership);
     QJSValue wrapper = m_engine->newQObject(object);
@@ -78,7 +78,7 @@ void JsScript::publish(QJSValue& global, const QString& name, QObject* object)
     global.setProperty(name, wrapper);
 }
 
-void JsScript::execute()
+void JsContext::execute()
 {
     clearError();
     QQmlEngine& engine = createEngine();
@@ -103,7 +103,7 @@ void JsScript::execute()
     connectSignals(engine);
 }
 
-void JsScript::connectSignals(QQmlEngine& engine)
+void JsContext::connectSignals(QQmlEngine& engine)
 {
     const QJSValue global = engine.globalObject();
     const QHash<QString, ChildrenInterface::Options> options = action()->objectOptions();
@@ -135,7 +135,7 @@ void JsScript::connectSignals(QQmlEngine& engine)
     }
 }
 
-QStringList JsScript::functionNames()
+QStringList JsContext::functionNames()
 {
     const QJSValue names = ensureEngine().evaluate(QStringLiteral(R"js(
         Object.keys(this).filter(function(name) { return typeof this[name] === 'function'; }, this)
@@ -143,7 +143,7 @@ QStringList JsScript::functionNames()
     return names.toVariant().toStringList();
 }
 
-QVariant JsScript::callFunction(const QString& name, const QVariantList& args)
+QVariant JsContext::callFunction(const QString& name, const QVariantList& args)
 {
     clearError();
     QQmlEngine& engine = ensureEngine();
@@ -168,7 +168,7 @@ QVariant JsScript::callFunction(const QString& name, const QVariantList& args)
     return result.toVariant();
 }
 
-QVariant JsScript::evaluate(const QByteArray& code)
+QVariant JsContext::evaluate(const QByteArray& code)
 {
     clearError();
     QStringList trace;

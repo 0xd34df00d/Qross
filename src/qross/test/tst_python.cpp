@@ -4,9 +4,9 @@
  **********************************************************************/
 
 #include <qross/core/action.h>
+#include <qross/core/context.h>
 #include <qross/core/manager.h>
 #include <qross/core/object.h>
-#include <qross/core/script.h>
 #include <thread>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QPointer>
@@ -137,11 +137,11 @@ def nothing():
         const QVariantMap map({ { QStringLiteral("k"), 1 } });
         QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(map) }).toMap(), map);
         QVERIFY(!action->callFunction(QStringLiteral("nothing")).isValid());
-        QVERIFY(!action->script()->hadError());
+        QVERIFY(!action->context()->hadError());
 
         QVERIFY(!action->callFunction(QStringLiteral("missing")).isValid());
-        QVERIFY(action->script()->hadError());
-        QVERIFY(action->script()->errorMessage().contains(QStringLiteral("missing")));
+        QVERIFY(action->context()->hadError());
+        QVERIFY(action->context()->errorMessage().contains(QStringLiteral("missing")));
     }
 
     void reportsExceptionsFromCalls()
@@ -151,25 +151,25 @@ def bad(x):
     raise TypeError('bad ' + str(x))
 )py");
         QVERIFY(!action->callFunction(QStringLiteral("bad"), { 1 }).isValid());
-        QVERIFY(action->script()->hadError());
-        QCOMPARE(action->script()->errorMessage(), QStringLiteral("TypeError: bad 1"));
-        QCOMPARE(action->script()->errorLineNo(), 3);
+        QVERIFY(action->context()->hadError());
+        QCOMPARE(action->context()->errorMessage(), QStringLiteral("TypeError: bad 1"));
+        QCOMPARE(action->context()->errorLineNo(), 3);
     }
 
     void evaluates()
     {
         const auto action = run("base = 40");
         QCOMPARE(action->evaluate("base + 2").toInt(), 42);
-        QVERIFY(!action->script()->hadError());
+        QVERIFY(!action->context()->hadError());
         QVERIFY(!action->evaluate("None").isValid());
 
         QVERIFY(!action->evaluate("extra = 5").isValid());
-        QVERIFY2(!action->script()->hadError(), qPrintable(action->script()->errorMessage()));
+        QVERIFY2(!action->context()->hadError(), qPrintable(action->context()->errorMessage()));
         QCOMPARE(action->evaluate("extra").toInt(), 5);
 
         QVERIFY(!action->evaluate("(").isValid());
-        QVERIFY(action->script()->hadError());
-        QVERIFY(action->script()->errorMessage().startsWith(QStringLiteral("SyntaxError")));
+        QVERIFY(action->context()->hadError());
+        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("SyntaxError")));
     }
 
     void publishesObjects()
@@ -323,7 +323,7 @@ def name():
         QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
         delete local;
         QVERIFY(!action->callFunction(QStringLiteral("name")).isValid());
-        QVERIFY(action->script()->errorMessage().startsWith(QStringLiteral("RuntimeError")));
+        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("RuntimeError")));
     }
 };
 

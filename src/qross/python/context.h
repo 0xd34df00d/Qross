@@ -10,7 +10,7 @@
 #include <Python.h>
 #include <QtCore/QList>
 #include <QtCore/QPointer>
-#include "../core/script.h"
+#include "../core/context.h"
 
 namespace Qross
 {
@@ -28,13 +28,13 @@ namespace Qross
      * Objects stay owned by C++; a wrapper of a deleted object raises
      * RuntimeError.
      */
-    class PythonScript : public Script
+    class PythonContext : public Context
     {
         PyObject* m_module = nullptr;
         QList<QPointer<PythonFunction>> m_connections;
     public:
-        PythonScript(Interpreter* interpreter, Action* action);
-        ~PythonScript() override;
+        PythonContext(Interpreter* interpreter, Action* action);
+        ~PythonContext() override;
 
         void execute() override;
         QStringList functionNames() override;

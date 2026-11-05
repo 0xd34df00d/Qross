@@ -4,9 +4,9 @@
  **********************************************************************/
 
 #include <qross/core/action.h>
+#include <qross/core/context.h>
 #include <qross/core/manager.h>
 #include <qross/core/object.h>
-#include <qross/core/script.h>
 #include <csignal>
 #include <thread>
 #include <QtCore/QCoreApplication>
@@ -152,15 +152,15 @@ end
         const QVariantMap map({ { QStringLiteral("k"), 1 } });
         QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(map) }).toMap(), map);
         QVERIFY(!action->callFunction(QStringLiteral("nothing")).isValid());
-        QVERIFY(!action->script()->hadError());
+        QVERIFY(!action->context()->hadError());
 
         QVERIFY(!action->callFunction(QStringLiteral("missing")).isValid());
-        QVERIFY(action->script()->hadError());
-        QVERIFY(action->script()->errorMessage().contains(QStringLiteral("missing")));
+        QVERIFY(action->context()->hadError());
+        QVERIFY(action->context()->errorMessage().contains(QStringLiteral("missing")));
 
         // Qt methods of the action are not functions of the script.
         QVERIFY(!action->callFunction(QStringLiteral("trigger")).isValid());
-        QVERIFY(action->script()->hadError());
+        QVERIFY(action->context()->hadError());
     }
 
     void reportsExceptionsFromCalls()
@@ -171,25 +171,25 @@ def bad(x)
 end
 )rb");
         QVERIFY(!action->callFunction(QStringLiteral("bad"), { 1 }).isValid());
-        QVERIFY(action->script()->hadError());
-        QCOMPARE(action->script()->errorMessage(), QStringLiteral("TypeError: bad 1"));
-        QCOMPARE(action->script()->errorLineNo(), 3);
+        QVERIFY(action->context()->hadError());
+        QCOMPARE(action->context()->errorMessage(), QStringLiteral("TypeError: bad 1"));
+        QCOMPARE(action->context()->errorLineNo(), 3);
     }
 
     void evaluates()
     {
         const auto action = run("base = 40");
         QCOMPARE(action->evaluate("base + 2").toInt(), 42);
-        QVERIFY(!action->script()->hadError());
+        QVERIFY(!action->context()->hadError());
         QVERIFY(!action->evaluate("nil").isValid());
 
         QCOMPARE(action->evaluate("extra = 5").toInt(), 5);
-        QVERIFY2(!action->script()->hadError(), qPrintable(action->script()->errorMessage()));
+        QVERIFY2(!action->context()->hadError(), qPrintable(action->context()->errorMessage()));
         QCOMPARE(action->evaluate("extra").toInt(), 5);
 
         QVERIFY(!action->evaluate("(").isValid());
-        QVERIFY(action->script()->hadError());
-        QVERIFY(action->script()->errorMessage().startsWith(QStringLiteral("SyntaxError")));
+        QVERIFY(action->context()->hadError());
+        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("SyntaxError")));
     }
 
     void publishesObjects()
@@ -269,9 +269,9 @@ Local.fired(7)
         QCOMPARE(action->evaluate("@got").toList(), QVariantList({ 3, 50 }));
 
         QVERIFY(!action->evaluate("Local.connect(:named)").isValid());
-        QVERIFY(action->script()->errorMessage().startsWith(QStringLiteral("ArgumentError")));
+        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("ArgumentError")));
         QVERIFY(!action->evaluate("Local.connect(:self) {}").isValid());
-        QVERIFY(action->script()->errorMessage().startsWith(QStringLiteral("ArgumentError")));
+        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("ArgumentError")));
     }
 
     void deliversSignalsFromOtherThreads()
@@ -298,7 +298,7 @@ end
         QVariant result;
         std::thread([&] { result = action->evaluate("answer"); }).join();
         QVERIFY(!result.isValid());
-        QVERIFY2(action->script()->errorMessage().contains(QStringLiteral("thread")), qPrintable(action->script()->errorMessage()));
+        QVERIFY2(action->context()->errorMessage().contains(QStringLiteral("thread")), qPrintable(action->context()->errorMessage()));
         QCOMPARE(action->evaluate("answer").toInt(), 42);
     }
 
@@ -409,7 +409,7 @@ def name_of = Local.objectName
         QVERIFY2(!action->hadError(), qPrintable(action->errorMessage()));
         delete local;
         QVERIFY(!action->callFunction(QStringLiteral("name_of")).isValid());
-        QVERIFY(action->script()->errorMessage().startsWith(QStringLiteral("RuntimeError")));
+        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("RuntimeError")));
     }
 };
 

@@ -6,9 +6,9 @@
  **********************************************************************/
 
 #include "interpreter.h"
+#include "context.h"
 #include "function.h"
 #include "ref.h"
-#include "script.h"
 #include "variant.h"
 
 QROSS_EXPORT_INTERPRETER(Qross::PythonInterpreter)
@@ -46,9 +46,9 @@ PythonInterpreter::~PythonInterpreter()
     Py_FinalizeEx();
 }
 
-Script* PythonInterpreter::createScript(Action* action)
+Context* PythonInterpreter::createContext(Action* action)
 {
-    return new PythonScript(this, action);
+    return new PythonContext(this, action);
 }
 
 void Qross::storeException(ErrorInterface& target)

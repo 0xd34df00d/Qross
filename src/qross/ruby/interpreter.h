@@ -47,6 +47,6 @@ namespace Qross
         explicit RubyInterpreter(InterpreterInfo* info);
         ~RubyInterpreter() override;
 
-        Script* createScript(Action* action) override;
+        Context* createContext(Action* action) override;
     };
 }

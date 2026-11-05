@@ -12,8 +12,8 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QThread>
 #include "call.h"
+#include "context.h"
 #include "function.h"
-#include "script.h"
 #include "variant.h"
 
 QROSS_EXPORT_INTERPRETER(Qross::RubyInterpreter)
@@ -180,7 +180,7 @@ RubyInterpreter::~RubyInterpreter()
     ruby_cleanup(0);
 }
 
-Script* RubyInterpreter::createScript(Action* action)
+Context* RubyInterpreter::createContext(Action* action)
 {
-    return new RubyScript(this, action);
+    return new RubyContext(this, action);
 }

@@ -18,7 +18,7 @@
  ***************************************************************************/
 
 #include "interpreter.h"
-#include "script.h"
+#include "context.h"
 #include "action.h"
 #include "manager.h"
 

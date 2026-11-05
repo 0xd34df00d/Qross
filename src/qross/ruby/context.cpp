@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: LGPL-2.0-or-later
  **********************************************************************/
 
-#include "script.h"
+#include "context.h"
 #include <QtCore/QMetaMethod>
 #include <QtCore/QSet>
 #include "../core/action.h"
@@ -35,8 +35,8 @@ namespace
     }
 }
 
-RubyScript::RubyScript(Interpreter* interpreter, Action* action)
-    : Script(interpreter, action)
+RubyContext::RubyContext(Interpreter* interpreter, Action* action)
+    : Context(interpreter, action)
 {
     if (interpreter->hadError())
         setError(interpreter);
@@ -47,7 +47,7 @@ RubyScript::RubyScript(Interpreter* interpreter, Action* action)
     }
 }
 
-RubyScript::~RubyScript()
+RubyContext::~RubyContext()
 {
     if (!rubyRunning())
         return;
@@ -56,12 +56,12 @@ RubyScript::~RubyScript()
     rb_gc_unregister_address(&m_binding);
 }
 
-bool RubyScript::prepare()
+bool RubyContext::prepare()
 {
     return requireRubyThread(*this) && ensureContext();
 }
 
-void RubyScript::resetContext()
+void RubyContext::resetContext()
 {
     for (const QPointer<RubyFunction>& relay : std::as_const(m_connections))
         delete relay.data();
@@ -70,7 +70,7 @@ void RubyScript::resetContext()
     m_binding = Qnil;
 }
 
-bool RubyScript::ensureContext()
+bool RubyContext::ensureContext()
 {
     if (!NIL_P(m_self))
         return true;
@@ -98,7 +98,7 @@ bool RubyScript::ensureContext()
     return true;
 }
 
-void RubyScript::publish(VALUE accessors, const QString& name, QObject* object)
+void RubyContext::publish(VALUE accessors, const QString& name, QObject* object)
 {
     const QByteArray utf8 = name.toUtf8();
     const ID id = rb_intern2(utf8.constData(), utf8.size());
@@ -109,7 +109,7 @@ void RubyScript::publish(VALUE accessors, const QString& name, QObject* object)
         rb_const_set(rb_singleton_class(m_self), id, wrapper);
 }
 
-void RubyScript::appendLoadPath()
+void RubyContext::appendLoadPath()
 {
     // Appended rather than put first, so that a script named like an
     // installed library does not shadow it for itself.
@@ -122,7 +122,7 @@ void RubyScript::appendLoadPath()
         rb_ary_push(path, entry);
 }
 
-QVariant RubyScript::run(const QByteArray& code, const QString& file)
+QVariant RubyContext::run(const QByteArray& code, const QString& file)
 {
     const VALUE arguments[] = { rb_utf8_str_new(code.constData(), code.size()), fromString(file), INT2FIX(1) };
     const Result result = callProtected(m_binding, rb_intern("eval"), std::size(arguments), arguments);
@@ -134,7 +134,7 @@ QVariant RubyScript::run(const QByteArray& code, const QString& file)
     return toVariant(*result);
 }
 
-void RubyScript::execute()
+void RubyContext::execute()
 {
     clearError();
     if (!requireRubyThread(*this))
@@ -147,13 +147,13 @@ void RubyScript::execute()
         connectSignals();
 }
 
-VALUE RubyScript::functions()
+VALUE RubyContext::functions()
 {
     VALUE inherited = Qfalse;
     return rb_obj_singleton_methods(1, &inherited, m_self);
 }
 
-void RubyScript::connectSignals()
+void RubyContext::connectSignals()
 {
     const VALUE names = functions();
     const QHash<QString, ChildrenInterface::Options> options = action()->objectOptions();
@@ -185,7 +185,7 @@ void RubyScript::connectSignals()
     }
 }
 
-QStringList RubyScript::functionNames()
+QStringList RubyContext::functionNames()
 {
     if (!prepare())
         return {};
@@ -196,7 +196,7 @@ QStringList RubyScript::functionNames()
     return result;
 }
 
-QVariant RubyScript::callFunction(const QString& name, const QVariantList& args)
+QVariant RubyContext::callFunction(const QString& name, const QVariantList& args)
 {
     clearError();
     if (!prepare())
@@ -231,7 +231,7 @@ QVariant RubyScript::callFunction(const QString& name, const QVariantList& args)
     return toVariant(*result);
 }
 
-QVariant RubyScript::evaluate(const QByteArray& code)
+QVariant RubyContext::evaluate(const QByteArray& code)
 {
     clearError();
     if (!prepare())

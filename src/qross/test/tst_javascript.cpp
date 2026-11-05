@@ -4,9 +4,9 @@
  **********************************************************************/
 
 #include <qross/core/action.h>
+#include <qross/core/context.h>
 #include <qross/core/manager.h>
 #include <qross/core/object.h>
-#include <qross/core/script.h>
 #include <QtCore/QAbstractItemModel>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QPointer>
@@ -178,11 +178,11 @@ private Q_SLOTS:
         const QVariantMap map({ { QStringLiteral("k"), 1 } });
         QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(map) }).toMap(), map);
         QVERIFY(!action->callFunction(QStringLiteral("nothing")).isValid());
-        QVERIFY(!action->script()->hadError());
+        QVERIFY(!action->context()->hadError());
 
         QVERIFY(!action->callFunction(QStringLiteral("missing")).isValid());
-        QVERIFY(action->script()->hadError());
-        QVERIFY(action->script()->errorMessage().contains(QStringLiteral("missing")));
+        QVERIFY(action->context()->hadError());
+        QVERIFY(action->context()->errorMessage().contains(QStringLiteral("missing")));
     }
 
     void reportsExceptionsFromCalls()
@@ -194,19 +194,19 @@ private Q_SLOTS:
             function plain() { throw 'plain'; }
         )js");
         QVERIFY(!action->callFunction(QStringLiteral("bad"), { 1 }).isValid());
-        QVERIFY(action->script()->hadError());
-        QCOMPARE(action->script()->errorMessage(), QStringLiteral("TypeError: bad 1"));
-        QCOMPARE(action->script()->errorLineNo(), 3);
+        QVERIFY(action->context()->hadError());
+        QCOMPARE(action->context()->errorMessage(), QStringLiteral("TypeError: bad 1"));
+        QCOMPARE(action->context()->errorLineNo(), 3);
 
         QVERIFY(!action->callFunction(QStringLiteral("plain")).isValid());
-        QCOMPARE(action->script()->errorMessage(), QStringLiteral("plain"));
+        QCOMPARE(action->context()->errorMessage(), QStringLiteral("plain"));
     }
 
     void evaluates()
     {
         const auto action = run("var base = 40;");
         QCOMPARE(action->evaluate("base + 2").toInt(), 42);
-        QVERIFY(!action->script()->hadError());
+        QVERIFY(!action->context()->hadError());
 
         const QVariant null = action->evaluate("null");
         QVERIFY(null.isValid());
@@ -214,8 +214,8 @@ private Q_SLOTS:
         QVERIFY(!action->evaluate("undefined").isValid());
 
         QVERIFY(!action->evaluate("(").isValid());
-        QVERIFY(action->script()->hadError());
-        QVERIFY(action->script()->errorMessage().startsWith(QStringLiteral("SyntaxError")));
+        QVERIFY(action->context()->hadError());
+        QVERIFY(action->context()->errorMessage().startsWith(QStringLiteral("SyntaxError")));
     }
 
     void publishesObjects()
@@ -323,7 +323,7 @@ private Q_SLOTS:
     {
         const auto action = run("var answer = 42;");
         QObject* engine = nullptr;
-        QVERIFY(QMetaObject::invokeMethod(action->script(), "engine", Q_RETURN_ARG(QObject*, engine)));
+        QVERIFY(QMetaObject::invokeMethod(action->context(), "engine", Q_RETURN_ARG(QObject*, engine)));
         auto* const jsEngine = qobject_cast<QJSEngine*>(engine);
         QVERIFY(jsEngine);
         QCOMPARE(jsEngine->evaluate(QStringLiteral("answer")).toInt(), 42);
