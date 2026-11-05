@@ -1,6 +1,6 @@
-# Points a test at the plugins of this build tree. Tests need a
-# QGuiApplication because Action derives from QAction, hence the offscreen
-# platform.
+# Points a test at the plugins of this build tree. The offscreen platform
+# lets qrosstest, which needs a QApplication for its QWidget slots, run
+# without a display.
 function(qross_set_test_environment name)
     set_tests_properties(${name} PROPERTIES
         ENVIRONMENT "QROSS_PLUGIN_PATH=${QROSS_PLUGIN_BUILD_DIR};QT_QPA_PLATFORM=offscreen"

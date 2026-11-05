@@ -14,7 +14,7 @@ add_library(qrosspython${SHLIB_SUFFIX} MODULE
     gil.h
     ref.h
 )
-target_link_libraries(qrosspython${SHLIB_SUFFIX} PRIVATE Qross::Core Python3::Python)
+target_link_libraries(qrosspython${SHLIB_SUFFIX} PRIVATE Qross::Core Qt6::Gui Python3::Python)
 target_compile_definitions(qrosspython${SHLIB_SUFFIX} PRIVATE PY_SSIZE_T_CLEAN)
 set_target_properties(qrosspython${SHLIB_SUFFIX} PROPERTIES
     PREFIX ""

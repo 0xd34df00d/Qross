@@ -35,7 +35,7 @@ target_include_directories(qrosscore${SHLIB_SUFFIX}
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/..>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(qrosscore${SHLIB_SUFFIX} PUBLIC Qt6::Core Qt6::Gui)
+target_link_libraries(qrosscore${SHLIB_SUFFIX} PUBLIC Qt6::Core)
 target_compile_definitions(qrosscore${SHLIB_SUFFIX} PRIVATE QROSS_INSTALL_LIBDIR="${CMAKE_INSTALL_FULL_LIBDIR}")
 set_target_properties(qrosscore${SHLIB_SUFFIX} PROPERTIES
     VERSION ${PROJECT_VERSION}
