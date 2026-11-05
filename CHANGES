@@ -10,7 +10,6 @@ Unreleased
   backends, the forms and translation modules, the action collection
   model and view, the GUI demo scripts, and the KJS, Lua, Java and
   Falcon interpreter entries.
-* Core: Action and Manager no longer derive from QScriptable.
 * API: Action is now Script, built once from a Config with a File or
   Code source, the interpreter (deduced from the extension when
   empty), option overrides and the published objects; nothing but
