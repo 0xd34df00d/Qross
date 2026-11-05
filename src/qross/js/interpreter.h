@@ -11,12 +11,12 @@
 
 namespace Qross
 {
-    /// Creates a \a JsContext for every \a Action that runs JavaScript.
+    /// Creates a \a JsContext for every \a Script that runs JavaScript.
     class JsInterpreter : public Interpreter
     {
     public:
         explicit JsInterpreter(InterpreterInfo* info);
 
-        Context* createContext(Action* action) override;
+        Context* createContext(Script* script) override;
     };
 }

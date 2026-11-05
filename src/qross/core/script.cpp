@@ -1,23 +1,11 @@
-/***************************************************************************
- * action.cpp
- * This file is part of the KDE project
- * copyright (C)2004-2006 by Sebastian Sauer (mail@dipe.org)
+/**********************************************************************
+ * Qross - scripting bridge for Qt applications.
+ * Copyright (C) 2004-2006 Sebastian Sauer <mail@dipe.org>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * You should have received a copy of the GNU Library General Public License
- * along with this program; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- ***************************************************************************/
+ * SPDX-License-Identifier: LGPL-2.0-or-later
+ **********************************************************************/
 
-#include "action.h"
+#include "script.h"
 #include "interpreter.h"
 #include "context.h"
 #include "manager.h"
@@ -32,11 +20,11 @@ namespace Qross
 {
 
     /// \internal d-pointer class.
-    class Action::Private
+    class Script::Private
     {
     public:
         /**
-         * The \a Context instance the \a Action uses if initialized. It will
+         * The \a Context instance the \a Script uses if initialized. It will
          * be NULL as long as we didn't initialized it what will be done on
          * demand.
          */
@@ -79,17 +67,17 @@ enum InitOptions
 {
     Enable = 1
 };
-void static init(Action* th, const QString& name, int options = 0)
+void static init(Script* th, const QString& name, int options = 0)
 {
     th->setEnabled(options & Enable);
     th->setObjectName(name);
 #ifdef QROSS_ACTION_DEBUG
-    qrossdebug(QString("Action::Action() Ctor name='%1'").arg(th->objectName()));
+    qrossdebug(QString("Script::Script() Ctor name='%1'").arg(th->objectName()));
 #endif
     QObject::connect(th, SIGNAL(triggered(bool)), th, SLOT(slotTriggered()));
 }
 
-Action::Action(QObject* parent, const QString& name)
+Script::Script(QObject* parent, const QString& name)
     : QAction(parent)
     , ChildrenInterface()
     , ErrorInterface()
@@ -98,7 +86,7 @@ Action::Action(QObject* parent, const QString& name)
     init(this, name);
 }
 
-Action::Action(QObject* parent, const QUrl& url)
+Script::Script(QObject* parent, const QUrl& url)
     : QAction(parent)
     , ChildrenInterface()
     , ErrorInterface()
@@ -110,31 +98,31 @@ Action::Action(QObject* parent, const QUrl& url)
     setFile(url.toLocalFile());
 }
 
-Action::~Action()
+Script::~Script()
 {
 #ifdef QROSS_ACTION_DEBUG
-    qrossdebug(QString("Action::~Action() Dtor name='%1'").arg(objectName()));
+    qrossdebug(QString("Script::~Script() Dtor name='%1'").arg(objectName()));
 #endif
     finalize();
     delete d;
 }
 
-Context* Action::context() const
+Context* Script::context() const
 {
     return d->context;
 }
 
-QString Action::name() const
+QString Script::name() const
 {
     return objectName();
 }
 
-QByteArray Action::code() const
+QByteArray Script::code() const
 {
     return d->code;
 }
 
-void Action::setCode(const QByteArray& code)
+void Script::setCode(const QByteArray& code)
 {
     if (d->code != code)
     {
@@ -143,12 +131,12 @@ void Action::setCode(const QByteArray& code)
     }
 }
 
-QString Action::interpreter() const
+QString Script::interpreter() const
 {
     return d->interpretername;
 }
 
-void Action::setInterpreter(const QString& interpretername)
+void Script::setInterpreter(const QString& interpretername)
 {
     if (d->interpretername != interpretername)
     {
@@ -156,16 +144,16 @@ void Action::setInterpreter(const QString& interpretername)
         d->interpretername = interpretername;
         setEnabled(Manager::self().hasInterpreterInfo(interpretername));
         if (!isEnabled())
-            qrosswarning("Action::setInterpreter: interpreter not found: " + interpretername);
+            qrosswarning("Script::setInterpreter: interpreter not found: " + interpretername);
     }
 }
 
-QString Action::file() const
+QString Script::file() const
 {
     return d->scriptfile;
 }
 
-bool Action::setFile(const QString& scriptfile)
+bool Script::setFile(const QString& scriptfile)
 {
     if (d->scriptfile != scriptfile)
     {
@@ -187,32 +175,32 @@ bool Action::setFile(const QString& scriptfile)
     return true;
 }
 
-QString Action::currentPath() const
+QString Script::currentPath() const
 {
     return file().isEmpty() ? QString() : QFileInfo(file()).absolutePath(); // obey Qt docs and don't cheat
 }
 
-QVariantMap Action::options() const
+QVariantMap Script::options() const
 {
     return d->options;
 }
 
-void Action::addQObject(QObject* obj, const QString& name)
+void Script::addQObject(QObject* obj, const QString& name)
 {
     this->addObject(obj, name);
 }
 
-QObject* Action::qobject(const QString& name) const
+QObject* Script::qobject(const QString& name) const
 {
     return this->object(name);
 }
 
-QStringList Action::qobjectNames() const
+QStringList Script::qobjectNames() const
 {
     return this->objects().keys();
 }
 
-QVariant Action::option(const QString& name, const QVariant& defaultvalue)
+QVariant Script::option(const QString& name, const QVariant& defaultvalue)
 {
     if (d->options.contains(name))
         return d->options[name];
@@ -220,7 +208,7 @@ QVariant Action::option(const QString& name, const QVariant& defaultvalue)
     return info ? info->optionValue(name, defaultvalue) : defaultvalue;
 }
 
-bool Action::setOption(const QString& name, const QVariant& value)
+bool Script::setOption(const QString& name, const QVariant& value)
 {
     InterpreterInfo* info = Manager::self().interpreterInfo(d->interpretername);
     if (info)
@@ -231,14 +219,14 @@ bool Action::setOption(const QString& name, const QVariant& value)
             return true;
         }
         else
-            qrosswarning(QString("Qross::Action::setOption(%1, %2): No such option").arg(name).arg(value.toString()));
+            qrosswarning(QString("Qross::Script::setOption(%1, %2): No such option").arg(name).arg(value.toString()));
     }
     else
-        qrosswarning(QString("Qross::Action::setOption(%1, %2): No such interpreterinfo").arg(name).arg(value.toString()));
+        qrosswarning(QString("Qross::Script::setOption(%1, %2): No such interpreterinfo").arg(name).arg(value.toString()));
     return false;
 }
 
-QStringList Action::functionNames()
+QStringList Script::functionNames()
 {
     if (!d->context)
     {
@@ -248,7 +236,7 @@ QStringList Action::functionNames()
     return d->context->functionNames();
 }
 
-QVariant Action::callFunction(const QString& name, const QVariantList& args)
+QVariant Script::callFunction(const QString& name, const QVariantList& args)
 {
     if (!d->context)
     {
@@ -258,7 +246,7 @@ QVariant Action::callFunction(const QString& name, const QVariantList& args)
     return d->context->callFunction(name, args);
 }
 
-QVariant Action::evaluate(const QByteArray& code)
+QVariant Script::evaluate(const QByteArray& code)
 {
     if (!d->context)
     {
@@ -268,7 +256,7 @@ QVariant Action::evaluate(const QByteArray& code)
     return d->context->evaluate(code);
 }
 
-bool Action::initialize()
+bool Script::initialize()
 {
     finalize();
 
@@ -323,21 +311,21 @@ bool Action::initialize()
     return true;
 }
 
-void Action::finalize()
+void Script::finalize()
 {
     delete d->context;
     d->context = 0;
 }
 
-bool Action::isFinalized() const
+bool Script::isFinalized() const
 {
     return d->context == 0;
 }
 
-void Action::slotTriggered()
+void Script::slotTriggered()
 {
 #ifdef QROSS_ACTION_DEBUG
-    qrossdebug(QString("Action::slotTriggered() name=%1").arg(objectName()));
+    qrossdebug(QString("Script::slotTriggered() name=%1").arg(objectName()));
 #endif
 
     Q_EMIT started(this);
@@ -351,7 +339,7 @@ void Action::slotTriggered()
     if (hadError())
     {
 #ifdef QROSS_ACTION_DEBUG
-        qrossdebug(QString("Action::slotTriggered() on init, errorMessage=%2").arg(errorMessage()));
+        qrossdebug(QString("Script::slotTriggered() on init, errorMessage=%2").arg(errorMessage()));
 #endif
     }
     else
@@ -360,7 +348,7 @@ void Action::slotTriggered()
         if (d->context->hadError())
         {
 #ifdef QROSS_ACTION_DEBUG
-            qrossdebug(QString("Action::slotTriggered() after exec, errorMessage=%2").arg(errorMessage()));
+            qrossdebug(QString("Script::slotTriggered() after exec, errorMessage=%2").arg(errorMessage()));
 #endif
             setError(d->context);
             // emit finished(this);

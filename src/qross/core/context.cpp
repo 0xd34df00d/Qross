@@ -9,9 +9,9 @@
 
 using namespace Qross;
 
-Context::Context(Interpreter* interpreter, Action* action)
+Context::Context(Interpreter* interpreter, Script* script)
     : m_interpreter(interpreter)
-    , m_action(action)
+    , m_script(script)
 {
 }
 
@@ -20,7 +20,7 @@ Interpreter* Context::interpreter() const
     return m_interpreter;
 }
 
-Action* Context::action() const
+Script* Context::script() const
 {
-    return m_action;
+    return m_script;
 }

@@ -9,8 +9,8 @@
 #include "context.h"
 #include <QtCore/QMetaMethod>
 #include <QtCore/QSet>
-#include "../core/action.h"
 #include "../core/manager.h"
+#include "../core/script.h"
 #include "call.h"
 #include "function.h"
 #include "interpreter.h"
@@ -35,8 +35,8 @@ namespace
     }
 }
 
-RubyContext::RubyContext(Interpreter* interpreter, Action* action)
-    : Context(interpreter, action)
+RubyContext::RubyContext(Interpreter* interpreter, Script* script)
+    : Context(interpreter, script)
 {
     if (interpreter->hadError())
         setError(interpreter);
@@ -75,13 +75,13 @@ bool RubyContext::ensureContext()
     if (!NIL_P(m_self))
         return true;
 
-    m_self = wrapObject(action());
+    m_self = wrapObject(script());
     rb_ivar_set(m_self, objectsKey(), rb_hash_new());
     // Extended rather than defined on self, so that they are not functions of the script.
     const VALUE accessors = rb_module_new();
     for (const auto& [name, object] : Manager::self().objects().asKeyValueRange())
         publish(accessors, name, object);
-    for (const auto& [name, object] : action()->objects().asKeyValueRange())
+    for (const auto& [name, object] : script()->objects().asKeyValueRange())
         publish(accessors, name, object);
     rb_extend_object(m_self, accessors);
 
@@ -113,7 +113,7 @@ void RubyContext::appendLoadPath()
 {
     // Appended rather than put first, so that a script named like an
     // installed library does not shadow it for itself.
-    const QString directory = action()->currentPath();
+    const QString directory = script()->currentPath();
     if (directory.isEmpty())
         return;
     const VALUE path = rb_gv_get("$LOAD_PATH");
@@ -142,7 +142,7 @@ void RubyContext::execute()
     resetContext();
     if (!ensureContext())
         return;
-    run(action()->code(), action()->file().isEmpty() ? action()->name() : action()->file());
+    run(script()->code(), script()->file().isEmpty() ? script()->name() : script()->file());
     if (!hadError())
         connectSignals();
 }
@@ -156,12 +156,12 @@ VALUE RubyContext::functions()
 void RubyContext::connectSignals()
 {
     const VALUE names = functions();
-    const QHash<QString, ChildrenInterface::Options> options = action()->objectOptions();
+    const QHash<QString, ChildrenInterface::Options> options = script()->objectOptions();
     for (auto it = options.cbegin(); it != options.cend(); ++it)
     {
         if (!(it.value() & ChildrenInterface::AutoConnectSignals))
             continue;
-        QObject* const sender = action()->object(it.key());
+        QObject* const sender = script()->object(it.key());
         if (!sender)
             continue;
 

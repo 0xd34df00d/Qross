@@ -12,8 +12,8 @@
 #include <QtQml/QJSManagedValue>
 #include <QtQml/QQmlComponent>
 #include <QtQml/QQmlEngine>
-#include "../core/action.h"
 #include "../core/manager.h"
+#include "../core/script.h"
 #include "object.h"
 
 using namespace Qross;
@@ -29,8 +29,8 @@ namespace
     }
 }
 
-JsContext::JsContext(Interpreter* interpreter, Action* action)
-    : Context(interpreter, action)
+JsContext::JsContext(Interpreter* interpreter, Script* script)
+    : Context(interpreter, script)
 {
 }
 
@@ -49,15 +49,15 @@ QQmlEngine& JsContext::ensureEngine()
 QQmlEngine& JsContext::createEngine()
 {
     m_engine = std::make_unique<QQmlEngine>();
-    if (action()->option(QStringLiteral("qml"), true).toBool())
+    if (script()->option(QStringLiteral("qml"), true).toBool())
         importQtQml(*m_engine);
     JsObject::prepareEngine(*m_engine);
 
     QJSValue global = m_engine->globalObject();
-    publish(global, QStringLiteral("self"), action());
+    publish(global, QStringLiteral("self"), script());
     for (const auto& [name, object] : Manager::self().objects().asKeyValueRange())
         publish(global, name, object);
-    for (const auto& [name, object] : action()->objects().asKeyValueRange())
+    for (const auto& [name, object] : script()->objects().asKeyValueRange())
         publish(global, name, object);
     return *m_engine;
 }
@@ -84,14 +84,14 @@ void JsContext::execute()
     QQmlEngine& engine = createEngine();
 
     // A shebang is not JavaScript; its newline stays so that line numbers do.
-    QString code = QString::fromUtf8(action()->code());
+    QString code = QString::fromUtf8(script()->code());
     if (code.startsWith(QLatin1String("#!")))
     {
         const qsizetype eol = code.indexOf(QLatin1Char('\n'));
         code.remove(0, eol < 0 ? code.size() : eol);
     }
 
-    const QString file = action()->file().isEmpty() ? action()->name() : action()->file();
+    const QString file = script()->file().isEmpty() ? script()->name() : script()->file();
     QStringList trace;
     const QJSValue result = engine.evaluate(code, file, 1, &trace);
     if (result.isError() || !trace.isEmpty())
@@ -106,12 +106,12 @@ void JsContext::execute()
 void JsContext::connectSignals(QQmlEngine& engine)
 {
     const QJSValue global = engine.globalObject();
-    const QHash<QString, ChildrenInterface::Options> options = action()->objectOptions();
+    const QHash<QString, ChildrenInterface::Options> options = script()->objectOptions();
     for (auto it = options.cbegin(); it != options.cend(); ++it)
     {
         if (!(it.value() & ChildrenInterface::AutoConnectSignals))
             continue;
-        QObject* const sender = action()->object(it.key());
+        QObject* const sender = script()->object(it.key());
         if (!sender)
             continue;
 

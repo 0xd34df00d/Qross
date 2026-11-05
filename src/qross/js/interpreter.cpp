@@ -19,7 +19,7 @@ JsInterpreter::JsInterpreter(InterpreterInfo* info)
     JsObject::registerConverters();
 }
 
-Context* JsInterpreter::createContext(Action* action)
+Context* JsInterpreter::createContext(Script* script)
 {
-    return new JsContext(this, action);
+    return new JsContext(this, script);
 }

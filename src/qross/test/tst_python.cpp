@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.0-or-later
  **********************************************************************/
 
-#include <qross/core/action.h>
 #include <qross/core/context.h>
 #include <qross/core/manager.h>
 #include <qross/core/object.h>
+#include <qross/core/script.h>
 #include <thread>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QPointer>
@@ -51,9 +51,9 @@ class tst_Python : public QObject
 
     Host m_global;
 
-    static std::unique_ptr<Qross::Action> run(const QByteArray& code, QObject* local = nullptr, Qross::ChildrenInterface::Options options = Qross::ChildrenInterface::NoOption)
+    static std::unique_ptr<Qross::Script> run(const QByteArray& code, QObject* local = nullptr, Qross::ChildrenInterface::Options options = Qross::ChildrenInterface::NoOption)
     {
-        auto action = std::make_unique<Qross::Action>(nullptr, QStringLiteral("tst"));
+        auto action = std::make_unique<Qross::Script>(nullptr, QStringLiteral("tst"));
         action->setInterpreter(QStringLiteral("python"));
         action->setCode(code);
         if (local)

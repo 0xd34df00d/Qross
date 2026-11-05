@@ -18,14 +18,14 @@ namespace Qross
     class RubyFunction;
 
     /**
-     * Runs the code of an \a Action with the action as \c self.
+     * Runs the code of a \a Script with the script as \c self.
      *
      * Every execute() starts afresh: the code runs in a binding of its own
-     * where \c self is a wrapper of the action, so methods defined at the
+     * where \c self is a wrapper of the script, so methods defined at the
      * top level are the functions of the script and classes defined there
      * belong to it alone. The objects of the \a Manager (\c Qross among
-     * them) and of the action are constants of the script where their
-     * names allow it, and methods of \c self in any case. The binding
+     * them) and of the script are its constants where their names allow
+     * it, and methods of \c self in any case. The binding
      * keeps local variables across evaluate() calls. The directory of the
      * script file is appended to the load path, so that scripts can
      * require their neighbours.
@@ -39,7 +39,7 @@ namespace Qross
         VALUE m_binding = Qnil;
         QList<QPointer<RubyFunction>> m_connections;
     public:
-        RubyContext(Interpreter* interpreter, Action* action);
+        RubyContext(Interpreter* interpreter, Script* script);
         ~RubyContext() override;
 
         void execute() override;

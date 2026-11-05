@@ -180,7 +180,7 @@ RubyInterpreter::~RubyInterpreter()
     ruby_cleanup(0);
 }
 
-Context* RubyInterpreter::createContext(Action* action)
+Context* RubyInterpreter::createContext(Script* script)
 {
-    return new RubyContext(this, action);
+    return new RubyContext(this, script);
 }

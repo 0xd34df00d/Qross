@@ -17,11 +17,11 @@ namespace Qross
     class PythonFunction;
 
     /**
-     * Runs the code of an \a Action as a module of its own.
+     * Runs the code of a \a Script as a module of its own.
      *
      * Every execute() starts from a fresh module called \c __main__ whose
-     * globals are the action as \c self, the objects of the \a Manager
-     * (\c Qross among them) and the objects of the action. The directory of
+     * globals are the script as \c self, the objects of the \a Manager
+     * (\c Qross among them) and the objects of the script. The directory of
      * the script file is appended to \c sys.path, so that scripts can import
      * their neighbours.
      *
@@ -33,7 +33,7 @@ namespace Qross
         PyObject* m_module = nullptr;
         QList<QPointer<PythonFunction>> m_connections;
     public:
-        PythonContext(Interpreter* interpreter, Action* action);
+        PythonContext(Interpreter* interpreter, Script* script);
         ~PythonContext() override;
 
         void execute() override;

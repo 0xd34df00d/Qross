@@ -16,12 +16,12 @@ class QQmlEngine;
 namespace Qross
 {
     /**
-     * Runs the code of an \a Action in a QQmlEngine.
+     * Runs the code of a \a Script in a QQmlEngine.
      *
      * Every execute() starts from a fresh engine, so a rerun sees neither the
      * globals nor the signal connections of the previous run. The engine
-     * publishes the action as \c self, the objects of the \a Manager (\c Qross
-     * among them) and the objects of the action, each with the keys of its
+     * publishes the script as \c self, the objects of the \a Manager (\c Qross
+     * among them) and the objects of the script, each with the keys of its
      * enums as properties.
      *
      * Published objects stay owned by C++. For everything else Qt's rule
@@ -40,7 +40,7 @@ namespace Qross
 
         std::unique_ptr<QQmlEngine> m_engine;
     public:
-        JsContext(Interpreter* interpreter, Action* action);
+        JsContext(Interpreter* interpreter, Script* script);
         ~JsContext() override;
 
         /**

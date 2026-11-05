@@ -28,7 +28,7 @@
 
 // Qross
 #include "../core/manager.h"
-#include "../core/action.h"
+#include "../core/script.h"
 #include "../core/interpreter.h"
 
 #define ERROR_OK 0
@@ -66,12 +66,12 @@ int runScriptFile(const QString& scriptfile)
         return ERROR_NOINTERPRETER;
     }
 
-    // First we need a Action and fill it.
-    Qross::Action* action = new Qross::Action(0 /*no parent*/, QUrl::fromLocalFile(scriptfile));
+    // First we need a Script and fill it.
+    Qross::Script* action = new Qross::Script(0 /*no parent*/, QUrl::fromLocalFile(scriptfile));
     action->setInterpreter(interpreterinfo->interpreterName());
     action->setCode(scriptcode);
 
-    // Now execute the Action.
+    // Now execute the Script.
     action->trigger();
 
     if (action->hadError())

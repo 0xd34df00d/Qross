@@ -31,7 +31,7 @@ namespace Qross
 
     // Forward declaration.
     class Manager;
-    class Action;
+    class Script;
     class Context;
     class Interpreter;
 
@@ -199,8 +199,8 @@ namespace Qross
          */
         InterpreterInfo* interpreterInfo() const;
 
-        /// \return a new context for \p action, owned by the caller.
-        virtual Context* createContext(Action* action) = 0;
+        /// \return a new context for \p script, owned by the caller.
+        virtual Context* createContext(Script* script) = 0;
     private:
         /// \internal d-pointer class.
         class Private;

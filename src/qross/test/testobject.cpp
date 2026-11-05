@@ -305,7 +305,7 @@ void TestThread::emitStepDone(int step)
 
 QVariant TestThread::callFunction(QObject* action, const QString& functionname, QVariantList arguments)
 {
-    Qross::Action* a = dynamic_cast<Qross::Action*>(action);
+    Qross::Script* a = dynamic_cast<Qross::Script*>(action);
     Q_ASSERT(a);
     return a->callFunction(functionname, arguments);
 }

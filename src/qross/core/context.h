@@ -16,14 +16,14 @@
 namespace Qross
 {
     class Interpreter;
-    class Action;
+    class Script;
 
     /**
-     * The state a backend keeps for one \a Action: an engine, a module or
+     * The state a backend keeps for one \a Script: an engine, a module or
      * a binding.
      *
-     * An \a Action creates its context through the \a Interpreter on first
-     * use and drops it on finalize(). execute() runs the code of the action
+     * A \a Script creates its context through the \a Interpreter on first
+     * use and drops it on finalize(). execute() runs the code of the script
      * afresh; callFunction() and evaluate() work on what the last run left
      * behind.
      */
@@ -34,12 +34,12 @@ namespace Qross
         Q_OBJECT
 
         Interpreter* const m_interpreter;
-        Action* const m_action;
+        Script* const m_script;
     public:
-        Context(Interpreter* interpreter, Action* action);
+        Context(Interpreter* interpreter, Script* script);
 
         Interpreter* interpreter() const;
-        Action* action() const;
+        Script* script() const;
 
         virtual void execute() = 0;
         virtual QStringList functionNames() = 0;

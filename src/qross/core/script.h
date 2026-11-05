@@ -1,21 +1,9 @@
-/***************************************************************************
- * action.h
- * This file is part of the KDE project
- * copyright (C)2004-2007 by Sebastian Sauer (mail@dipe.org)
+/**********************************************************************
+ * Qross - scripting bridge for Qt applications.
+ * Copyright (C) 2004-2007 Sebastian Sauer <mail@dipe.org>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * You should have received a copy of the GNU Library General Public License
- * along with this program; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- ***************************************************************************/
+ * SPDX-License-Identifier: LGPL-2.0-or-later
+ **********************************************************************/
 
 #pragma once
 
@@ -33,25 +21,25 @@ namespace Qross
     class Context;
 
     /**
-     * The Action class is an abstract container to deal with scripts
-     * like a single standalone script file. Each action holds a reference
+     * The Script class is an abstract container to deal with scripts
+     * like a single standalone script file. Each script holds a reference
      * to the matching @a Qross::Interpreter created @a Qross::Context
      * instance.
      *
-     * Once you've such a Action instance you're able to perform actions
+     * Once you've such a Script instance you're able to perform actions
      * with it like executing scripting code.
      *
      * Following sample shows "Hello World." executed with the python
      * interpreter:
      * \code
-     * # Create a new Qross::Action instance.
-     * Qross::Action* action = new Qross::Action(0,"MyFirstScript");
+     * # Create a new Qross::Script instance.
+     * Qross::Script* script = new Qross::Script(0,"MyFirstScript");
      * # Set the interpreter we like to use. This could be e.g. "python", "ruby" or "javascript".
-     * action->setInterpreter("python");
+     * script->setInterpreter("python");
      * # Set the scripting code.
-     * action->setCode("print \"Hello World.\"");
+     * script->setCode("print \"Hello World.\"");
      * # Execute the scripting code.
-     * action->trigger();
+     * script->trigger();
      * \endcode
      *
      * Following sample demonstrates how to execute an external python script
@@ -70,21 +58,21 @@ namespace Qross
      * Then you are able to load the script file, publish QObject instances
      * and let the script do whatever it likes to do:
      * \code
-     * # Publish a QObject instance for all Qross::Action instances.
+     * # Publish a QObject instance for all Qross::Script instances.
      * Qross::Manager::self().addObject(myqobject1, "MyFirstQObject")
-     * # Create a new Qross::Action instance.
-     * Qross::Action* action = new Qross::Action(0,"MySecondScript");
-     * # Publish a QObject instance only for the Qross::Action instance.
-     * action->addObject(myqobject2, "MySecondQObject");
+     * # Create a new Qross::Script instance.
+     * Qross::Script* script = new Qross::Script(0,"MySecondScript");
+     * # Publish a QObject instance only for the Qross::Script instance.
+     * script->addObject(myqobject2, "MySecondQObject");
      * # Set the script file we like to execute.
-     * action->setFile("/home/myuser/mytest.py");
+     * script->setFile("/home/myuser/mytest.py");
      * # Execute the script file.
-     * action->trigger();
+     * script->trigger();
      * # Call the "myfunction" defined in the "mytest.py" python script.
-     * QVariant result = action->callFunction("myfunction", QVariantList()<<"Arg");
+     * QVariant result = script->callFunction("myfunction", QVariantList()<<"Arg");
      * \endcode
      */
-    class QROSSCORE_EXPORT Action
+    class QROSSCORE_EXPORT Script
         : public QAction
         , public ChildrenInterface
         , public ErrorInterface
@@ -94,30 +82,30 @@ namespace Qross
         /**
          * Constructor.
          *
-         * \param parent The parent QObject this \a Action is a child of.
-         * \param name The unique name this Action has. It's used
-         * e.g. at the \a Manager to identify the Action. The
+         * \param parent The parent QObject this \a Script is a child of.
+         * \param name The unique name this Script has. It's used
+         * e.g. at the \a Manager to identify the Script. The
          * name is accessible via \a QObject::objectName .
          */
-        Action(QObject* parent, const QString& name); // BIC may be removed in favour of the next c'tor
+        Script(QObject* parent, const QString& name); // BIC may be removed in favour of the next c'tor
 
         /**
          * Constructor.
          *
-         * \param parent The parent QObject this \a Action is a child of.
+         * \param parent The parent QObject this \a Script is a child of.
          * \param url The URL should point to a valid scripting file.
-         * This \a Action will be filled with the content of the
+         * This \a Script will be filled with the content of the
          * file (e.g. the file is read and \a code should return
          * its content and it's also tried to determine the
          * \a interpreter ). Remember to use QUrl c'tor explicitly.
          * The name will be set to url.path()
          */
-        Action(QObject* parent, const QUrl& url);
+        Script(QObject* parent, const QUrl& url);
 
         /**
          * Destructor.
          */
-        virtual ~Action();
+        virtual ~Script();
 
         /**
          * Initialize the \a Context instance.
@@ -133,25 +121,25 @@ namespace Qross
         /**
          * Finalize the \a Context instance and frees any cached or still
          * running executions. Normally there is no need to call this
-         * function directly because the \a Action will take care
+         * function directly because the \a Script will take care
          * of calling it if needed.
          */
         void finalize();
 
         /**
-         * \return true if the action is finalized, which means the
-         * action is currently not running.
+         * \return true if the script is finalized, which means the
+         * script is currently not running.
          */
         bool isFinalized() const;
 
         /**
          * \return the \a Qross::Context implementation used by the scripting
-         * backend. This returns NULL until the action got triggered or if
+         * backend. This returns NULL until the script got triggered or if
          * there was an error before that.
          *
          * Normaly it shouldn't be necessary to deal with the scripting backend
          * depending instance of a \a Qross::Context implementation since this
-         * \a Action class already decorates all the things needed. It
+         * \a Script class already decorates all the things needed. It
          * may however be useful to provide additional interpreter dependent
          * functionality.
          */
@@ -160,7 +148,7 @@ namespace Qross
     public Q_SLOTS:
 
         /**
-         * \return the objectName for this Action.
+         * \return the objectName for this Script.
          */
         QString name() const;
 
@@ -175,12 +163,12 @@ namespace Qross
         bool setFile(const QString& scriptfile);
 
         /**
-         * \return the scriptcode this Action holds.
+         * \return the scriptcode this Script holds.
          */
         QByteArray code() const;
 
         /**
-         * Set the scriptcode \p code this Action should execute.
+         * Set the scriptcode \p code this Script should execute.
          */
         void setCode(const QByteArray& code);
 
@@ -202,7 +190,7 @@ namespace Qross
         QString currentPath() const;
 
         /**
-         * Add a QObject instance to the action. This instance will
+         * Add a QObject instance to the script. This instance will
          * be published to scripts.
          */
         void addQObject(QObject* obj, const QString& name = QString());
@@ -218,7 +206,7 @@ namespace Qross
         QStringList qobjectNames() const;
 
         /**
-         * \return a map of options this \a Action defines.
+         * \return a map of options this \a Script defines.
          * The options are returned call-by-ref, so you are able to
          * manipulate them.
          */
@@ -254,7 +242,7 @@ namespace Qross
          *
          * Example how this can be used:
          * \code
-         * Qross::Action* a = new Qross::Action(0, "MyScript");
+         * Qross::Script* a = new Qross::Script(0, "MyScript");
          * a->setInterpreter("python");
          * a->setCode("def myFunc(x): return x");
          * a->execute();
@@ -272,12 +260,12 @@ namespace Qross
         /**
          * This signal is emitted before the script got executed.
          */
-        void started(Qross::Action*);
+        void started(Qross::Script*);
 
         /**
          * This signal is emitted after the script got executed.
          */
-        void finished(Qross::Action*);
+        void finished(Qross::Script*);
 
     private Q_SLOTS:
 
@@ -296,4 +284,4 @@ namespace Qross
 
 }
 
-Q_DECLARE_METATYPE(Qross::Action*)
+Q_DECLARE_METATYPE(Qross::Script*)

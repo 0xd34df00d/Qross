@@ -20,9 +20,9 @@
 #include "testobject.h"
 
 // Qross
-#include "../core/action.h"
 #include "../core/interpreter.h"
 #include "../core/manager.h"
+#include "../core/script.h"
 #include "../core/wrapperinterface.h"
 
 // Qt
@@ -86,8 +86,8 @@ int runScriptFile(const QString& scriptfile)
         return ERROR_NOINTERPRETER;
     }
 
-    // First we need a Action and fill it.
-    Qross::Action* action = new Qross::Action(0 /*no parent*/, QUrl::fromLocalFile(scriptfile));
+    // First we need a Script and fill it.
+    Qross::Script* action = new Qross::Script(0 /*no parent*/, QUrl::fromLocalFile(scriptfile));
     action->setObjectName("MyAction");
     action->setInterpreter(interpretername);
     action->setCode(scriptcode);
@@ -100,7 +100,7 @@ int runScriptFile(const QString& scriptfile)
     action->addObject(testobj3, "TestObject3", Qross::ChildrenInterface::AutoConnectSignals);
     action->addObject(testobj4, "TestObject4");
 
-    // Now execute the Action.
+    // Now execute the Script.
     std::cout << "Execute scriptfile " << scriptfile.toLatin1().data() << " now" << std::endl;
     action->trigger();
     std::cout << "Execution of scriptfile " << scriptfile.toLatin1().data() << " done" << std::endl;

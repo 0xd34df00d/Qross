@@ -19,7 +19,7 @@
 
 #include "interpreter.h"
 #include "context.h"
-#include "action.h"
+#include "script.h"
 #include "manager.h"
 
 extern "C" {

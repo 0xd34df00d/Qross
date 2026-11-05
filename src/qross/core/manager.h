@@ -39,7 +39,7 @@ namespace Qross
      * point to deal with the Qross Scripting Framework.
      *
      * Use \a Interpreter to just work with some implementated
-     * interpreter like python or ruby. While \a Action implements
+     * interpreter like python or ruby. While \a Script implements
      * a flexible abstract container to deal with single script files.
      */
     class QROSSCORE_EXPORT Manager

@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.0-or-later
  **********************************************************************/
 
-#include <qross/core/action.h>
 #include <qross/core/context.h>
 #include <qross/core/manager.h>
 #include <qross/core/object.h>
+#include <qross/core/script.h>
 #include <QtCore/QAbstractItemModel>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QPointer>
@@ -51,9 +51,9 @@ class tst_JavaScript : public QObject
 
     Host m_global;
 
-    static std::unique_ptr<Qross::Action> run(const QByteArray& code, QObject* local = nullptr, Qross::ChildrenInterface::Options options = Qross::ChildrenInterface::NoOption)
+    static std::unique_ptr<Qross::Script> run(const QByteArray& code, QObject* local = nullptr, Qross::ChildrenInterface::Options options = Qross::ChildrenInterface::NoOption)
     {
-        auto action = std::make_unique<Qross::Action>(nullptr, QStringLiteral("tst"));
+        auto action = std::make_unique<Qross::Script>(nullptr, QStringLiteral("tst"));
         action->setInterpreter(QStringLiteral("javascript"));
         action->setCode(code);
         if (local)
@@ -84,7 +84,7 @@ private Q_SLOTS:
         // for the whole process.
         Host local;
         {
-            Qross::Action action(nullptr, QStringLiteral("plain"));
+            Qross::Script action(nullptr, QStringLiteral("plain"));
             action.setInterpreter(QStringLiteral("javascript"));
             QVERIFY(action.setOption(QStringLiteral("qml"), false));
             action.setCode("var row = Local.model().index(1, 0).row;");
@@ -106,7 +106,7 @@ private Q_SLOTS:
         QVERIFY(manager.hasInterpreterInfo(QStringLiteral("qtscript")));
         QCOMPARE(manager.interpreter(QStringLiteral("qtscript")), manager.interpreter(QStringLiteral("javascript")));
 
-        Qross::Action action(nullptr, QStringLiteral("old"));
+        Qross::Script action(nullptr, QStringLiteral("old"));
         action.setInterpreter(QStringLiteral("qtscript"));
         action.setCode("var answer = 42;");
         action.trigger();

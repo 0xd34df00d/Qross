@@ -46,9 +46,9 @@ PythonInterpreter::~PythonInterpreter()
     Py_FinalizeEx();
 }
 
-Context* PythonInterpreter::createContext(Action* action)
+Context* PythonInterpreter::createContext(Script* script)
 {
-    return new PythonContext(this, action);
+    return new PythonContext(this, script);
 }
 
 void Qross::storeException(ErrorInterface& target)

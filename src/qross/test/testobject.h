@@ -44,8 +44,8 @@ class QDate;
 #include <QtGui/QBrush>
 #include <QtWidgets/QWidget>
 
-#include "../core/action.h"
 #include "../core/object.h"
+#include "../core/script.h"
 #include "../core/wrapperinterface.h"
 
 class OtherObject;

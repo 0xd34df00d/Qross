@@ -8,8 +8,8 @@
 #include "context.h"
 #include <QtCore/QMetaMethod>
 #include <QtCore/QSet>
-#include "../core/action.h"
 #include "../core/manager.h"
+#include "../core/script.h"
 #include "function.h"
 #include "gil.h"
 #include "interpreter.h"
@@ -19,8 +19,8 @@
 
 using namespace Qross;
 
-PythonContext::PythonContext(Interpreter* interpreter, Action* action)
-    : Context(interpreter, action)
+PythonContext::PythonContext(Interpreter* interpreter, Script* script)
+    : Context(interpreter, script)
 {
     if (interpreter->hadError())
         setError(interpreter);
@@ -50,21 +50,21 @@ PyObject* PythonContext::ensureModule()
     Ref module(PyModule_New("__main__"));
     PyObject* const dict = PyModule_GetDict(module.get());
     PyDict_SetItemString(dict, "__builtins__", PyEval_GetBuiltins());
-    if (!action()->file().isEmpty())
+    if (!script()->file().isEmpty())
     {
-        const Ref file(toPython(action()->file()));
+        const Ref file(toPython(script()->file()));
         PyDict_SetItemString(dict, "__file__", file.get());
     }
 
-    publish(dict, QStringLiteral("self"), action());
+    publish(dict, QStringLiteral("self"), script());
     for (const auto& [name, object] : Manager::self().objects().asKeyValueRange())
         publish(dict, name, object);
-    for (const auto& [name, object] : action()->objects().asKeyValueRange())
+    for (const auto& [name, object] : script()->objects().asKeyValueRange())
         publish(dict, name, object);
 
     // Appended rather than put first, so that a script named like an
     // installed module does not shadow it for itself.
-    const QString directory = action()->currentPath();
+    const QString directory = script()->currentPath();
     if (!directory.isEmpty())
     {
         const Ref sys(PyImport_ImportModule("sys"));
@@ -92,8 +92,8 @@ void PythonContext::execute()
     resetModule();
     PyObject* const dict = PyModule_GetDict(ensureModule());
 
-    const QByteArray file = (action()->file().isEmpty() ? action()->name() : action()->file()).toUtf8();
-    const Ref code(Py_CompileString(action()->code().constData(), file.constData(), Py_file_input));
+    const QByteArray file = (script()->file().isEmpty() ? script()->name() : script()->file()).toUtf8();
+    const Ref code(Py_CompileString(script()->code().constData(), file.constData(), Py_file_input));
     const Ref result(code ? PyEval_EvalCode(code.get(), dict, dict) : nullptr);
     if (!result)
     {
@@ -106,12 +106,12 @@ void PythonContext::execute()
 void PythonContext::connectSignals()
 {
     PyObject* const dict = PyModule_GetDict(m_module);
-    const QHash<QString, ChildrenInterface::Options> options = action()->objectOptions();
+    const QHash<QString, ChildrenInterface::Options> options = script()->objectOptions();
     for (auto it = options.cbegin(); it != options.cend(); ++it)
     {
         if (!(it.value() & ChildrenInterface::AutoConnectSignals))
             continue;
-        QObject* const sender = action()->object(it.key());
+        QObject* const sender = script()->object(it.key());
         if (!sender)
             continue;
 
