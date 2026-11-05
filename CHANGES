@@ -1,7 +1,7 @@
 == Qross CHANGES ==
 
 Unreleased
-* Port to Qt 6 and C++26: Qt 6.8 or later, CMake 3.21 and GCC 16. The
+* Port to Qt 6 and C++26: Qt 6.8 or later, CMake 4.3 and GCC 16. The
   library, the plugins and the console carry a -qt6 suffix, and the new
   pkg-config file qrosscore declares its Qt requirements. Qt 4 and Qt 5
   are no longer supported.

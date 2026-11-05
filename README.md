@@ -25,7 +25,7 @@ the matching option: `QROSS_WITH_JAVASCRIPT`, `QROSS_WITH_PYTHON`,
 
 ## Building
 
-Qross needs CMake 3.21, a C++26 compiler (GCC 16 is the one it is
+Qross needs CMake 4.3, a C++26 compiler (GCC 16 is the one it is
 developed and tested with), Qt 6.8 or later with Core, Gui, Widgets
 and Test, plus Qml for the JavaScript backend, the Python 3.12 embedding
 development files for the Python backend and Ruby 3.2 for the Ruby backend.

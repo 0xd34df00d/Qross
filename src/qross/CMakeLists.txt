@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 4.3)
 project(qross VERSION 0.3.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 26)
