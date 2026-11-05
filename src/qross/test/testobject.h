@@ -228,57 +228,9 @@ public Q_SLOTS:
 };
 
 /**
- * \internal class to test threading functionality within qrosstest.
- *
- * Following python code does provide a sample how this class
- * may used to test the threading functionality.
- * \code
- * import time, TestObject1
- * # this function will be called by our thread
- * def myFunction(step):
- *     print "myFunction step=%i" % step
- * # create a thread that iterates 15 times and waits 200
- * # milliseconds on each iteration, 20*200=2 seconds
- * mythread = TestObject1.createThread(15,200)
- * # connect the stepDone signal our thread provides to
- * # our own python function above
- * mythread.connect("stepDone(int)",myFunction)
- * # start the thread
- * mythread.start()
- * # let this python thread sleep for a second
- * time.sleep(1)
- * # ask our action to call our myFunction function
- * self.callFunction("myFunction", [123])
- * # ask our thread to emit the stepDone signal which in
- * # turn should call our myFunction function.
- * mythread.emitStepDone(456)
- * # same as above but we emit the signal by our own
- * # rather than going through a helper-function.
- * mythread.stepDone(789)
- * # now let's ask our thread to ask our action to execute
- * # our function to have one complete roundtrip :)
- * mythread.callFunction(self, "myFunction", [987])
- * # sleep again one second
- * time.sleep(1)
- * \endcode
- *
- * Following sample code does the same as the code above but
- * uses the Ruby scripting language.
- * \code
- * require 'TestObject1'
- * def myFunction(step)
- *     puts "myFunction step=" + step.to_s
- * end
- * mythread = TestObject1.createThread(10,200)
- * mythread.connect("stepDone(int)", method("myFunction"))
- * mythread.start()
- * sleep(1)
- * self.action().callFunction("myFunction", [123])
- * mythread.emitStepDone(456)
- * mythread.stepDone(789)
- * mythread.callFunction(self.action(), "myFunction", [987])
- * sleep(1)
- * \endcode
+ * \internal class to test threading functionality within qrosstest: the
+ * thread calls a function of the script that created it from another
+ * thread.
  */
 class TestThread : public QThread
 {
@@ -289,7 +241,7 @@ public:
     virtual void run();
 public Q_SLOTS:
     void emitStepDone(int step);
-    QVariant callFunction(QObject* action, const QString& functionname, QVariantList arguments);
+    QVariant callFunction(QObject* script, const QString& functionname, QVariantList arguments);
 Q_SIGNALS:
     void stepDone(int step);
 private:

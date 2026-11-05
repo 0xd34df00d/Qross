@@ -12,7 +12,6 @@
 #include <QtQml/QJSManagedValue>
 #include <QtQml/QQmlComponent>
 #include <QtQml/QQmlEngine>
-#include "../core/manager.h"
 #include "../core/script.h"
 #include "object.h"
 
@@ -55,10 +54,8 @@ QQmlEngine& JsContext::createEngine()
 
     QJSValue global = m_engine->globalObject();
     publish(global, QStringLiteral("self"), script());
-    for (const auto& [name, object] : Manager::self().objects().asKeyValueRange())
-        publish(global, name, object);
-    for (const auto& [name, object] : script()->objects().asKeyValueRange())
-        publish(global, name, object);
+    for (const Published& published : script()->publishedObjects())
+        publish(global, published.name, published.object);
     return *m_engine;
 }
 
@@ -90,9 +87,8 @@ std::expected<void, Error> JsContext::execute()
         code.remove(0, eol < 0 ? code.size() : eol);
     }
 
-    const QString file = script()->file().isEmpty() ? script()->name() : script()->file();
     QStringList trace;
-    const QJSValue result = engine.evaluate(code, file, 1, &trace);
+    const QJSValue result = engine.evaluate(code, script()->name(), 1, &trace);
     if (result.isError() || !trace.isEmpty())
         return std::unexpected(errorOf(result, trace));
 
@@ -103,18 +99,15 @@ std::expected<void, Error> JsContext::execute()
 void JsContext::connectSignals(QQmlEngine& engine)
 {
     const QJSValue global = engine.globalObject();
-    const QHash<QString, ChildrenInterface::Options> options = script()->objectOptions();
-    for (auto it = options.cbegin(); it != options.cend(); ++it)
+    for (const Published& published : script()->publishedObjects())
     {
-        if (!(it.value() & ChildrenInterface::AutoConnectSignals))
+        if (!(published.options & AutoConnectSignals))
             continue;
-        QObject* const sender = script()->object(it.key());
-        if (!sender)
-            continue;
+        QObject* const sender = published.object;
 
         // Overloads share a name and a wrapper property, so one connection per name.
         QSet<QString> connected;
-        const QJSValue wrapper = global.property(it.key());
+        const QJSValue wrapper = global.property(published.name);
         const QMetaObject* const meta = sender->metaObject();
         for (int i = 0; i < meta->methodCount(); ++i)
         {

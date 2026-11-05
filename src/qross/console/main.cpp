@@ -1,114 +1,63 @@
-/***************************************************************************
- * main.cpp
- * This file is part of the KDE project
- * copyright (C)2006 by Sebastian Sauer (mail@dipe.org)
+/**********************************************************************
+ * Qross - scripting bridge for Qt applications.
+ * Copyright (C) 2006 Sebastian Sauer <mail@dipe.org>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * You should have received a copy of the GNU Library General Public License
- * along with this program; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- ***************************************************************************/
+ * SPDX-License-Identifier: LGPL-2.0-or-later
+ **********************************************************************/
 
-// for std namespace
 #include <iostream>
-
-// Qt
-
-#include <QFile>
-#include <QApplication>
-#include <QUrl>
-
-// Qross
+#include <QtCore/QCoreApplication>
+#include <QtCore/QFileInfo>
 #include "../core/manager.h"
 #include "../core/script.h"
-#include "../core/interpreter.h"
 
-#define ERROR_OK 0
-#define ERROR_HELP 1
-#define ERROR_NOSUCHFILE 2
-#define ERROR_OPENFAILED 3
-#define ERROR_NOINTERPRETER 4
-#define ERROR_EXCEPTION 5
-
-QApplication* app = 0;
-
-int runScriptFile(const QString& scriptfile)
+namespace
 {
-    // Read the scriptfile
-    QFile f(scriptfile);
-    if (!f.exists())
+    enum Status
     {
-        std::cerr << "No such scriptfile: " << scriptfile.toLatin1().data() << std::endl;
-        return ERROR_NOSUCHFILE;
-    }
-    if (!f.open(QIODevice::ReadOnly))
+        Ok = 0,
+        Usage = 1,
+        NoSuchFile = 2,
+        NoInterpreter = 4,
+        ScriptError = 5,
+    };
+
+    int runScript(const QString& path)
     {
-        std::cerr << "Failed to open scriptfile: " << scriptfile.toLatin1().data() << std::endl;
-        return ERROR_OPENFAILED;
+        if (!QFileInfo::exists(path))
+        {
+            std::cerr << "No such script file: " << qPrintable(path) << std::endl;
+            return NoSuchFile;
+        }
+
+        Qross::Script script({ .source = Qross::File { path } });
+        if (script.interpreter().isEmpty())
+        {
+            std::cerr << "No interpreter for " << qPrintable(path) << "; available: "
+                      << qPrintable(Qross::Manager::self().interpreters().join(QStringLiteral(", "))) << std::endl;
+            return NoInterpreter;
+        }
+
+        if (const auto result = script.run(); !result)
+        {
+            std::cerr << qPrintable(result.error().toString()) << std::endl;
+            return ScriptError;
+        }
+        return Ok;
     }
-    QByteArray scriptcode = f.readAll();
-    f.close();
-
-    // Determinate the matching interpreter
-    Qross::InterpreterInfo* interpreterinfo = Qross::Manager::self().interpreterInfo(Qross::Manager::self().interpreternameForFile(scriptfile));
-    if (!interpreterinfo)
-    {
-        std::cerr << "No interpreter for file: " << scriptfile.toLatin1().data() << std::endl;
-        std::cerr << "Available interpreters: " << Qross::Manager::self().interpreters().join(", ").toLatin1().data() << std::endl;
-        return ERROR_NOINTERPRETER;
-    }
-
-    // First we need a Script and fill it.
-    Qross::Script* action = new Qross::Script(0 /*no parent*/, QUrl::fromLocalFile(scriptfile));
-    action->setInterpreter(interpreterinfo->interpreterName());
-    action->setCode(scriptcode);
-
-    // Now execute the Script.
-    action->trigger();
-
-    if (const auto error = action->error())
-    {
-        // We had an exception.
-        std::cerr << qPrintable(error->toString()) << std::endl;
-        delete action;
-        return ERROR_EXCEPTION;
-    }
-
-    delete action;
-    return ERROR_OK;
 }
 
 int main(int argc, char** argv)
 {
-    int result = ERROR_OK;
-
-    // If no options are defined.
     if (argc < 2)
     {
-        std::cout << "Syntax: " << argv[0] << " scriptfile1 [scriptfile2] [scriptfile3] ..." << std::endl;
-        return ERROR_HELP;
+        std::cout << "Syntax: " << argv[0] << " scriptfile1 [scriptfile2] ..." << std::endl;
+        return Usage;
     }
 
-    // Create KApplication instance.
-    app = new QApplication(argc, argv);
-
-    // Each argument is a scriptfile to open
-    for (int i = 1; i < argc; i++)
-    {
-        result = runScriptFile(argv[i]);
-        if (result != ERROR_OK)
-            break;
-    }
-
-    // Free the KApplication instance and exit the program.
-    delete app;
-    return result;
+    QCoreApplication app(argc, argv);
+    for (int i = 1; i < argc; ++i)
+        if (const int status = runScript(QString::fromLocal8Bit(argv[i])); status != Ok)
+            return status;
+    return Ok;
 }

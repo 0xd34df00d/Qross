@@ -20,14 +20,12 @@
 #include "testobject.h"
 
 // Qross
-#include "../core/interpreter.h"
 #include "../core/manager.h"
 #include "../core/script.h"
 #include "../core/wrapperinterface.h"
 
 // Qt
 
-#include <QFile>
 #include <QArgument>
 #include <QMetaEnum>
 #include <QApplication>
@@ -45,74 +43,30 @@
 
 QApplication* app = 0;
 
-QString getInterpreterName(const QString& scriptfile)
-{
-    Qross::InterpreterInfo* interpreterinfo = Qross::Manager::self().interpreterInfo(Qross::Manager::self().interpreternameForFile(scriptfile));
-    return interpreterinfo ? interpreterinfo->interpreterName() : QString();
-}
-
-int readFile(const QString& scriptfile, QByteArray& content)
-{
-    QFile f(scriptfile);
-    if (!f.exists())
-    {
-        std::cerr << "No such scriptfile: " << scriptfile.toLatin1().data() << std::endl;
-        return ERROR_NOSUCHFILE;
-    }
-    if (!f.open(QIODevice::ReadOnly))
-    {
-        std::cerr << "Failed to open scriptfile: " << scriptfile.toLatin1().data() << std::endl;
-        return ERROR_OPENFAILED;
-    }
-    content = f.readAll();
-    f.close();
-    return ERROR_OK;
-}
-
 int runScriptFile(const QString& scriptfile)
 {
-    // Read the scriptfile
-    QByteArray scriptcode;
-    int result = readFile(scriptfile, scriptcode);
-    if (result != ERROR_OK)
-        return result;
-
-    // Determinate the matching interpreter
-    QString interpretername = getInterpreterName(scriptfile);
-    if (interpretername.isNull())
+    Qross::Script script({ .source = Qross::File { scriptfile } });
+    if (script.interpreter().isEmpty())
     {
         std::cerr << "No interpreter for scriptfile: " << scriptfile.toLatin1().data() << std::endl;
         std::cerr << "Available interpreters: " << Qross::Manager::self().interpreters().join(", ").toLatin1().data() << std::endl;
         return ERROR_NOINTERPRETER;
     }
 
-    // First we need a Script and fill it.
-    Qross::Script* action = new Qross::Script(0 /*no parent*/, QUrl::fromLocalFile(scriptfile));
-    action->setObjectName("MyAction");
-    action->setInterpreter(interpretername);
-    action->setCode(scriptcode);
+    TestObject* testobj3 = new TestObject(&script, "TestObject3");
+    TestObject* testobj4 = new TestObject(&script, "TestObject4");
+    script.addObject(testobj3, "TestObject3", Qross::AutoConnectSignals);
+    script.addObject(testobj4, "TestObject4");
 
-    // Create the testobject instances.
-    TestObject* testobj3 = new TestObject(action, "TestObject3");
-    TestObject* testobj4 = new TestObject(action, "TestObject4");
-
-    // Publish other both testobject instance to the script.
-    action->addObject(testobj3, "TestObject3", Qross::ChildrenInterface::AutoConnectSignals);
-    action->addObject(testobj4, "TestObject4");
-
-    // Now execute the Script.
     std::cout << "Execute scriptfile " << scriptfile.toLatin1().data() << " now" << std::endl;
-    action->trigger();
+    const auto result = script.run();
     std::cout << "Execution of scriptfile " << scriptfile.toLatin1().data() << " done" << std::endl;
 
-    if (const auto error = action->error())
+    if (!result)
     {
-        std::cerr << qPrintable(error->toString()) << std::endl;
-        delete action;
+        std::cerr << qPrintable(result.error().toString()) << std::endl;
         return ERROR_EXCEPTION;
     }
-
-    delete action;
     return ERROR_OK;
 }
 

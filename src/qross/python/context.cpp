@@ -8,7 +8,6 @@
 #include "context.h"
 #include <QtCore/QMetaMethod>
 #include <QtCore/QSet>
-#include "../core/manager.h"
 #include "../core/script.h"
 #include "function.h"
 #include "gil.h"
@@ -55,14 +54,12 @@ PyObject* PythonContext::ensureModule()
     }
 
     publish(dict, QStringLiteral("self"), script());
-    for (const auto& [name, object] : Manager::self().objects().asKeyValueRange())
-        publish(dict, name, object);
-    for (const auto& [name, object] : script()->objects().asKeyValueRange())
-        publish(dict, name, object);
+    for (const Published& published : script()->publishedObjects())
+        publish(dict, published.name, published.object);
 
     // Appended rather than put first, so that a script named like an
     // installed module does not shadow it for itself.
-    const QString directory = script()->currentPath();
+    const QString directory = script()->directory();
     if (!directory.isEmpty())
     {
         const Ref sys(PyImport_ImportModule("sys"));
@@ -89,7 +86,7 @@ std::expected<void, Error> PythonContext::execute()
     resetModule();
     PyObject* const dict = PyModule_GetDict(ensureModule());
 
-    const QByteArray file = (script()->file().isEmpty() ? script()->name() : script()->file()).toUtf8();
+    const QByteArray file = script()->name().toUtf8();
     const Ref code(Py_CompileString(script()->code().constData(), file.constData(), Py_file_input));
     const Ref result(code ? PyEval_EvalCode(code.get(), dict, dict) : nullptr);
     if (!result)
@@ -101,14 +98,11 @@ std::expected<void, Error> PythonContext::execute()
 void PythonContext::connectSignals()
 {
     PyObject* const dict = PyModule_GetDict(m_module);
-    const QHash<QString, ChildrenInterface::Options> options = script()->objectOptions();
-    for (auto it = options.cbegin(); it != options.cend(); ++it)
+    for (const Published& published : script()->publishedObjects())
     {
-        if (!(it.value() & ChildrenInterface::AutoConnectSignals))
+        if (!(published.options & AutoConnectSignals))
             continue;
-        QObject* const sender = script()->object(it.key());
-        if (!sender)
-            continue;
+        QObject* const sender = published.object;
 
         // Overloads share a name, so one connection per name.
         QSet<QByteArray> connected;

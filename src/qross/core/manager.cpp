@@ -48,6 +48,9 @@ namespace Qross
 
         /// List with custom handlers for metatypes.
         QHash<QByteArray, MetaTypeHandler*> wrappers;
+
+        /// The objects every script sees.
+        PublishedObjects objects;
     };
 
 }
@@ -109,7 +112,6 @@ namespace
 
 Manager::Manager()
     : QObject()
-    , ChildrenInterface()
     , d(new Private())
 {
     setObjectName("Qross");
@@ -141,14 +143,12 @@ Manager::Manager()
 #ifdef QROSS_JAVASCRIPT_LIBRARY
     if (void* funcPtr = loadLibrary(QROSS_JAVASCRIPT_LIBRARY, "qrossinterpreter"))
     {
-        InterpreterInfo::Option::Map options;
-        options.insert("qml", new InterpreterInfo::Option(tr("Import the QtQml module into the engine"), QVariant(true)));
         d->interpreterinfos.insert("javascript",
             new InterpreterInfo("javascript",
                 funcPtr, // library
                 "*.js *.es", // file filter-wildcard
                 QStringList() << "text/javascript" << "application/javascript" << "application/ecmascript", // mimetypes
-                options // options
+                QVariantMap { { QStringLiteral("qml"), true } } // options
                 ));
         d->aliases.insert("qtscript", "javascript");
     }
@@ -162,7 +162,7 @@ Manager::Manager()
     d->interpreters.sort();
 
     // publish ourself.
-    ChildrenInterface::addObject(this, "Qross");
+    d->objects.add(this, QStringLiteral("Qross"));
 }
 
 Manager::~Manager()
@@ -171,22 +171,17 @@ Manager::~Manager()
     delete d;
 }
 
-QHash<QString, InterpreterInfo*> Manager::interpreterInfos() const
+bool Manager::hasInterpreter(const QString& name) const
 {
-    return d->interpreterinfos;
+    return interpreterInfo(name) != nullptr;
 }
 
-bool Manager::hasInterpreterInfo(const QString& interpretername) const
+InterpreterInfo* Manager::interpreterInfo(const QString& name) const
 {
-    return interpreterInfo(interpretername) != nullptr;
+    return d->interpreterinfos.value(d->aliases.value(name, name));
 }
 
-InterpreterInfo* Manager::interpreterInfo(const QString& interpretername) const
-{
-    return d->interpreterinfos.value(d->aliases.value(interpretername, interpretername));
-}
-
-const QString Manager::interpreternameForFile(const QString& file)
+QString Manager::interpreterNameForFile(const QString& file) const
 {
     for (QHash<QString, InterpreterInfo*>::Iterator it = d->interpreterinfos.begin(); it != d->interpreterinfos.end(); ++it)
     {
@@ -202,12 +197,12 @@ const QString Manager::interpreternameForFile(const QString& file)
     return QString();
 }
 
-Interpreter* Manager::interpreter(const QString& interpretername) const
+Interpreter* Manager::interpreter(const QString& name) const
 {
-    InterpreterInfo* const info = interpreterInfo(interpretername);
+    InterpreterInfo* const info = interpreterInfo(name);
     if (!info)
     {
-        qrosswarning(QString("No such interpreter '%1'").arg(interpretername));
+        qrosswarning(QString("No such interpreter '%1'").arg(name));
         return nullptr;
     }
     return info->interpreter();
@@ -227,19 +222,19 @@ QStringList Manager::interpreters() const
     return d->interpreters;
 }
 
-void Manager::addQObject(QObject* obj, const QString& name)
+void Manager::addObject(QObject* object, const QString& name, ObjectOptions options)
 {
-    this->addObject(obj, name);
+    d->objects.add(object, name, options);
 }
 
-QObject* Manager::qobject(const QString& name) const
+void Manager::removeObject(const QString& name)
 {
-    return this->object(name);
+    d->objects.remove(name);
 }
 
-QStringList Manager::qobjectNames() const
+QList<Published> Manager::publishedObjects() const
 {
-    return this->objects().keys();
+    return d->objects.live();
 }
 
 MetaTypeHandler* Manager::metaTypeHandler(const QByteArray& typeName) const

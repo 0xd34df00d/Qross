@@ -47,15 +47,15 @@ namespace Qross
         QString wildcard;
         /// List of mimetypes this interpreter supports.
         QStringList mimetypes;
-        /// A map with options.
-        Option::Map options;
+        /// The options with their defaults.
+        QVariantMap options;
         /// The \a Interpreter instance.
         Interpreter* interpreter;
     };
 
 }
 
-InterpreterInfo::InterpreterInfo(const QString& interpretername, void* funcPtr, const QString& wildcard, const QStringList& mimetypes, const Option::Map& options)
+InterpreterInfo::InterpreterInfo(const QString& interpretername, void* funcPtr, const QString& wildcard, const QStringList& mimetypes, const QVariantMap& options)
     : d(new Private())
 {
     d->interpretername = interpretername;
@@ -93,19 +93,14 @@ bool InterpreterInfo::hasOption(const QString& name) const
     return d->options.contains(name);
 }
 
-InterpreterInfo::Option* InterpreterInfo::option(const QString& name) const
-{
-    return d->options.contains(name) ? d->options[name] : 0;
-}
-
-InterpreterInfo::Option::Map& InterpreterInfo::options()
+QVariantMap InterpreterInfo::options() const
 {
     return d->options;
 }
 
 const QVariant InterpreterInfo::optionValue(const QString& name, const QVariant& defaultvalue) const
 {
-    return d->options.contains(name) ? d->options[name]->value : defaultvalue;
+    return d->options.value(name, defaultvalue);
 }
 
 Interpreter* InterpreterInfo::interpreter()

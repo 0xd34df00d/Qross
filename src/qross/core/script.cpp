@@ -6,327 +6,203 @@
  **********************************************************************/
 
 #include "script.h"
-#include "interpreter.h"
+#include <QtCore/QFile>
+#include <QtCore/QFileInfo>
 #include "context.h"
+#include "interpreter.h"
 #include "manager.h"
 #include "wrapperinterface.h"
 
-#include <QFile>
-#include <QFileInfo>
-
 using namespace Qross;
 
-namespace Qross
+namespace
 {
-
-    /// \internal d-pointer class.
-    class Script::Private
+    Config resolve(Config config)
     {
-    public:
-        /**
-         * The \a Context instance the \a Script uses if initialized. It will
-         * be NULL as long as we didn't initialized it what will be done on
-         * demand.
-         */
-        std::unique_ptr<Context> context;
-
-        /// The error of the latest operation, if it failed.
-        std::optional<Error> error;
-
-        /**
-         * The scripting code.
-         */
-        QByteArray code;
-
-        /**
-         * The name of the interpreter. This could be something
-         * like for example "python" for the python binding.
-         */
-        QString interpretername;
-
-        /**
-         * The name of the scriptfile that should be executed. Those
-         * scriptfile will be readed and the content will be used to
-         * set the scripting code and, if not defined, the used
-         * interpreter.
-         */
-        QString scriptfile;
-
-        /**
-         * Map of options that overwritte the \a InterpreterInfo::Option::Map
-         * standard options.
-         */
-        QMap<QString, QVariant> options;
-    };
-
+        const auto* const file = std::get_if<File>(&config.source);
+        if (file && config.interpreter.isEmpty())
+            config.interpreter = Manager::self().interpreterNameForFile(file->path);
+        return config;
+    }
 }
 
-enum InitOptions
+Script::Script(Config config, QObject* parent)
+    : QObject(parent)
+    , m_config(resolve(std::move(config)))
 {
-    Enable = 1
-};
-void static init(Script* th, const QString& name, int options = 0)
-{
-    th->setEnabled(options & Enable);
-    th->setObjectName(name);
-#ifdef QROSS_ACTION_DEBUG
-    qrossdebug(QString("Script::Script() Ctor name='%1'").arg(th->objectName()));
-#endif
-    QObject::connect(th, SIGNAL(triggered(bool)), th, SLOT(slotTriggered()));
+    setObjectName(name());
+    if (const auto* const code = std::get_if<Code>(&m_config.source))
+        m_code = code->text;
+    for (const Published& published : m_config.objects)
+        addObject(published.object, published.name, published.options);
 }
 
-Script::Script(QObject* parent, const QString& name)
-    : QAction(parent)
-    , ChildrenInterface()
-    , d(new Private())
+Script::~Script() = default;
+
+const Config& Script::config() const
 {
-    init(this, name);
+    return m_config;
 }
 
-Script::Script(QObject* parent, const QUrl& url)
-    : QAction(parent)
-    , ChildrenInterface()
-    , d(new Private())
+void Script::addObject(QObject* object, const QString& name, ObjectOptions options)
 {
-    init(this, url.path(), Enable);
-    QFileInfo fi(url.toLocalFile());
-    setText(fi.fileName());
-    setFile(url.toLocalFile());
+    m_objects.add(object, name, options);
 }
 
-Script::~Script()
+void Script::removeObject(const QString& name)
 {
-#ifdef QROSS_ACTION_DEBUG
-    qrossdebug(QString("Script::~Script() Dtor name='%1'").arg(objectName()));
-#endif
-    finalize();
-    delete d;
+    m_objects.remove(name);
 }
 
-Context* Script::context() const
+QList<Published> Script::publishedObjects() const
 {
-    return d->context.get();
+    QList<Published> result = Manager::self().publishedObjects();
+    for (const Published& own : m_objects.live())
+    {
+        result.removeIf([&own](const Published& published) { return published.name == own.name; });
+        result << own;
+    }
+    return result;
 }
 
-std::optional<Error> Script::error() const
+QVariant Script::option(const QString& name, const QVariant& fallback) const
 {
-    return d->error;
-}
-
-QString Script::name() const
-{
-    return objectName();
+    if (const auto it = m_config.options.constFind(name); it != m_config.options.constEnd())
+        return *it;
+    const InterpreterInfo* const info = Manager::self().interpreterInfo(m_config.interpreter);
+    return info ? info->optionValue(name, fallback) : fallback;
 }
 
 QByteArray Script::code() const
 {
-    return d->code;
+    return m_code;
 }
 
-void Script::setCode(const QByteArray& code)
+std::unexpected<Error> Script::fail(Error error)
 {
-    if (d->code != code)
+    m_error = std::move(error);
+    return std::unexpected(*m_error);
+}
+
+std::expected<Context*, Error> Script::ensureContext()
+{
+    if (m_context)
+        return m_context.get();
+
+    InterpreterInfo* const info = Manager::self().interpreterInfo(m_config.interpreter);
+    if (!info)
+        return std::unexpected(Error { QStringLiteral("No such interpreter \"%1\"").arg(m_config.interpreter) });
+    for (const QString& name : m_config.options.keys())
+        if (!info->hasOption(name))
+            return std::unexpected(Error { QStringLiteral("No such option \"%1\" for interpreter \"%2\"").arg(name, m_config.interpreter) });
+    Interpreter* const interpreter = info->interpreter();
+    if (!interpreter)
+        return std::unexpected(Error { QStringLiteral("Failed to load interpreter \"%1\"").arg(m_config.interpreter) });
+
+    auto context = interpreter->createContext(this);
+    if (!context)
+        return std::unexpected(context.error());
+    m_context = std::move(*context);
+    return m_context.get();
+}
+
+std::expected<void, Error> Script::run()
+{
+    m_error.reset();
+    if (const auto* const file = std::get_if<File>(&m_config.source))
     {
-        finalize();
-        d->code = code;
+        QFile source(file->path);
+        if (!source.open(QIODevice::ReadOnly))
+            return fail({ QStringLiteral("Cannot read \"%1\": %2").arg(file->path, source.errorString()) });
+        m_code = source.readAll();
     }
-}
 
-QString Script::interpreter() const
-{
-    return d->interpretername;
-}
+    const auto context = ensureContext();
+    if (!context)
+        return fail(context.error());
 
-void Script::setInterpreter(const QString& interpretername)
-{
-    if (d->interpretername != interpretername)
-    {
-        finalize();
-        d->interpretername = interpretername;
-        setEnabled(Manager::self().hasInterpreterInfo(interpretername));
-        if (!isEnabled())
-            qrosswarning("Script::setInterpreter: interpreter not found: " + interpretername);
-    }
-}
-
-QString Script::file() const
-{
-    return d->scriptfile;
-}
-
-bool Script::setFile(const QString& scriptfile)
-{
-    if (d->scriptfile != scriptfile)
-    {
-        finalize();
-        if (scriptfile.isNull())
-        {
-            if (!d->scriptfile.isNull())
-                d->interpretername.clear();
-            d->scriptfile.clear();
-        }
-        else
-        {
-            d->scriptfile = scriptfile;
-            d->interpretername = Manager::self().interpreternameForFile(scriptfile);
-            if (d->interpretername.isNull())
-                return false;
-        }
-    }
-    return true;
-}
-
-QString Script::currentPath() const
-{
-    return file().isEmpty() ? QString() : QFileInfo(file()).absolutePath(); // obey Qt docs and don't cheat
-}
-
-QVariantMap Script::options() const
-{
-    return d->options;
-}
-
-void Script::addQObject(QObject* obj, const QString& name)
-{
-    this->addObject(obj, name);
-}
-
-QObject* Script::qobject(const QString& name) const
-{
-    return this->object(name);
-}
-
-QStringList Script::qobjectNames() const
-{
-    return this->objects().keys();
-}
-
-QVariant Script::option(const QString& name, const QVariant& defaultvalue)
-{
-    if (d->options.contains(name))
-        return d->options[name];
-    InterpreterInfo* info = Manager::self().interpreterInfo(d->interpretername);
-    return info ? info->optionValue(name, defaultvalue) : defaultvalue;
-}
-
-bool Script::setOption(const QString& name, const QVariant& value)
-{
-    InterpreterInfo* info = Manager::self().interpreterInfo(d->interpretername);
-    if (info)
-    {
-        if (info->hasOption(name))
-        {
-            d->options.insert(name, value);
-            return true;
-        }
-        else
-            qrosswarning(QString("Qross::Script::setOption(%1, %2): No such option").arg(name).arg(value.toString()));
-    }
-    else
-        qrosswarning(QString("Qross::Script::setOption(%1, %2): No such interpreterinfo").arg(name).arg(value.toString()));
-    return false;
-}
-
-QStringList Script::functionNames()
-{
-    d->error.reset();
-    if (!d->context && !initialize())
-        return {};
-    return d->context->functionNames();
-}
-
-std::expected<QVariant, Error> Script::callFunction(const QString& name, const QVariantList& args)
-{
-    d->error.reset();
-    if (!d->context && !initialize())
-        return std::unexpected(*d->error);
-    auto result = d->context->callFunction(name, args);
+    Q_EMIT started();
+    const auto result = (*context)->execute();
     if (!result)
-        d->error = result.error();
+        m_error = result.error();
+    Q_EMIT finished();
+    return result;
+}
+
+std::expected<QVariant, Error> Script::call(const QString& function, const QVariantList& arguments)
+{
+    m_error.reset();
+    const auto context = ensureContext();
+    if (!context)
+        return fail(context.error());
+    auto result = (*context)->callFunction(function, arguments);
+    if (!result)
+        m_error = result.error();
     return result;
 }
 
 std::expected<QVariant, Error> Script::evaluate(const QByteArray& code)
 {
-    d->error.reset();
-    if (!d->context && !initialize())
-        return std::unexpected(*d->error);
-    auto result = d->context->evaluate(code);
+    m_error.reset();
+    const auto context = ensureContext();
+    if (!context)
+        return fail(context.error());
+    auto result = (*context)->evaluate(code);
     if (!result)
-        d->error = result.error();
+        m_error = result.error();
     return result;
 }
 
-bool Script::initialize()
+std::optional<Error> Script::error() const
 {
-    finalize();
+    return m_error;
+}
 
-    if (!d->scriptfile.isNull())
-    {
-        QFile f(d->scriptfile);
-        if (!f.exists())
-        {
-            d->error = Error { tr("Scriptfile \"%1\" does not exist.").arg(d->scriptfile) };
-            return false;
-        }
-        if (d->interpretername.isNull())
-        {
-            d->error = Error { tr("Failed to determine interpreter for scriptfile \"%1\"").arg(d->scriptfile) };
-            return false;
-        }
-        if (!f.open(QIODevice::ReadOnly))
-        {
-            d->error = Error { tr("Failed to open scriptfile \"%1\"").arg(d->scriptfile) };
-            return false;
-        }
-        d->code = f.readAll();
-        f.close();
-    }
+void Script::reset()
+{
+    m_context.reset();
+    m_error.reset();
+}
 
-    Interpreter* interpreter = Manager::self().interpreter(d->interpretername);
-    if (!interpreter)
-    {
-        InterpreterInfo* info = Manager::self().interpreterInfo(d->interpretername);
-        if (info)
-            d->error = Error { tr("Failed to load interpreter \"%1\"").arg(d->interpretername) };
-        else
-            d->error = Error { tr("No such interpreter \"%1\"").arg(d->interpretername) };
-        return false;
-    }
+Context* Script::context() const
+{
+    return m_context.get();
+}
 
-    auto context = interpreter->createContext(this);
+QString Script::name() const
+{
+    if (const auto* const file = std::get_if<File>(&m_config.source))
+        return file->path;
+    return std::get<Code>(m_config.source).name;
+}
+
+QString Script::file() const
+{
+    const auto* const file = std::get_if<File>(&m_config.source);
+    return file ? file->path : QString();
+}
+
+QString Script::directory() const
+{
+    const auto* const file = std::get_if<File>(&m_config.source);
+    return file ? QFileInfo(file->path).absolutePath() : QString();
+}
+
+QString Script::interpreter() const
+{
+    return m_config.interpreter;
+}
+
+QStringList Script::functionNames()
+{
+    m_error.reset();
+    const auto context = ensureContext();
     if (!context)
     {
-        d->error = context.error();
-        return false;
+        m_error = context.error();
+        return {};
     }
-    d->context = std::move(*context);
-    return true;
+    return (*context)->functionNames();
 }
 
-void Script::finalize()
-{
-    d->context.reset();
-}
-
-bool Script::isFinalized() const
-{
-    return !d->context;
-}
-
-void Script::slotTriggered()
-{
-    Q_EMIT started(this);
-    d->error.reset();
-    if (d->context || initialize())
-        if (const auto result = d->context->execute(); !result)
-            d->error = result.error();
-    Q_EMIT finished(this);
-}
-
-// --------
-
-// interface files
-WrapperInterface::~WrapperInterface()
-{
-}
+WrapperInterface::~WrapperInterface() = default;

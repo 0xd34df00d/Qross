@@ -8,285 +8,89 @@
 #pragma once
 
 #include <expected>
+#include <memory>
 #include <optional>
-#include <QVariant>
-#include <QObject>
-#include <QUrl>
-#include <QAction>
-
+#include <QtCore/QObject>
+#include <QtCore/QStringList>
+#include <QtCore/QVariant>
+#include "config.h"
 #include "error.h"
-#include "childreninterface.h"
+#include "qrossconfig.h"
 
 namespace Qross
 {
-
     class Context;
 
     /**
-     * The Script class is an abstract container to deal with scripts
-     * like a single standalone script file. Each script holds a reference
-     * to the matching @a Qross::Interpreter created @a Qross::Context
-     * instance.
+     * One script: its source, its interpreter, the objects it sees and the
+     * state its runs leave behind.
      *
-     * Once you've such a Script instance you're able to perform actions
-     * with it like executing scripting code.
+     * A script is configured once, by its \a Config. run() executes the
+     * source afresh each time, reading a \a File again, and keeps the
+     * resulting state, so that call() reaches the functions the script
+     * defined and evaluate() runs code among them. Objects added with
+     * addObject() are seen by the next run. The objects of the \a Manager
+     * are visible to every script; an object of the script with the same
+     * name wins.
      *
-     * Following sample shows "Hello World." executed with the python
-     * interpreter:
-     * \code
-     * # Create a new Qross::Script instance.
-     * Qross::Script* script = new Qross::Script(0,"MyFirstScript");
-     * # Set the interpreter we like to use. This could be e.g. "python", "ruby" or "javascript".
-     * script->setInterpreter("python");
-     * # Set the scripting code.
-     * script->setCode("print \"Hello World.\"");
-     * # Execute the scripting code.
-     * script->trigger();
-     * \endcode
+     * Scripts see the script as \c self with the invokable methods below.
      *
-     * Following sample demonstrates how to execute an external python script
-     * file. The script file itself is named "mytest.py" and contains:
-     * \code
-     * # this function got called from within C++
-     * def myfunction(args):
-     *     print "Arguments are: %s" % args
-     * # Import the published QObject's
-     * import MyFirstQObject, MySecondQObject
-     * # Call a slot MyFirstQObject provides.
-     * MyFirstQObject.someSlot("Some string")
-     * # Set a property MySecondQObject provides.
-     * MySecondQObject.someProperty = "Other string"
-     * \endcode
-     * Then you are able to load the script file, publish QObject instances
-     * and let the script do whatever it likes to do:
-     * \code
-     * # Publish a QObject instance for all Qross::Script instances.
-     * Qross::Manager::self().addObject(myqobject1, "MyFirstQObject")
-     * # Create a new Qross::Script instance.
-     * Qross::Script* script = new Qross::Script(0,"MySecondScript");
-     * # Publish a QObject instance only for the Qross::Script instance.
-     * script->addObject(myqobject2, "MySecondQObject");
-     * # Set the script file we like to execute.
-     * script->setFile("/home/myuser/mytest.py");
-     * # Execute the script file.
-     * script->trigger();
-     * # Call the "myfunction" defined in the "mytest.py" python script.
-     * QVariant result = script->callFunction("myfunction", QVariantList()<<"Arg");
-     * \endcode
+     * The context is created on the thread of the first run(), call(),
+     * evaluate() or functionNames(); the backends say what they allow from
+     * other threads.
      */
-    class QROSSCORE_EXPORT Script
-        : public QAction
-        , public ChildrenInterface
+    class QROSSCORE_EXPORT Script : public QObject
     {
         Q_OBJECT
+
+        const Config m_config;
+        PublishedObjects m_objects;
+        QByteArray m_code;
+        std::unique_ptr<Context> m_context;
+        std::optional<Error> m_error;
     public:
-        /**
-         * Constructor.
-         *
-         * \param parent The parent QObject this \a Script is a child of.
-         * \param name The unique name this Script has. It's used
-         * e.g. at the \a Manager to identify the Script. The
-         * name is accessible via \a QObject::objectName .
-         */
-        Script(QObject* parent, const QString& name); // BIC may be removed in favour of the next c'tor
+        explicit Script(Config config, QObject* parent = nullptr);
+        ~Script() override;
 
-        /**
-         * Constructor.
-         *
-         * \param parent The parent QObject this \a Script is a child of.
-         * \param url The URL should point to a valid scripting file.
-         * This \a Script will be filled with the content of the
-         * file (e.g. the file is read and \a code should return
-         * its content and it's also tried to determine the
-         * \a interpreter ). Remember to use QUrl c'tor explicitly.
-         * The name will be set to url.path()
-         */
-        Script(QObject* parent, const QUrl& url);
+        const Config& config() const;
 
-        /**
-         * Destructor.
-         */
-        virtual ~Script();
+        /// Makes \p object visible to the next run as \p name, or as its object name.
+        void addObject(QObject* object, const QString& name = {}, ObjectOptions options = {});
+        void removeObject(const QString& name);
+        /// The live objects of the \a Manager and of this script, the script's own replacing namesakes.
+        QList<Published> publishedObjects() const;
 
-        /**
-         * Initialize the \a Context instance.
-         *
-         * Normally there is no need to call this function directly because
-         * if will be called internally if needed (e.g. on \a execute ).
-         *
-         * \return true if the initialization was successful else
-         * false is returned.
-         */
-        bool initialize();
-
-        /**
-         * Finalize the \a Context instance and frees any cached or still
-         * running executions. Normally there is no need to call this
-         * function directly because the \a Script will take care
-         * of calling it if needed.
-         */
-        void finalize();
-
-        /**
-         * \return true if the script is finalized, which means the
-         * script is currently not running.
-         */
-        bool isFinalized() const;
-
-        /**
-         * \return the \a Qross::Context implementation used by the scripting
-         * backend. This returns NULL until the script got triggered or if
-         * there was an error before that.
-         *
-         * Normaly it shouldn't be necessary to deal with the scripting backend
-         * depending instance of a \a Qross::Context implementation since this
-         * \a Script class already decorates all the things needed. It
-         * may however be useful to provide additional interpreter dependent
-         * functionality.
-         */
-        Context* context() const;
-
-        /// The error of the latest trigger(), callFunction(), evaluate() or functionNames(), if it failed.
-        std::optional<Error> error() const;
-
-        /**
-         * Call a function in the script.
-         *
-         * \param name The name of the function which should be called.
-         * \param args The optional list of arguments.
-         * \return The return value of the function, or the error it raised.
-         */
-        std::expected<QVariant, Error> callFunction(const QString& name, const QVariantList& args = QVariantList());
-
-        /**
-         * Evaluate some scripting code.
-         *
-         * Example how this can be used:
-         * \code
-         * Qross::Script* a = new Qross::Script(0, "MyScript");
-         * a->setInterpreter("python");
-         * a->setCode("def myFunc(x): return x");
-         * a->trigger();
-         * int three = a->evaluate("1+2").value_or(QVariant()).toInt(); // returns 3
-         * int nine = a->evaluate("myFunc(9)").value_or(QVariant()).toInt(); // returns 9
-         * \endcode
-         *
-         * \param code The scripting code to evaluate.
-         * \return The value of the evaluation, or the error it raised.
-         */
-        std::expected<QVariant, Error> evaluate(const QByteArray& code);
-
-    public Q_SLOTS:
-
-        /**
-         * \return the objectName for this Script.
-         */
-        QString name() const;
-
-        /**
-         * \return the script file that should be executed.
-         */
-        QString file() const;
-
-        /**
-         * Set the script file that should be executed.
-         */
-        bool setFile(const QString& scriptfile);
-
-        /**
-         * \return the scriptcode this Script holds.
-         */
+        /// The option \p name as configured, else the backend's default, else \p fallback.
+        QVariant option(const QString& name, const QVariant& fallback = {}) const;
+        /// The source the last run() read, or the \a Code text.
         QByteArray code() const;
 
-        /**
-         * Set the scriptcode \p code this Script should execute.
-         */
-        void setCode(const QByteArray& code);
+        std::expected<void, Error> run();
+        std::expected<QVariant, Error> call(const QString& function, const QVariantList& arguments = {});
+        std::expected<QVariant, Error> evaluate(const QByteArray& code);
+        /// The error of the latest run(), call(), evaluate() or functionNames(), if it failed.
+        std::optional<Error> error() const;
 
-        /**
-         * \return the name of the interpreter. Could be for
-         * example "python" or "ruby".
-         */
-        QString interpreter() const;
+        /// Drops the state of the runs so far; the next use starts afresh.
+        void reset();
+        /// The backend's state, or nullptr before the first use and after reset().
+        Context* context() const;
 
-        /**
-         * Set the name of the interpreter (javascript, python or ruby).
-         */
-        void setInterpreter(const QString& interpretername);
-
-        /**
-         * \return the current path the script is running in or
-         * an empty string if there is no current path defined.
-         */
-        QString currentPath() const;
-
-        /**
-         * Add a QObject instance to the script. This instance will
-         * be published to scripts.
-         */
-        void addQObject(QObject* obj, const QString& name = QString());
-
-        /**
-         * \return the QObject with the object name \p name .
-         */
-        QObject* qobject(const QString& name) const;
-
-        /**
-         * \return a list of QObject object names.
-         */
-        QStringList qobjectNames() const;
-
-        /**
-         * \return a map of options this \a Script defines.
-         * The options are returned call-by-ref, so you are able to
-         * manipulate them.
-         */
-        QVariantMap options() const;
-
-        /**
-         * \return the value of the option defined with \p name .
-         * If there doesn't exist an option with such a name,
-         * the \p defaultvalue is returned.
-         */
-        QVariant option(const QString& name, const QVariant& defaultvalue = QVariant());
-
-        /**
-         * Set the \a Interpreter::Option value.
-         */
-        bool setOption(const QString& name, const QVariant& value);
-
-        /**
-         * \return the list of functionnames.
-         */
-        QStringList functionNames();
-
+        /// The path of a \a File source, or the name of the \a Code.
+        Q_INVOKABLE QString name() const;
+        /// The path of a \a File source, otherwise empty.
+        Q_INVOKABLE QString file() const;
+        /// The directory of a \a File source, otherwise empty.
+        Q_INVOKABLE QString directory() const;
+        Q_INVOKABLE QString interpreter() const;
+        /// The functions the script has defined so far.
+        Q_INVOKABLE QStringList functionNames();
     Q_SIGNALS:
-
-        /**
-         * This signal is emitted before the script got executed.
-         */
-        void started(Qross::Script*);
-
-        /**
-         * This signal is emitted after the script got executed.
-         */
-        void finished(Qross::Script*);
-
-    private Q_SLOTS:
-
-        /**
-         * This private slot is connected with the \a QAction::triggered
-         * signal. To execute the script just emit that signal and this
-         * slot tries to execute the script.
-         */
-        void slotTriggered();
+        /// Emitted by run() around the execution; error() is set before finished().
+        void started();
+        void finished();
     private:
-        /// \internal d-pointer class.
-        class Private;
-        /// \internal d-pointer instance.
-        Private* const d;
+        std::expected<Context*, Error> ensureContext();
+        std::unexpected<Error> fail(Error error);
     };
-
 }
-
-Q_DECLARE_METATYPE(Qross::Script*)

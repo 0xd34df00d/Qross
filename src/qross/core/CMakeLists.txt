@@ -6,13 +6,13 @@ set(qrosscore_SRCS
     manager.cpp
     metafunction.cpp
     object.cpp
+    published.cpp
 )
 
 set(qrosscore_HEADERS
     qross_export.h
     qrossconfig.h
     error.h
-    childreninterface.h
     wrapperinterface.h
     metatype.h
     metafunction.h
@@ -21,6 +21,8 @@ set(qrosscore_HEADERS
     script.h
     manager.h
     object.h
+    published.h
+    config.h
 )
 
 add_library(qrosscore${SHLIB_SUFFIX} SHARED ${qrosscore_SRCS} ${qrosscore_HEADERS})

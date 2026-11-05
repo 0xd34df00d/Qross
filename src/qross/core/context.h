@@ -24,7 +24,7 @@ namespace Qross
      * a binding.
      *
      * A \a Script creates its context through the \a Interpreter on first
-     * use and drops it on finalize(). execute() runs the code of the script
+     * use and drops it on reset(). execute() runs the source of the script
      * afresh; callFunction() and evaluate() work on what the last run left
      * behind. Each returns the error the script raised instead of a value.
      */

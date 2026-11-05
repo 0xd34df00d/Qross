@@ -46,38 +46,6 @@ namespace Qross
     {
     public:
         /**
-         * Each interpreter is able to define options we could
-         * use to manipulate the interpreter behaviour.
-         */
-        class Option
-        {
-        public:
-            /**
-             * Map of options.
-             */
-            typedef QMap<QString, Option*> Map;
-
-            /**
-             * Constructor.
-             *
-             * \param comment A localized comment that describes
-             * the option.
-             * \param value The QVariant value this option has.
-             */
-            Option(const QString& comment, const QVariant& value)
-                : comment(comment)
-                , value(value)
-            {
-            }
-
-            /// A description of the option.
-            QString comment;
-
-            /// The value the option has.
-            QVariant value;
-        };
-
-        /**
          * Constructor.
          *
          * \param interpretername The name of the interpreter. The name is
@@ -99,10 +67,9 @@ namespace Qross
          * \param mimetypes The file mimetype that identifies a by the interpreter
          * supported scripting files. As example Python does define "text/x-python"
          * here while Ruby defines "application/x-ruby" and Java "application/java".
-         * \param options The optional list of options supported by the interpreter
-         * to configure the backend.
+         * \param options The options the backend declares, with their defaults.
          */
-        InterpreterInfo(const QString& interpretername, void* funcPtr, const QString& wildcard, const QStringList& mimetypes, const Option::Map& options = Option::Map());
+        InterpreterInfo(const QString& interpretername, void* funcPtr, const QString& wildcard, const QStringList& mimetypes, const QVariantMap& options = {});
 
         /**
          * Destructor.
@@ -128,20 +95,11 @@ namespace Qross
          */
         const QStringList mimeTypes() const;
 
-        /**
-         * \return true if an \a Option with that \p key exists else false.
-         */
+        /// \return whether the backend declares an option \p name.
         bool hasOption(const QString& name) const;
 
-        /**
-         * \return the option defined with \p name .
-         */
-        Option* option(const QString& name) const;
-
-        /**
-         * \return the reference to the intenal used map with all options.
-         */
-        Option::Map& options();
+        /// The options the backend declares, with their defaults.
+        QVariantMap options() const;
 
         /**
          * \return the value of the option defined with \p name . If there

@@ -5,7 +5,7 @@
  **********************************************************************/
 
 // Run by qrosstest, which publishes TestObject1 and TestObject2 through
-// the manager and TestObject3 and TestObject4 through the action.
+// the manager and TestObject3 and TestObject4 through the script.
 
 function UnitTest() {
     var passed = 0;
@@ -65,9 +65,9 @@ var obj2 = TestObject2;
 // objects
 test.assert(obj1.name(), 'TestObject1', 'name of a manager object');
 test.assert(obj2.objectName, 'TestObject2', 'objectName property');
-test.assert(TestObject3.name(), 'TestObject3', 'name of an action object');
-test.assert(TestObject4.name(), 'TestObject4', 'name of an action object');
-test.assert(self.name(), 'MyAction', 'self');
+test.assert(TestObject3.name(), 'TestObject3', 'name of an object of the script');
+test.assert(TestObject4.name(), 'TestObject4', 'name of an object of the script');
+test.assert(self.name().endsWith('unittest.js'), true, 'self.name() is the script file');
 test.assert(self.interpreter(), 'javascript', 'interpreter name');
 test.assert(Qross.interpreters().indexOf('javascript') >= 0, true, 'Qross.interpreters()');
 test.assert(obj1.myself() === obj1, true, 'identity of a returned QObject');

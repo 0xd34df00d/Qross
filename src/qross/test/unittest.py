@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: LGPL-2.0-or-later
 
 # Run by qrosstest, which publishes TestObject1 and TestObject2 through
-# the manager and TestObject3 and TestObject4 through the action.
+# the manager and TestObject3 and TestObject4 through the script.
 
 import datetime
 import unittest
 
-action = self
+script = self
 
 
 class TestQross(unittest.TestCase):
@@ -172,8 +172,8 @@ class TestQross(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.object1.func_void.connect(onInt)
 
-    def testAction(self):
-        self.assertIn("testFunction", action.functionNames())
+    def testScript(self):
+        self.assertIn("testFunction", script.functionNames())
 
     def testScriptObjects(self):
         class MyClass:

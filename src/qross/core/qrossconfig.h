@@ -52,7 +52,6 @@ namespace Qross
 // #define QROSS_OBJECT_METACALL_DEBUG
 // #define QROSS_METATYPE_DEBUG
 // #define QROSS_INTERPRETER_DEBUG
-// #define QROSS_ACTION_DEBUG
 
 // The version number of Qross. For example the interpreters use
 // it do be sure there are linked against the correct core version

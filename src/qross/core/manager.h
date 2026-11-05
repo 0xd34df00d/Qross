@@ -19,13 +19,12 @@
 
 #pragma once
 
-#include <QtCore/QStringList>
-#include <QtCore/QMap>
+#include <QtCore/QList>
 #include <QtCore/QObject>
-
-#include "qrossconfig.h"
-#include "childreninterface.h"
+#include <QtCore/QStringList>
 #include "metatype.h"
+#include "published.h"
+#include "qrossconfig.h"
 
 namespace Qross
 {
@@ -42,9 +41,7 @@ namespace Qross
      * interpreter like python or ruby. While \a Script implements
      * a flexible abstract container to deal with single script files.
      */
-    class QROSSCORE_EXPORT Manager
-        : public QObject
-        , public ChildrenInterface
+    class QROSSCORE_EXPORT Manager : public QObject
     {
         Q_OBJECT
     public:
@@ -54,54 +51,21 @@ namespace Qross
          */
         static Manager& self();
 
-        /**
-         * \return a map with \a InterpreterInfo* instances
-         * used to describe interpreters.
-         */
-        QHash<QString, InterpreterInfo*> interpreterInfos() const;
+        /// The names of the interpreters whose plugins were found, sorted.
+        Q_INVOKABLE QStringList interpreters() const;
+        /// \return whether \p name, or a former name such as "qtscript", names an interpreter.
+        bool hasInterpreter(const QString& name) const;
+        /// The description of the interpreter \p name, also under a former name, or nullptr.
+        InterpreterInfo* interpreterInfo(const QString& name) const;
+        /// The interpreter \p name, loading its plugin on first use, or nullptr.
+        Interpreter* interpreter(const QString& name) const;
+        /// The name of the interpreter whose file pattern matches \p file, or an empty string.
+        QString interpreterNameForFile(const QString& file) const;
 
-        /**
-         * \return true if there exists an interpreter with the
-         * name \p interpretername else false. A former name of an
-         * interpreter, such as "qtscript" for "javascript", counts too.
-         */
-        bool hasInterpreterInfo(const QString& interpretername) const;
-
-        /**
-         * \return the \a InterpreterInfo* matching to the defined
-         * \p interpretername or NULL if there does not exists such
-         * a interpreter.
-         */
-        InterpreterInfo* interpreterInfo(const QString& interpretername) const;
-
-        /**
-         * Return the name of the \a Interpreter that feels responsible
-         * for the defined \p file .
-         *
-         * \param file The filename we should try to determinate the
-         * interpretername for.
-         * \return The name of the \a Interpreter which will be used
-         * to execute the file or QString() if we failed to determinate
-         * a matching interpreter for the file.
-         */
-        const QString interpreternameForFile(const QString& file);
-
-        /**
-         * Return the \a Interpreter instance defined by
-         * the interpretername.
-         *
-         * \param interpretername The name of the interpreter.
-         * e.g. "python" or "javascript".
-         * \return The Interpreter instance or NULL if there does not exists
-         * an interpreter with such an interpretername.
-         */
-        Interpreter* interpreter(const QString& interpretername) const;
-
-        /**
-         * Allows to free and finalize the interpreters before
-         * static cleanup of singleton instances takes place.
-         */
-        void finalize();
+        /// Makes \p object visible to every script as \p name, or as its object name.
+        void addObject(QObject* object, const QString& name = {}, ObjectOptions options = {});
+        void removeObject(const QString& name);
+        QList<Published> publishedObjects() const;
 
         /**
          * \return the \a MetaTypeHandler instance for custom types
@@ -154,18 +118,9 @@ namespace Qross
          * \return whether \p typeName has a handler assigned or not.
          */
         bool hasHandlerAssigned(const QByteArray& typeName) const;
-    public Q_SLOTS:
 
-        /**
-         * \return a list of names of all supported scripting interpreters.
-         * The list may contain for example "python", "ruby" and "javascript" depending
-         * on what interpreter-plugins are installed.
-         */
-        QStringList interpreters() const;
-
-        void addQObject(QObject* obj, const QString& name = QString());
-        QObject* qobject(const QString& name) const;
-        QStringList qobjectNames() const;
+        /// Deletes the interpreters and the handlers before static destruction does it in an unknown order.
+        void finalize();
     private:
         /// \internal d-pointer class.
         class Private;
@@ -185,5 +140,3 @@ namespace Qross
     };
 
 }
-
-Q_DECLARE_METATYPE(Qross::Manager*)

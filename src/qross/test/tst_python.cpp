@@ -50,15 +50,14 @@ class tst_Python : public QObject
 
     Host m_global;
 
-    static std::unique_ptr<Qross::Script> run(const QByteArray& code, QObject* local = nullptr, Qross::ChildrenInterface::Options options = Qross::ChildrenInterface::NoOption)
+    static std::unique_ptr<Qross::Script> run(const QByteArray& code, QObject* local = nullptr, Qross::ObjectOptions options = {})
     {
-        auto action = std::make_unique<Qross::Script>(nullptr, QStringLiteral("tst"));
-        action->setInterpreter(QStringLiteral("python"));
-        action->setCode(code);
+        Qross::Config config { .source = Qross::Code { code, QStringLiteral("tst") }, .interpreter = QStringLiteral("python") };
         if (local)
-            action->addObject(local, QStringLiteral("Local"), options);
-        action->trigger();
-        return action;
+            config.objects << Qross::Published { local, QStringLiteral("Local"), options };
+        auto script = std::make_unique<Qross::Script>(std::move(config));
+        (void)script->run();
+        return script;
     }
 
     static QByteArray describe(const Qross::Script& script)
@@ -76,35 +75,35 @@ private Q_SLOTS:
     {
         Qross::Manager& manager = Qross::Manager::self();
         QVERIFY(manager.interpreters().contains(QStringLiteral("python")));
-        QCOMPARE(manager.interpreternameForFile(QStringLiteral("dir/test.py")), QStringLiteral("python"));
+        QCOMPARE(manager.interpreterNameForFile(QStringLiteral("dir/test.py")), QStringLiteral("python"));
         QVERIFY(manager.interpreter(QStringLiteral("python")));
     }
 
     void reportsSyntaxErrors()
     {
-        const auto action = run("ok = 1\nif (");
-        QVERIFY(action->error());
-        QVERIFY2(action->error()->message.startsWith(QStringLiteral("SyntaxError")), qPrintable(action->error()->message));
-        QCOMPARE(action->error()->line, 2);
+        const auto script = run("ok = 1\nif (");
+        QVERIFY(script->error());
+        QVERIFY2(script->error()->message.startsWith(QStringLiteral("SyntaxError")), qPrintable(script->error()->message));
+        QCOMPARE(script->error()->line, 2);
     }
 
     void reportsExceptions()
     {
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 def boom():
     raise ValueError('boom')
 
 boom()
 )py");
-        QVERIFY(action->error());
-        QCOMPARE(action->error()->message, QStringLiteral("ValueError: boom"));
-        QCOMPARE(action->error()->line, 3);
-        QVERIFY(action->error()->trace.contains(QStringLiteral("in boom")));
+        QVERIFY(script->error());
+        QCOMPARE(script->error()->message, QStringLiteral("ValueError: boom"));
+        QCOMPARE(script->error()->line, 3);
+        QVERIFY(script->error()->trace.contains(QStringLiteral("in boom")));
     }
 
     void listsFunctions()
     {
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 import os
 
 def first():
@@ -117,13 +116,13 @@ class Third:
 
 not_a_function = 1
 )py");
-        QVERIFY2(!action->error(), describe(*action).constData());
-        QCOMPARE(action->functionNames(), QStringList({ QStringLiteral("first"), QStringLiteral("second"), QStringLiteral("Third") }));
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->functionNames(), QStringList({ QStringLiteral("first"), QStringLiteral("second"), QStringLiteral("Third") }));
     }
 
     void callsFunctions()
     {
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 def add(a, b):
     return a + b
 
@@ -133,28 +132,28 @@ def same(x):
 def nothing():
     pass
 )py");
-        QVERIFY2(!action->error(), describe(*action).constData());
-        QCOMPARE(action->callFunction(QStringLiteral("add"), { 40, 2 })->toInt(), 42);
-        QCOMPARE(action->callFunction(QStringLiteral("same"), { QStringLiteral("text") })->toString(), QStringLiteral("text"));
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->call(QStringLiteral("add"), { 40, 2 })->toInt(), 42);
+        QCOMPARE(script->call(QStringLiteral("same"), { QStringLiteral("text") })->toString(), QStringLiteral("text"));
         const QVariantList list({ 1, QStringLiteral("a") });
-        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(list) })->toList(), list);
+        QCOMPARE(script->call(QStringLiteral("same"), { QVariant(list) })->toList(), list);
         const QVariantMap map({ { QStringLiteral("k"), 1 } });
-        QCOMPARE(action->callFunction(QStringLiteral("same"), { QVariant(map) })->toMap(), map);
-        QVERIFY(!action->callFunction(QStringLiteral("nothing"))->isValid());
-        QVERIFY(!action->error());
+        QCOMPARE(script->call(QStringLiteral("same"), { QVariant(map) })->toMap(), map);
+        QVERIFY(!script->call(QStringLiteral("nothing"))->isValid());
+        QVERIFY(!script->error());
 
-        const auto failed = action->callFunction(QStringLiteral("missing"));
+        const auto failed = script->call(QStringLiteral("missing"));
         QVERIFY(!failed);
         QVERIFY(failed.error().message.contains(QStringLiteral("missing")));
     }
 
     void reportsExceptionsFromCalls()
     {
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 def bad(x):
     raise TypeError('bad ' + str(x))
 )py");
-        const auto failed = action->callFunction(QStringLiteral("bad"), { 1 });
+        const auto failed = script->call(QStringLiteral("bad"), { 1 });
         QVERIFY(!failed);
         QCOMPARE(failed.error().message, QStringLiteral("TypeError: bad 1"));
         QCOMPARE(failed.error().line, 3);
@@ -162,16 +161,16 @@ def bad(x):
 
     void evaluates()
     {
-        const auto action = run("base = 40");
-        QCOMPARE(action->evaluate("base + 2")->toInt(), 42);
-        QVERIFY(!action->error());
-        QVERIFY(!action->evaluate("None")->isValid());
+        const auto script = run("base = 40");
+        QCOMPARE(script->evaluate("base + 2")->toInt(), 42);
+        QVERIFY(!script->error());
+        QVERIFY(!script->evaluate("None")->isValid());
 
-        QVERIFY(!action->evaluate("extra = 5")->isValid());
-        QVERIFY2(!action->error(), describe(*action).constData());
-        QCOMPARE(action->evaluate("extra")->toInt(), 5);
+        QVERIFY(!script->evaluate("extra = 5")->isValid());
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("extra")->toInt(), 5);
 
-        const auto failed = action->evaluate("(");
+        const auto failed = script->evaluate("(");
         QVERIFY(!failed);
         QVERIFY(failed.error().message.startsWith(QStringLiteral("SyntaxError")));
     }
@@ -180,7 +179,7 @@ def bad(x):
     {
         Host local;
         local.setObjectName(QStringLiteral("Local"));
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 ok = (self.name() == 'tst'
       and 'python' in Qross.interpreters()
       and Global.objectName == 'Global'
@@ -192,31 +191,31 @@ ok = (self.name() == 'tst'
       and 'fired' in dir(Global))
 )py",
             &local);
-        QVERIFY2(!action->error(), describe(*action).constData());
-        QVERIFY(action->evaluate("ok")->toBool());
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QVERIFY(script->evaluate("ok")->toBool());
     }
 
     void connectsSignalsAutomatically()
     {
         Host local;
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 got = None
 
 def fired(n):
     global got
     got = n
 )py",
-            &local, Qross::ChildrenInterface::AutoConnectSignals);
-        QVERIFY2(!action->error(), describe(*action).constData());
+            &local, Qross::AutoConnectSignals);
+        QVERIFY2(!script->error(), describe(*script).constData());
         Q_EMIT local.fired(7);
         Q_EMIT local.named(QStringLiteral("ignored"));
-        QCOMPARE(action->evaluate("got")->toInt(), 7);
+        QCOMPARE(script->evaluate("got")->toInt(), 7);
     }
 
     void connectsSignalsFromScripts()
     {
         Host local;
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 got = []
 
 def on(n):
@@ -228,30 +227,30 @@ Local.fired.disconnect(on)
 Local.fired(4)
 )py",
             &local);
-        QVERIFY2(!action->error(), describe(*action).constData());
-        QCOMPARE(action->evaluate("got")->toList(), QVariantList({ 3 }));
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("got")->toList(), QVariantList({ 3 }));
     }
 
     void deliversSignalsFromOtherThreads()
     {
         Host local;
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 got = None
 
 def fired(n):
     global got
     got = n
 )py",
-            &local, Qross::ChildrenInterface::AutoConnectSignals);
-        QVERIFY2(!action->error(), describe(*action).constData());
+            &local, Qross::AutoConnectSignals);
+        QVERIFY2(!script->error(), describe(*script).constData());
         std::thread([&local] { Q_EMIT local.fired(9); }).join();
         QCoreApplication::processEvents();
-        QCOMPARE(action->evaluate("got")->toInt(), 9);
+        QCOMPARE(script->evaluate("got")->toInt(), 9);
     }
 
     void wrapsScriptObjects()
     {
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 class Counter:
     def __init__(self, start):
         self.n = start
@@ -275,56 +274,56 @@ results = {
     'missing': Global.call(counter, 'nope'),
 }
 )py");
-        QVERIFY2(!action->error(), describe(*action).constData());
-        QCOMPARE(action->evaluate("results['first']")->toInt(), 42);
-        QCOMPARE(action->evaluate("results['second']")->toInt(), 43);
-        QCOMPARE(action->evaluate("results['greeting']")->toString(), QStringLiteral("hi bob"));
-        QCOMPARE(action->evaluate("results['methods']")->toStringList(), QStringList(QStringLiteral("greet")));
-        QCOMPARE(action->evaluate("results['identity']")->toBool(), true);
-        QCOMPARE(action->evaluate("results['nullObject']")->toBool(), true);
-        QVERIFY(!action->evaluate("results['missing']")->isValid());
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("results['first']")->toInt(), 42);
+        QCOMPARE(script->evaluate("results['second']")->toInt(), 43);
+        QCOMPARE(script->evaluate("results['greeting']")->toString(), QStringLiteral("hi bob"));
+        QCOMPARE(script->evaluate("results['methods']")->toStringList(), QStringList(QStringLiteral("greet")));
+        QCOMPARE(script->evaluate("results['identity']")->toBool(), true);
+        QCOMPARE(script->evaluate("results['nullObject']")->toBool(), true);
+        QVERIFY(!script->evaluate("results['missing']")->isValid());
     }
 
     void callsScriptObjectsFromOutside()
     {
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 class Answer:
     def answer(self):
         return 42
 
 Global.keep(Answer())
 )py");
-        QVERIFY2(!action->error(), describe(*action).constData());
+        QVERIFY2(!script->error(), describe(*script).constData());
         const Qross::Object::Ptr kept = m_global.kept();
         m_global.forget();
         QVERIFY(kept);
         QCOMPARE(kept->callMethod(QStringLiteral("answer"))->toInt(), 42);
 
-        action->finalize();
+        script->reset();
         QCOMPARE(kept->callMethod(QStringLiteral("answer"))->toInt(), 42);
         QVERIFY(!kept->callMethod(QStringLiteral("nope")));
     }
 
     void startsAfreshOnRerun()
     {
-        const auto action = run("runs = globals().get('runs', 0) + 1");
-        QVERIFY2(!action->error(), describe(*action).constData());
-        action->trigger();
-        QVERIFY2(!action->error(), describe(*action).constData());
-        QCOMPARE(action->evaluate("runs")->toInt(), 1);
+        const auto script = run("runs = globals().get('runs', 0) + 1");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        (void)script->run();
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("runs")->toInt(), 1);
     }
 
     void refusesDeletedObjects()
     {
         auto* const local = new Host;
-        const auto action = run(R"py(
+        const auto script = run(R"py(
 def name():
     return Local.objectName
 )py",
             local);
-        QVERIFY2(!action->error(), describe(*action).constData());
+        QVERIFY2(!script->error(), describe(*script).constData());
         delete local;
-        const auto failed = action->callFunction(QStringLiteral("name"));
+        const auto failed = script->call(QStringLiteral("name"));
         QVERIFY(!failed);
         QVERIFY(failed.error().message.startsWith(QStringLiteral("RuntimeError")));
     }

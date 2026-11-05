@@ -9,7 +9,6 @@
 #include "context.h"
 #include <QtCore/QMetaMethod>
 #include <QtCore/QSet>
-#include "../core/manager.h"
 #include "../core/script.h"
 #include "call.h"
 #include "function.h"
@@ -79,10 +78,8 @@ std::expected<void, Error> RubyContext::ensureContext()
     rb_ivar_set(m_self, objectsKey(), rb_hash_new());
     // Extended rather than defined on self, so that they are not functions of the script.
     const VALUE accessors = rb_module_new();
-    for (const auto& [name, object] : Manager::self().objects().asKeyValueRange())
-        publish(accessors, name, object);
-    for (const auto& [name, object] : script()->objects().asKeyValueRange())
-        publish(accessors, name, object);
+    for (const Published& published : script()->publishedObjects())
+        publish(accessors, published.name, published.object);
     rb_extend_object(m_self, accessors);
 
     const VALUE arguments[] = { fromString(QStringLiteral("binding")), fromString(QStringLiteral("<qross>")), INT2FIX(1) };
@@ -112,7 +109,7 @@ void RubyContext::appendLoadPath()
 {
     // Appended rather than put first, so that a script named like an
     // installed library does not shadow it for itself.
-    const QString directory = script()->currentPath();
+    const QString directory = script()->directory();
     if (directory.isEmpty())
         return;
     const VALUE path = rb_gv_get("$LOAD_PATH");
@@ -137,7 +134,7 @@ std::expected<void, Error> RubyContext::execute()
     resetContext();
     if (const auto context = ensureContext(); !context)
         return context;
-    if (const auto result = run(script()->code(), script()->file().isEmpty() ? script()->name() : script()->file()); !result)
+    if (const auto result = run(script()->code(), script()->name()); !result)
         return std::unexpected(result.error());
     connectSignals();
     return {};
@@ -152,14 +149,11 @@ VALUE RubyContext::functions()
 void RubyContext::connectSignals()
 {
     const VALUE names = functions();
-    const QHash<QString, ChildrenInterface::Options> options = script()->objectOptions();
-    for (auto it = options.cbegin(); it != options.cend(); ++it)
+    for (const Published& published : script()->publishedObjects())
     {
-        if (!(it.value() & ChildrenInterface::AutoConnectSignals))
+        if (!(published.options & AutoConnectSignals))
             continue;
-        QObject* const sender = script()->object(it.key());
-        if (!sender)
-            continue;
+        QObject* const sender = published.object;
 
         // Overloads share a name, so one connection per name.
         QSet<QByteArray> connected;

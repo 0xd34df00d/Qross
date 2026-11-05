@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: LGPL-2.0-or-later
 
 # Run by qrosstest, which publishes TestObject1 and TestObject2 through
-# the manager and TestObject3 and TestObject4 through the action.
+# the manager and TestObject3 and TestObject4 through the script.
 
 require 'date'
 require 'json'
 
-ACTION = self
+SCRIPT = self
 
 def testFunction(*args) = args
 
@@ -78,8 +78,8 @@ class TestQross
   def testObjects
     @checks.equal('TestObject1', @object1.name, 'name()')
     @checks.equal('TestObject2', @object2.objectName, 'objectName')
-    @checks.equal('TestObject3', TestObject3.name, 'action object')
-    @checks.equal('TestObject4', TestObject4.name, 'another action object')
+    @checks.equal('TestObject3', TestObject3.name, 'object of the script')
+    @checks.equal('TestObject4', TestObject4.name, 'another object of the script')
     @checks.equal('TestObject', @object1.className, 'className')
     @checks.equal(@object1, @object1.myself, 'QObject* result')
     @checks.equal(@object1, @object1.myself2, 'TestObject* result')
@@ -255,8 +255,8 @@ class TestQross
     @checks.raises(ArgumentError, 'connect() needs a handler') { @object1.connect(:signalInt) }
   end
 
-  def testAction
-    @checks.assert(ACTION.functionNames.include?('testFunction'), 'functionNames()')
+  def testScript
+    @checks.assert(SCRIPT.functionNames.include?('testFunction'), 'functionNames()')
   end
 
   def testScriptObjects
