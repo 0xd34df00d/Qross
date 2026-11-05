@@ -22,7 +22,6 @@
 #include <QtCore/QStringList>
 #include <QtCore/QMap>
 #include <QtCore/QObject>
-#include <QtCore/QUrl>
 
 #include "qrossconfig.h"
 #include "childreninterface.h"
@@ -33,8 +32,6 @@ namespace Qross
 
     // Forward declarations.
     class Interpreter;
-    class Action;
-    class ActionCollection;
     class InterpreterInfo;
 
     /**
@@ -107,13 +104,6 @@ namespace Qross
         void finalize();
 
         /**
-         * \return the root \a ActionCollection instance. Each collection
-         * could have children of other collections and/or
-         * \a Action instances.
-         */
-        ActionCollection* actionCollection() const;
-
-        /**
          * \return the \a MetaTypeHandler instance for custom types
          * of type \p typeName .
          *
@@ -161,25 +151,6 @@ namespace Qross
         void registerMetaTypeHandler(const QByteArray& typeName, MetaTypeHandler* handler);
 
         /**
-         * Returns true if strict type handling is enabled.
-         *
-         * \since 4.2
-         */
-        bool strictTypesEnabled() const;
-
-        /**
-         * Enable more strict type handling. If enabled then scripting-backends don't
-         * handle unknown pointer-types where no MetaTypeHandler was registered for.
-         * If disabled, such unknown types will be reinterpret_cast to QObject* what
-         * allows to also handle unknown QObject's but will also result in a crash
-         * if the unknown type isn't a QObject. Per default strict type handling is
-         * enabled.
-         *
-         * \since 4.2
-         */
-        void setStrictTypesEnabled(bool enabled);
-
-        /**
          * \return whether \p typeName has a handler assigned or not.
          */
         bool hasHandlerAssigned(const QByteArray& typeName) const;
@@ -192,60 +163,9 @@ namespace Qross
          */
         QStringList interpreters() const;
 
-        /**
-         * \return true if there exists a \a Action QObject instance
-         * which is child of this \a Manager instance and is defined as \p name
-         * else false is returned.
-         */
-        bool hasAction(const QString& name);
-
-        /**
-         * \return the \a Action QObject instance defined with \p name which is
-         * child of this \a Manager instance. If there exists no such \a Action
-         * yet, create one.
-         */
-        QObject* action(const QString& name);
-
-        /**
-         * Load and return an external module. Modules are dynamic loadable
-         * plugins which could be loaded on demand to provide additional
-         * functionality.
-         *
-         * \param modulename The name of the module we should try to load.
-         * \return The QObject instance that repesents the module or NULL
-         * if loading failed.
-         */
-        QObject* module(const QString& modulename);
-
-        /**
-         * External modules are dynamically loadable and are normally deleted
-         * when the qross library is unloaded.
-         * Applications may choose to call deleteModules() instead to control
-         * deletion of the modules at another time.
-         */
-        void deleteModules();
-
-        /**
-         * Execute a script file.
-         * \param file The script file that should be executed.
-         */
-        bool executeScriptFile(const QUrl& file = QUrl());
-
         void addQObject(QObject* obj, const QString& name = QString());
         QObject* qobject(const QString& name) const;
         QStringList qobjectNames() const;
-
-    Q_SIGNALS:
-
-        /**
-         * This signal is emitted when the execution of a script is started.
-         */
-        void started(Qross::Action*);
-
-        /**
-         * This signal is emitted when the execution of a script is finished.
-         */
-        void finished(Qross::Action*);
     private:
         /// \internal d-pointer class.
         class Private;

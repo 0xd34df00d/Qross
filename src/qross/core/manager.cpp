@@ -19,22 +19,14 @@
 
 #include "manager.h"
 #include "interpreter.h"
-#include "action.h"
-#include "actioncollection.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QArgument>
-#include <QtCore/QFile>
 #include <QtCore/QRegularExpression>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
-#include <QtCore/QPointer>
 #include <QtCore/QLibrary>
 #include <QtCore/QCoreApplication>
-
-extern "C" {
-typedef QObject* (*def_module_func)();
-}
 
 using namespace Qross;
 
@@ -54,17 +46,8 @@ namespace Qross
         /// Former names of interpreters, still accepted on lookup.
         QHash<QString, QString> aliases;
 
-        /// Loaded modules.
-        QHash<QString, QPointer<QObject>> modules;
-
-        /// The collection of \a Action instances.
-        ActionCollection* collection;
-
         /// List with custom handlers for metatypes.
         QHash<QByteArray, MetaTypeHandler*> wrappers;
-
-        /// Strict type handling enabled or disabled.
-        bool strictTypesEnabled;
     };
 
 }
@@ -129,9 +112,7 @@ Manager::Manager()
     , ChildrenInterface()
     , d(new Private())
 {
-    d->strictTypesEnabled = true;
     setObjectName("Qross");
-    d->collection = new ActionCollection("main");
 
 #ifdef QROSS_PYTHON_LIBRARY
     if (void* funcPtr = loadLibrary(QROSS_PYTHON_LIBRARY, "qrossinterpreter"))
@@ -187,7 +168,6 @@ Manager::Manager()
 Manager::~Manager()
 {
     finalize();
-    delete d->collection;
     delete d;
 }
 
@@ -240,114 +220,11 @@ void Manager::finalize()
 
     qDeleteAll(d->interpreterinfos);
     d->interpreterinfos.clear();
-
-    qDeleteAll(d->modules);
-    d->modules.clear();
 }
 
 QStringList Manager::interpreters() const
 {
     return d->interpreters;
-}
-
-ActionCollection* Manager::actionCollection() const
-{
-    return d->collection;
-}
-
-bool Manager::hasAction(const QString& name)
-{
-    return findChild<Action*>(name) != 0L;
-}
-
-QObject* Manager::action(const QString& name)
-{
-    Action* action = findChild<Action*>(name);
-    if (!action)
-    {
-        action = new Action(this, name);
-#if 0
-        d->actioncollection->insert(action); //FIXME should we really remember the action?
-#endif
-    }
-    return action;
-}
-
-QObject* Manager::module(const QString& modulename)
-{
-    if (d->modules.contains(modulename))
-    {
-        QObject* obj = d->modules[modulename];
-        if (obj)
-            return obj;
-    }
-
-    if (modulename.isEmpty() || modulename.contains(QRegularExpression("[^a-zA-Z0-9]")))
-    {
-        qrosswarning(QString("Invalid module name '%1'").arg(modulename));
-        return 0;
-    }
-
-    QByteArray libraryname = QString("qrossmodule%1").arg(modulename).toLower().toLatin1();
-
-#if 0
-    KLibLoader* loader = KLibLoader::self();
-    KLibrary* lib = loader->library( libraryname, QLibrary::ExportExternalSymbolsHint );
-    if( ! lib ) { //FIXME this fallback-code should be in KLibLoader imho.
-        lib = loader->library( QString("lib%1").arg(libraryname), QLibrary::ExportExternalSymbolsHint );
-        if( ! lib ) {
-            qrosswarning( QString("Failed to load module '%1': %2").arg(modulename).arg(loader->lastErrorMessage()) );
-            return 0;
-        }
-    }
-
-    def_module_func func;
-    func = (def_module_func) lib->resolveFunction("qrossmodule");
-    if( ! func ) {
-        qrosswarning( QString("Failed to determinate init function in module '%1'").arg(modulename) );
-        return 0;
-    }
-
-    QObject* module = (QObject*) (func)(); // call the function
-    lib->unload(); // unload the library
-
-    if( ! module ) {
-        qrosswarning( QString("Failed to load module object '%1'").arg(modulename) );
-        return 0;
-    }
-#else
-    if (void* funcPtr = loadLibrary(libraryname, "qrossmodule"))
-    {
-        def_module_func func = (def_module_func)funcPtr;
-        Q_ASSERT(func);
-        QObject* module = (QObject*)(func)(); // call the function
-        Q_ASSERT(module);
-        // qrossdebug( QString("Manager::module Module successfully loaded: modulename=%1 module.objectName=%2 module.className=%3").arg(modulename).arg(module->objectName()).arg(module->metaObject()->className()) );
-        d->modules.insert(modulename, module);
-        return module;
-    }
-    else
-    {
-        qrosswarning(QString("Failed to load module '%1'").arg(modulename));
-    }
-#endif
-    return 0;
-}
-
-void Manager::deleteModules()
-{
-    qDeleteAll(d->modules);
-    d->modules.clear();
-}
-
-bool Manager::executeScriptFile(const QUrl& file)
-{
-    qrossdebug(QString("Manager::executeScriptFile() file='%1'").arg(file.toString()));
-    Action* action = new Action(0 /*no parent*/, file);
-    action->trigger();
-    bool ok = !action->hadError();
-    delete action; // action->delayedDestruct();
-    return ok;
 }
 
 void Manager::addQObject(QObject* obj, const QString& name)
@@ -383,16 +260,6 @@ void Manager::registerMetaTypeHandler(const QByteArray& typeName, MetaTypeHandle
 void Manager::registerMetaTypeHandler(const QByteArray& typeName, MetaTypeHandler* handler)
 {
     d->wrappers.insert(typeName, handler);
-}
-
-bool Manager::strictTypesEnabled() const
-{
-    return d->strictTypesEnabled;
-}
-
-void Manager::setStrictTypesEnabled(bool enabled)
-{
-    d->strictTypesEnabled = enabled;
 }
 
 bool Manager::hasHandlerAssigned(const QByteArray& typeName) const

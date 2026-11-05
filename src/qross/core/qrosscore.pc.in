@@ -6,6 +6,6 @@ includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
 Name: qrosscore
 Description: Qross C++ scripting core library
 Version: @PROJECT_VERSION@
-Requires: Qt6Core Qt6Gui Qt6Xml
+Requires: Qt6Core Qt6Gui
 Libs: -L${libdir} -lqrosscore@SHLIB_SUFFIX@
 Cflags: -I${includedir}

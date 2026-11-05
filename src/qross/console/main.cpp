@@ -110,6 +110,5 @@ int main(int argc, char** argv)
 
     // Free the KApplication instance and exit the program.
     delete app;
-    Qross::Manager::self().deleteModules();
     return result;
 }

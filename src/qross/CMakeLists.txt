@@ -13,7 +13,7 @@ option(QROSS_WITH_JAVASCRIPT "Build the JavaScript backend" ON)
 option(QROSS_WITH_PYTHON "Build the Python backend" ON)
 option(QROSS_WITH_RUBY "Build the Ruby backend" ON)
 
-find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Xml Test)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Test)
 if(QROSS_WITH_JAVASCRIPT)
     find_package(Qt6 6.8 REQUIRED COMPONENTS Qml)
 endif()

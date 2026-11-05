@@ -21,14 +21,11 @@
 
 #include <QVariant>
 #include <QObject>
-#include <QDir>
 #include <QUrl>
 #include <QAction>
 
 #include "errorinterface.h"
 #include "childreninterface.h"
-
-class QDomElement;
 
 namespace Qross
 {
@@ -40,10 +37,6 @@ namespace Qross
      * like a single standalone script file. Each action holds a reference
      * to the matching @a Qross::Interpreter created @a Qross::Script
      * instance.
-     *
-     * The \a Manager takes care of handling the \a Action instances
-     * application by providing access to \a ActionCollection containers
-     * for those \a Action instances.
      *
      * Once you've such a Action instance you're able to perform actions
      * with it like executing scripting code.
@@ -105,9 +98,8 @@ namespace Qross
          * \param name The unique name this Action has. It's used
          * e.g. at the \a Manager to identify the Action. The
          * name is accessible via \a QObject::objectName .
-         * \deprecated since 4.3: pass search path to fromDomElement() and toDomElement()
          */
-        Action(QObject* parent, const QString& name, const QDir& packagepath = QDir()); // BIC may be removed in favour of the next c'tor
+        Action(QObject* parent, const QString& name); // BIC may be removed in favour of the next c'tor
 
         /**
          * Constructor.
@@ -126,40 +118,6 @@ namespace Qross
          * Destructor.
          */
         virtual ~Action();
-
-        /**
-         * Method to read settings from the QDomElement \p element that
-         * contains details about e.g. the displayed text, the file to
-         * execute or the used interpreter.
-         * \todo BIC merge
-         */
-        void fromDomElement(const QDomElement& element);
-
-        /**
-         * Method to read settings from the QDomElement \p element that
-         * contains details about e.g. the displayed text, the file to
-         * execute or the used interpreter.
-         *
-         * \param searchPath List of directories where to search the script if its path is relative
-         * First item is given the highest priority.
-         */
-        void fromDomElement(const QDomElement& element, const QStringList& searchPath /* = QStringList()*/);
-
-        /**
-         * \return a QDomElement that contains the settings like e.g. the
-         * displayed text, the file to execute or the used interpreter
-         * of this \a Action instance.
-         */
-        QDomElement toDomElement() const;
-
-        /**
-         * \return a QDomElement that contains the settings like e.g. the
-         * displayed text, the file to execute or the used interpreter
-         * of this \a Action instance.
-         * \param searchPath if given, find the closest directory containing the scriptfile
-         *  and write relative filepath
-         */
-        QDomElement toDomElement(const QStringList& searchPath /* = QStringList()*/) const;
 
         /**
          * Initialize the \a Script instance.
@@ -205,42 +163,6 @@ namespace Qross
          * \return the objectName for this Action.
          */
         QString name() const;
-
-        /**
-         * \return the version number this Action has.
-         * Per default 0 is returned.
-         */
-        int version() const;
-
-        /**
-         * \return the optional description for this Action.
-         */
-        QString description() const;
-
-        /**
-         * Set the optional description for this Action.
-         */
-        void setDescription(const QString& description);
-
-        /**
-         * Return the name of the icon.
-         */
-        QString iconName() const;
-
-        /**
-         * Set the name of the icon to \p iconname .
-         */
-        void setIconName(const QString& iconname);
-
-        /**
-         * Return true if this Action is enabled else false is returned.
-         */
-        bool isEnabled() const;
-
-        /**
-         * Set the enable state of this Action to \p enabled .
-         */
-        void setEnabled(bool enabled);
 
         /**
          * \return the script file that should be executed.
@@ -348,17 +270,6 @@ namespace Qross
     Q_SIGNALS:
 
         /**
-         * This signal is emitted if the content of the Action
-         * was changed. The \a ActionCollection instances this Action
-         * is a child of are connected with this signal to fire up
-         * their own updated signal if an Action of them was updated.
-         */
-        void updated();
-
-        /// This signal is emitted when the data of the Action is changed
-        void dataChanged(Action*);
-
-        /**
          * This signal is emitted before the script got executed.
          */
         void started(Qross::Action*);
@@ -367,11 +278,6 @@ namespace Qross
          * This signal is emitted after the script got executed.
          */
         void finished(Qross::Action*);
-
-        /**
-         * This signal is emitted once a script finalized.
-         */
-        void finalized(Qross::Action*);
 
     private Q_SLOTS:
 
