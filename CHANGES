@@ -11,6 +11,30 @@ Unreleased
   model and view, the GUI demo scripts, and the KJS, Lua, Java and
   Falcon interpreter entries.
 * Core: Action and Manager no longer derive from QScriptable.
+* API: Action is now Script, built once from a Config with a File or
+  Code source, the interpreter (deduced from the extension when
+  empty), option overrides and the published objects; nothing but
+  the objects changes afterwards. run() replaces trigger() and
+  returns std::expected; call() and evaluate() return the value or
+  an Error of message, trace and line, and error() keeps the latest.
+  Script is a QObject, not a QAction: the enabled state, text, icon,
+  version, description and the XML round trip are gone with
+  ActionCollection. The backend base class Script is now Context,
+  created by Interpreter::createContext(), and Object::callMethod()
+  returns std::expected. ErrorInterface and ChildrenInterface are
+  gone; published objects are held through QPointer and
+  AutoConnectSignals works for Manager objects too.
+* Manager: hasInterpreter(), interpreterNameForFile(), addObject(),
+  removeObject() and publishedObjects(); module(), deleteModules(),
+  action(), hasAction(), actionCollection(), executeScriptFile(),
+  strictTypesEnabled(), interpreterInfos(), addQObject(), qobject(),
+  qobjectNames() and the started/finished signals are gone.
+  InterpreterInfo declares its options as a QVariantMap of defaults.
+* Scripts see self with name(), file(), directory(), interpreter()
+  and functionNames(); callFunction() and evaluate() on self are
+  gone.
+* The core depends on QtCore only; qrosscore.pc no longer requires
+  QtGui and QtXml. The console runs on QCoreApplication.
 * Core: MetaFunction, the signal relay, connects through
   QMetaObject::connect and receives invocations in qt_metacall instead
   of building a metaobject per connection, so the core needs no private
@@ -18,11 +42,9 @@ Unreleased
 * Core: interpreter plugins are looked up in QROSS_PLUGIN_PATH, the
   installation's library directory and Qt's library paths. Former
   interpreter names remain valid as aliases; qtscript names javascript.
-* Core: the version attribute of an action was serialized as a
-  one-character string.
 * JavaScript: the QtScript backend is replaced by one on QQmlEngine. The
   interpreter is called javascript and claims *.js and *.es. Scripts see
-  the action as self, the manager as Qross and every published object
+  the script as self, the manager as Qross and every published object
   with its enum keys as properties; signals have connect(). Object
   literals convert to QRect, QPoint and QSize, and the qml option, on by
   default, imports QtQml so that QModelIndex and its relatives are usable.
@@ -40,7 +62,7 @@ Unreleased
   script is appended to sys.path.
 * Ruby: rewritten on the C API for Ruby 3.2 or later. Ruby starts the way
   the ruby binary does, with RubyGems and the load path available.
-  Scripts run with the action as self in a binding that keeps local
+  Scripts run with the script as self in a binding that keeps local
   variables across evaluate(); each QMetaObject gets a Ruby class under
   Qross:: with slots, signals, properties and enum keys as methods;
   connect() and disconnect() take a signal name or signature and a block

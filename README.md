@@ -50,30 +50,36 @@ The tests of a build tree point the variable at its `plugins/` directory.
 ## From the application
 
 ```cpp
-#include <qross/core/action.h>
 #include <qross/core/manager.h>
+#include <qross/core/script.h>
 
 // Visible to every script, under its object name.
 Qross::Manager::self().addObject(document);
 
-Qross::Action action(nullptr, QStringLiteral("greeter"));
-action.setInterpreter(QStringLiteral("python"));
-action.setCode("def greet(name):\n    return 'hello ' + name + ' from ' + Document.title\n");
-// Visible to this script only; a script function named like one of the
-// view's signals is connected to it.
-action.addObject(view, QStringLiteral("View"), Qross::ChildrenInterface::AutoConnectSignals);
+Qross::Script greeter({
+    .source = Qross::Code { "def greet(name):\n    return 'hello ' + name + ' from ' + Document.title\n", QStringLiteral("greeter") },
+    .interpreter = QStringLiteral("python"),
+    // Visible to this script only; a script function named like one of
+    // the view's signals is connected to it after each run.
+    .objects = { { view, QStringLiteral("View"), Qross::AutoConnectSignals } },
+});
 
-action.trigger();
-if (action.hadError())
-    qWarning() << action.errorMessage() << "at line" << action.errorLineNo();
-const QVariant greeting = action.callFunction(QStringLiteral("greet"), { QStringLiteral("world") });
+if (const auto result = greeter.run(); !result)
+    qWarning() << result.error().message << "at line" << result.error().line;
+const QVariant greeting = greeter.call(QStringLiteral("greet"), { QStringLiteral("world") }).value_or(QVariant());
 ```
 
-An `Action` holds one script: its code or file, its interpreter and the
-objects it publishes. `trigger()` runs it; afterwards `callFunction()`
+A `Script` is built from a `Config`: a `File` or `Code` source, the
+interpreter (deduced from the file extension when left empty), overrides
+of the backend's options and the objects the script sees. `run()` runs
+the source afresh each time, reading a `File` again; afterwards `call()`
 calls a function the script defined, `evaluate()` runs code in the
-script's context and `functionNames()` lists what can be called. Every
-run starts the script afresh.
+script's context and `functionNames()` lists what can be called.
+`run()`, `call()` and `evaluate()` return `std::expected`, with an
+`Error` carrying the message, the trace and the line; `error()` keeps
+the latest one. `reset()` drops the state of the runs so far. Objects
+can be added with `addObject()` between runs; everything else is fixed
+at construction.
 
 Slots and properties exchange the Qt value types, containers of them,
 pointers to QObjects and `Qross::Object::Ptr`. The latter carries a
@@ -87,7 +93,7 @@ back.
 
 ## From the scripts
 
-Scripts see the action as `self`, the manager as `Qross` and every
+Scripts see the script as `self`, the manager as `Qross` and every
 published object under its name. Slots, invokables and signals are
 methods, calling a signal emits it, properties are attributes and enum
 keys are attributes of the object. Given a `Player` with a `volume`
@@ -133,21 +139,22 @@ QML ownership rules, so a parentless QObject returned from a slot becomes
 garbage-collectable by the engine unless it is given a parent or
 `QJSEngine::CppOwnership`.
 
-A script runs on the thread that triggers its action. Python callables can
-be called from any thread. Ruby runs only on the thread that started it,
-and signals emitted elsewhere reach their Ruby handlers through that
-thread's event loop. JavaScript engines must stay on their thread.
+A script runs on the thread that calls its `run()`, `call()` or
+`evaluate()`. Python callables can be called from any thread. Ruby runs
+only on the thread that started it, and signals emitted elsewhere reach
+their Ruby handlers through that thread's event loop. JavaScript engines
+must stay on their thread.
 
 The JavaScript backend imports QtQml into every engine, which makes
-QModelIndex and its relatives usable from scripts; `setOption("qml",
-false)` on an action turns that off.
+QModelIndex and its relatives usable from scripts; `.options = { {
+QStringLiteral("qml"), false } }` in the script's `Config` turns that
+off.
 
 ## Status
 
-The API around `Action` and `Manager` is the one inherited from Kross and
-will be redesigned before the next release, so expect source changes.
-The last tagged release, 0.3.2, is the Qt 4 and Qt 5 code base; CHANGES
-lists what has happened since.
+The API around `Script` and `Manager` was redesigned in this cycle;
+CHANGES lists what moved. The last tagged release, 0.3.2, is the Qt 4
+and Qt 5 code base.
 
 Qross is distributed under the GNU Lesser General Public License,
 version 2.0 or later.
