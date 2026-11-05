@@ -7,6 +7,7 @@
 
 #include "object.h"
 #include "call.h"
+#include "context.h"
 #include "interpreter.h"
 #include "variant.h"
 
@@ -14,6 +15,7 @@ using namespace Qross;
 
 RubyObject::RubyObject(VALUE value)
     : m_value(value)
+    , m_context(RubyContext::current())
 {
     rb_gc_register_address(&m_value);
 }
@@ -29,6 +31,7 @@ std::expected<QVariant, Error> RubyObject::callMethod(const QString& name, const
 {
     if (const auto thread = requireRubyThread(); !thread)
         return std::unexpected(thread.error());
+    const RubyContext::Scope scope(m_context);
 
     const QByteArray utf8 = name.toUtf8();
     const ID method = rb_intern2(utf8.constData(), utf8.size());
@@ -60,6 +63,7 @@ QStringList RubyObject::methodNames()
 {
     if (!onRubyThread())
         return {};
+    const RubyContext::Scope scope(m_context);
     const Result names = callProtected(m_value, rb_intern("public_methods"), { Qfalse });
     QStringList result;
     if (names && RB_TYPE_P(*names, T_ARRAY))

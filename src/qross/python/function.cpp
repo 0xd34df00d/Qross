@@ -8,6 +8,7 @@
 #include "function.h"
 #include <QtCore/QMutex>
 #include <QtCore/QSet>
+#include "context.h"
 #include "gil.h"
 #include "interpreter.h"
 #include "ref.h"
@@ -21,12 +22,15 @@ namespace
     QSet<PythonFunction*> relays;
 }
 
-PythonFunction::PythonFunction(QObject* sender, const QMetaMethod& signal, PyObject* callable)
+PythonFunction::PythonFunction(QObject* sender, const QMetaMethod& signal, PyObject* callable, PythonContext* owner)
     : MetaFunction(sender, signal)
     , m_callable(callable)
+    , m_owner(owner)
 {
     Py_INCREF(m_callable);
     setParent(sender);
+    if (owner)
+        owner->adopt(this);
     const QMutexLocker locker(&relaysMutex);
     relays.insert(this);
 }
@@ -64,6 +68,7 @@ void PythonFunction::deleteAll()
 void PythonFunction::callback(const QVariantList& args)
 {
     const Gil gil;
+    const PythonContext::Scope scope(m_owner);
     Ref arguments(PyTuple_New(args.size()));
     for (qsizetype i = 0; i < args.size(); ++i)
     {

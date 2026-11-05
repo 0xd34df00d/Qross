@@ -18,6 +18,7 @@
 #include "../core/object.h"
 #include "../core/wrapperinterface.h"
 #include "call.h"
+#include "context.h"
 #include "function.h"
 #include "object.h"
 #include "variant.h"
@@ -408,7 +409,7 @@ namespace
         const QMetaMethod signal = findSignal((*object)->metaObject(), spec);
         if (!signal.isValid())
             return fail(rb_eArgError, QStringLiteral("%1 has no signal %2").arg(QString::fromLatin1((*object)->metaObject()->className()), QString::fromUtf8(spec)));
-        new RubyFunction(*object, signal, callable);
+        new RubyFunction(*object, signal, callable, RubyContext::current());
         return callable;
     }
 

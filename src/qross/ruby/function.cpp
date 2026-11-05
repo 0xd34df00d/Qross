@@ -8,6 +8,7 @@
 #include "function.h"
 #include <QtCore/QSet>
 #include "call.h"
+#include "context.h"
 #include "interpreter.h"
 #include "variant.h"
 
@@ -18,12 +19,15 @@ namespace
     QSet<RubyFunction*> relays;
 }
 
-RubyFunction::RubyFunction(QObject* sender, const QMetaMethod& signal, VALUE callable)
+RubyFunction::RubyFunction(QObject* sender, const QMetaMethod& signal, VALUE callable, RubyContext* owner)
     : MetaFunction(sender, signal)
     , m_callable(callable)
+    , m_owner(owner)
 {
     rb_gc_register_address(&m_callable);
     relays.insert(this);
+    if (owner)
+        owner->adopt(this);
     connect(sender, &QObject::destroyed, this, &QObject::deleteLater);
 }
 
@@ -64,6 +68,7 @@ void RubyFunction::callback(const QVariantList& args)
     }
 
     // Nothing awaits the result, so errors can only be logged.
+    const RubyContext::Scope scope(m_owner);
     VALUE arguments = rb_ary_new_capa(args.size());
     for (const QVariant& arg : args)
     {

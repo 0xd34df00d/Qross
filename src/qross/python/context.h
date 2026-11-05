@@ -28,6 +28,9 @@ namespace Qross
      * through their \c __module__. The directory of the script file is
      * appended to \c sys.path, so that scripts can import their neighbours.
      *
+     * The signal connections the code of a run makes, through connect() or
+     * \a AutoConnectSignals, last until the next run or the destructor.
+     *
      * Objects stay owned by C++; a wrapper of a deleted object raises
      * RuntimeError.
      */
@@ -39,6 +42,24 @@ namespace Qross
     public:
         PythonContext(Interpreter* interpreter, Script* script);
         ~PythonContext() override;
+
+        /// The context whose code runs on this thread, or null outside any.
+        static PythonContext* current();
+
+        /// Makes \p context current on this thread for the scope.
+        class Scope
+        {
+            PythonContext* const m_previous;
+        public:
+            explicit Scope(PythonContext* context);
+            ~Scope();
+
+            Scope(const Scope&) = delete;
+            Scope& operator=(const Scope&) = delete;
+        };
+
+        /// Takes \p relay among the connections the next run and the destructor drop.
+        void adopt(PythonFunction* relay);
 
         std::expected<void, Error> execute() override;
         QStringList functionNames() override;

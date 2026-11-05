@@ -7,6 +7,7 @@
  **********************************************************************/
 
 #include "context.h"
+#include <utility>
 #include <QtCore/QMetaMethod>
 #include <QtCore/QSet>
 #include "../core/script.h"
@@ -20,6 +21,8 @@ using namespace Qross;
 
 namespace
 {
+    RubyContext* currentContext = nullptr;
+
     /// The hidden instance variable holding the published objects by name.
     ID objectsKey()
     {
@@ -51,6 +54,26 @@ RubyContext::~RubyContext()
     resetContext();
     rb_gc_unregister_address(&m_self);
     rb_gc_unregister_address(&m_binding);
+}
+
+RubyContext* RubyContext::current()
+{
+    return currentContext;
+}
+
+RubyContext::Scope::Scope(RubyContext* context)
+    : m_previous(std::exchange(currentContext, context))
+{
+}
+
+RubyContext::Scope::~Scope()
+{
+    currentContext = m_previous;
+}
+
+void RubyContext::adopt(RubyFunction* relay)
+{
+    m_connections << relay;
 }
 
 std::expected<void, Error> RubyContext::prepare()
@@ -134,6 +157,7 @@ std::expected<void, Error> RubyContext::execute()
 {
     if (const auto thread = requireRubyThread(); !thread)
         return thread;
+    const Scope scope(this);
     resetContext();
     if (const auto context = ensureContext(); !context)
         return context;
@@ -173,7 +197,7 @@ void RubyContext::connectSignals()
             if (!handler)
                 continue;
             connected.insert(method.name());
-            m_connections << new RubyFunction(sender, method, *handler);
+            new RubyFunction(sender, method, *handler, this);
         }
     }
 }
@@ -193,6 +217,7 @@ std::expected<QVariant, Error> RubyContext::callFunction(const QString& name, co
 {
     if (const auto ready = prepare(); !ready)
         return std::unexpected(ready.error());
+    const Scope scope(this);
 
     const QByteArray utf8 = name.toUtf8();
     const ID id = rb_intern2(utf8.constData(), utf8.size());
@@ -221,5 +246,6 @@ std::expected<QVariant, Error> RubyContext::evaluate(const QByteArray& code)
 {
     if (const auto ready = prepare(); !ready)
         return std::unexpected(ready.error());
+    const Scope scope(this);
     return run(code, QStringLiteral("<evaluate>"));
 }

@@ -8,14 +8,18 @@
 #pragma once
 
 #include <Python.h>
+#include <QtCore/QPointer>
 #include "../core/object.h"
 
 namespace Qross
 {
-    /// A Python object handed to C++ as an \a Object::Ptr.
+    class PythonContext;
+
+    /// A Python object handed to C++ as an \a Object::Ptr; its methods run with the context that made it current.
     class PythonObject : public Object
     {
         PyObject* m_object;
+        QPointer<PythonContext> m_context;
     public:
         /// Keeps its own reference to \p object.
         explicit PythonObject(PyObject* object);

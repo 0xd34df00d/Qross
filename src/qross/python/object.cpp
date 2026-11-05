@@ -6,6 +6,7 @@
  **********************************************************************/
 
 #include "object.h"
+#include "context.h"
 #include "gil.h"
 #include "interpreter.h"
 #include "ref.h"
@@ -15,6 +16,7 @@ using namespace Qross;
 
 PythonObject::PythonObject(PyObject* object)
     : m_object(object)
+    , m_context(PythonContext::current())
 {
     Py_INCREF(m_object);
 }
@@ -37,6 +39,7 @@ PyObject* PythonObject::object() const
 std::expected<QVariant, Error> PythonObject::callMethod(const QString& name, const QVariantList& args)
 {
     const Gil gil;
+    const PythonContext::Scope scope(m_context);
 
     const Ref method(PyObject_GetAttrString(m_object, name.toUtf8().constData()));
     if (!method || !PyCallable_Check(method.get()))
@@ -63,6 +66,7 @@ std::expected<QVariant, Error> PythonObject::callMethod(const QString& name, con
 QStringList PythonObject::methodNames()
 {
     const Gil gil;
+    const PythonContext::Scope scope(m_context);
     QStringList names;
     const Ref directory(PyObject_Dir(m_object));
     if (!directory)

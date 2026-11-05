@@ -7,15 +7,19 @@
 
 #pragma once
 
+#include <QtCore/QPointer>
 #include "../core/object.h"
 #include "rubyapi.h"
 
 namespace Qross
 {
-    /// A Ruby object handed to C++ as an \a Object::Ptr.
+    class RubyContext;
+
+    /// A Ruby object handed to C++ as an \a Object::Ptr; its methods run with the context that made it current.
     class RubyObject : public Object
     {
         VALUE m_value;
+        QPointer<RubyContext> m_context;
     public:
         /// Keeps \p value alive for as long as it lives itself.
         explicit RubyObject(VALUE value);

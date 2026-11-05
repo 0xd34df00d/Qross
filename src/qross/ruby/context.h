@@ -30,6 +30,9 @@ namespace Qross
      * script file is appended to the load path, so that scripts can
      * require their neighbours.
      *
+     * The signal connections the code of a run makes, through connect() or
+     * \a AutoConnectSignals, last until the next run or the destructor.
+     *
      * Objects stay owned by C++; a wrapper of a deleted object raises
      * RuntimeError.
      */
@@ -41,6 +44,24 @@ namespace Qross
     public:
         RubyContext(Interpreter* interpreter, Script* script);
         ~RubyContext() override;
+
+        /// The context whose code runs, or null outside any.
+        static RubyContext* current();
+
+        /// Makes \p context current for the scope.
+        class Scope
+        {
+            RubyContext* const m_previous;
+        public:
+            explicit Scope(RubyContext* context);
+            ~Scope();
+
+            Scope(const Scope&) = delete;
+            Scope& operator=(const Scope&) = delete;
+        };
+
+        /// Takes \p relay among the connections the next run and the destructor drop.
+        void adopt(RubyFunction* relay);
 
         std::expected<void, Error> execute() override;
         QStringList functionNames() override;

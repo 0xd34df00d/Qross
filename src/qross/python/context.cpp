@@ -6,6 +6,7 @@
  **********************************************************************/
 
 #include "context.h"
+#include <utility>
 #include <QtCore/QFileInfo>
 #include <QtCore/QMetaMethod>
 #include <QtCore/QRegularExpression>
@@ -22,6 +23,8 @@ using namespace Qross;
 
 namespace
 {
+    thread_local PythonContext* currentContext = nullptr;
+
     /// \return qross_ and the name of \p script as an identifier, numbered while sys.modules has it.
     QByteArray moduleName(const QString& script)
     {
@@ -51,6 +54,26 @@ PythonContext::~PythonContext()
         return;
     const Gil gil;
     resetModule();
+}
+
+PythonContext* PythonContext::current()
+{
+    return currentContext;
+}
+
+PythonContext::Scope::Scope(PythonContext* context)
+    : m_previous(std::exchange(currentContext, context))
+{
+}
+
+PythonContext::Scope::~Scope()
+{
+    currentContext = m_previous;
+}
+
+void PythonContext::adopt(PythonFunction* relay)
+{
+    m_connections << relay;
 }
 
 void PythonContext::resetModule()
@@ -113,6 +136,7 @@ void PythonContext::publish(PyObject* dict, const QString& name, QObject* object
 std::expected<void, Error> PythonContext::execute()
 {
     const Gil gil;
+    const Scope scope(this);
     resetModule();
     PyObject* const dict = PyModule_GetDict(ensureModule());
 
@@ -146,7 +170,7 @@ void PythonContext::connectSignals()
             if (!handler || !PyCallable_Check(handler))
                 continue;
             connected.insert(method.name());
-            m_connections << new PythonFunction(sender, method, handler);
+            new PythonFunction(sender, method, handler, this);
         }
     }
 }
@@ -172,6 +196,7 @@ QStringList PythonContext::functionNames()
 std::expected<QVariant, Error> PythonContext::callFunction(const QString& name, const QVariantList& args)
 {
     const Gil gil;
+    const Scope scope(this);
     PyObject* const dict = PyModule_GetDict(ensureModule());
 
     PyObject* const function = PyDict_GetItemString(dict, name.toUtf8().constData());
@@ -196,6 +221,7 @@ std::expected<QVariant, Error> PythonContext::callFunction(const QString& name, 
 std::expected<QVariant, Error> PythonContext::evaluate(const QByteArray& code)
 {
     const Gil gil;
+    const Scope scope(this);
     PyObject* const dict = PyModule_GetDict(ensureModule());
 
     // An expression has a value; anything else runs as statements.

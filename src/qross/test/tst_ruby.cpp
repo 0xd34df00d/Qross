@@ -30,6 +30,7 @@ public:
 
     Qross::Object::Ptr kept() const { return m_kept; }
     void forget() { m_kept.reset(); }
+    int listeners() const { return receivers(SIGNAL(fired(int))) + receivers(SIGNAL(named(QString))); }
 Q_SIGNALS:
     void fired(int n);
     void named(const QString& name);
@@ -278,6 +279,60 @@ Local.fired(7)
         const auto noSignal = script->evaluate("Local.connect(:self) {}");
         QVERIFY(!noSignal);
         QVERIFY(noSignal.error().message.startsWith(QStringLiteral("ArgumentError")));
+    }
+
+    void dropsConnectionsWithTheScript()
+    {
+        Host local;
+        auto script = run(R"rb(
+@got = []
+
+Local.connect(:fired) do |n|
+  @got << n
+  Local.connect(:named) { |name| @got << name }
+end
+)rb",
+            &local);
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(local.listeners(), 1);
+        Q_EMIT local.fired(1);
+        QCOMPARE(local.listeners(), 2);
+        Q_EMIT local.named(QStringLiteral("a"));
+        QCOMPARE(script->evaluate("@got")->toList(), QVariantList({ 1, QStringLiteral("a") }));
+
+        (void)script->run();
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(local.listeners(), 1);
+        Q_EMIT local.fired(2);
+        QCOMPARE(script->evaluate("@got")->toList(), QVariantList({ 2 }));
+
+        script.reset();
+        QCOMPARE(local.listeners(), 0);
+        Q_EMIT local.fired(3);
+    }
+
+    void ownsConnectionsMadeWhileListingMethods()
+    {
+        Host local;
+        auto script = run(R"rb(
+class Sneaky
+  def public_methods(all = true)
+    Local.connect(:fired) { |n| }
+    super
+  end
+end
+
+Global.keep(Sneaky.new)
+)rb",
+            &local);
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(local.listeners(), 0);
+        QVERIFY(m_global.kept()->methodNames().contains(QStringLiteral("public_methods")));
+        QCOMPARE(local.listeners(), 1);
+
+        script.reset();
+        QCOMPARE(local.listeners(), 0);
+        m_global.forget();
     }
 
     void deliversSignalsFromOtherThreads()

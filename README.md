@@ -121,7 +121,8 @@ Player.connect(:finished) { |code| Player.play("next.ogg") }
 
 A function defined at the top level of the script and named like a signal
 of an object published with `AutoConnectSignals` is connected to that
-signal once the script has run, in all three languages.
+signal once the script has run, in all three languages. The connections a
+script makes, by either route, last until its next run or its destruction.
 
 | C++                       | JavaScript                        | Python                 | Ruby                      |
 | ------------------------- | --------------------------------- | ---------------------- | ------------------------- |

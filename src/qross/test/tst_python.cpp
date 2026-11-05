@@ -28,6 +28,7 @@ public:
 
     Qross::Object::Ptr kept() const { return m_kept; }
     void forget() { m_kept.reset(); }
+    int listeners() const { return receivers(SIGNAL(fired(int))) + receivers(SIGNAL(named(QString))); }
 Q_SIGNALS:
     void fired(int n);
     void named(const QString& name);
@@ -230,6 +231,59 @@ Local.fired(4)
             &local);
         QVERIFY2(!script->error(), describe(*script).constData());
         QCOMPARE(script->evaluate("got")->toList(), QVariantList({ 3 }));
+    }
+
+    void dropsConnectionsWithTheScript()
+    {
+        Host local;
+        auto script = run(R"py(
+got = []
+
+def on(n):
+    got.append(n)
+    Local.named.connect(lambda name: got.append(name))
+
+Local.fired.connect(on)
+)py",
+            &local);
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(local.listeners(), 1);
+        Q_EMIT local.fired(1);
+        QCOMPARE(local.listeners(), 2);
+        Q_EMIT local.named(QStringLiteral("a"));
+        QCOMPARE(script->evaluate("got")->toList(), QVariantList({ 1, QStringLiteral("a") }));
+
+        (void)script->run();
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(local.listeners(), 1);
+        Q_EMIT local.fired(2);
+        QCOMPARE(script->evaluate("got")->toList(), QVariantList({ 2 }));
+
+        script.reset();
+        QCOMPARE(local.listeners(), 0);
+        Q_EMIT local.fired(3);
+    }
+
+    void ownsConnectionsMadeWhileListingMethods()
+    {
+        Host local;
+        auto script = run(R"py(
+class Sneaky:
+    def __dir__(self):
+        Local.fired.connect(lambda n: None)
+        return []
+
+Global.keep(Sneaky())
+)py",
+            &local);
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(local.listeners(), 0);
+        QVERIFY(m_global.kept()->methodNames().isEmpty());
+        QCOMPARE(local.listeners(), 1);
+
+        script.reset();
+        QCOMPARE(local.listeners(), 0);
+        m_global.forget();
     }
 
     void deliversSignalsFromOtherThreads()

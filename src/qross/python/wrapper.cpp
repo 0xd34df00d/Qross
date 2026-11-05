@@ -15,6 +15,7 @@
 #include <QtCore/QVarLengthArray>
 #include "../core/object.h"
 #include "../core/wrapperinterface.h"
+#include "context.h"
 #include "function.h"
 #include "object.h"
 #include "ref.h"
@@ -371,7 +372,7 @@ namespace
             PyErr_Format(PyExc_TypeError, "%s.%s is not a signal", object->metaObject()->className(), name);
             return nullptr;
         }
-        new PythonFunction(object, signal, callable);
+        new PythonFunction(object, signal, callable, PythonContext::current());
         Py_RETURN_NONE;
     }
 
