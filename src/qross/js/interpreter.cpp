@@ -16,7 +16,7 @@ using namespace Qross;
 JsInterpreter::JsInterpreter(InterpreterInfo* info)
     : Interpreter(info)
 {
-    JsObject::registerConverters();
+    JsObject::registerTypes();
 }
 
 std::expected<std::unique_ptr<Context>, Error> JsInterpreter::createContext(Script* script)

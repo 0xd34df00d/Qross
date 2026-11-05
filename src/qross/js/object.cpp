@@ -9,6 +9,7 @@
 #include <QtCore/QMetaType>
 #include <QtQml/QJSEngine>
 #include <QtQml/QJSManagedValue>
+#include <QtQml/qqml.h>
 
 using namespace Qross;
 
@@ -40,12 +41,21 @@ JsObject::JsObject(QJSEngine* engine, const QJSValue& value)
 {
 }
 
-void JsObject::registerConverters()
+void JsObject::registerTypes()
 {
     if (QMetaType::hasRegisteredConverterFunction<QJSValue, Object::Ptr>())
         return;
     QMetaType::registerConverter<QJSValue, Object::Ptr>(&JsObject::fromValue);
     QMetaType::registerConverter<std::nullptr_t, Object::Ptr>([](std::nullptr_t) { return Object::Ptr(); });
+    qmlRegisterTypesAndRevisions<ObjectValue>("Qross", 1);
+}
+
+QJSValue ObjectValue::value() const
+{
+    if (isNull())
+        return QJSValue(QJSValue::NullValue);
+    const auto* const js = dynamic_cast<const JsObject*>(data());
+    return js ? js->value() : QJSValue();
 }
 
 void JsObject::prepareEngine(QJSEngine& engine)

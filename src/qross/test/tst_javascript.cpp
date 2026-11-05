@@ -38,6 +38,7 @@ public Q_SLOTS:
     QAbstractItemModel* model() { return &m_model; }
     void keep(Qross::Object::Ptr object) { m_kept = object; }
     bool isNull(Qross::Object::Ptr object) { return object.isNull(); }
+    Qross::Object::Ptr same(Qross::Object::Ptr object) { return object; }
     QStringList methods(Qross::Object::Ptr object) { return object ? object->methodNames() : QStringList(); }
     QVariant call(Qross::Object::Ptr object, const QString& method, const QVariantList& args = QVariantList())
     {
@@ -330,6 +331,21 @@ private Q_SLOTS:
         QCOMPARE(script->evaluate("results.plain")->toInt(), 42);
         QCOMPARE(script->evaluate("results.nullObject")->toBool(), true);
         QVERIFY(!script->evaluate("results.missing")->isValid());
+    }
+
+    void returnsScriptObjects()
+    {
+        const auto script = run(R"js(
+            var object = { answer: function() { return 42; } };
+            var returned = Global.same(object).value();
+            var identical = returned === object;
+            var answer = returned.answer();
+            var empty = Global.same(null).value();
+        )js");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("identical")->toBool(), true);
+        QCOMPARE(script->evaluate("answer")->toInt(), 42);
+        QVERIFY(script->evaluate("empty")->isNull());
     }
 
     void callsScriptObjectsFromOutside()

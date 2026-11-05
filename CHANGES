@@ -47,9 +47,9 @@ Unreleased
   with its enum keys as properties; signals have connect(). Object
   literals convert to QRect, QPoint and QSize, and the qml option, on by
   default, imports QtQml so that QModelIndex and its relatives are usable.
-  Script objects travel to C++ as Qross::Object::Ptr. Every run starts
-  from a fresh engine. The widget constructors of the QtScript plugin
-  are gone.
+  Script objects travel to C++ as Qross::Object::Ptr and come back as
+  a value whose value() is the object. Every run starts from a fresh
+  engine. The widget constructors of the QtScript plugin are gone.
 * Python: rewritten on the C API for Python 3.12 or later, without PyCXX
   and PyQt. Published objects are globals of a fresh module per run,
   registered in sys.modules under a name derived from the script's,

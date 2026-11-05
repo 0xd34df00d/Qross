@@ -84,8 +84,10 @@ at construction.
 Slots and properties exchange the Qt value types, containers of them,
 pointers to QObjects and `Qross::Object::Ptr`. The latter carries a
 script object, such as a Python instance or a Ruby object, into C++, where
-`callMethod()` calls its methods; handed back to the script, it is the
-same object again. For return types the metatype system cannot convert,
+`callMethod()` calls its methods. Handed back to a Python or Ruby script,
+it is the same object again; JavaScript gets a value whose `value()` is
+the object, since the QML engine substitutes nothing else for a C++
+type. For return types the metatype system cannot convert,
 such as pointers to classes that are not QObjects, a `MetaTypeHandler`
 registered with the `Manager` produces something scripts can use, usually
 a QObject implementing `WrapperInterface` so that it unwraps on the way
@@ -131,7 +133,7 @@ signal once the script has run, in all three languages.
 | QSize, QPoint, QRect      | object with x, y, width, height   | tuple                  | Array of numbers          |
 | QDateTime, QDate, QTime   | Date                              | datetime, date, time   | Time, Date, ISO string    |
 | QObject*                  | wrapper                           | wrapper                | wrapper                   |
-| Qross::Object::Ptr        | the script object                 | the script object      | the script object         |
+| Qross::Object::Ptr        | value whose value() is the object | the script object      | the script object         |
 
 Objects stay owned by the application; a wrapper of an object that has
 been deleted raises an error when used. The JavaScript engine follows the
