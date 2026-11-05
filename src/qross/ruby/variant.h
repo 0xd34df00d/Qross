@@ -26,11 +26,13 @@ namespace Qross
     Result toRuby(const QVariant& value);
 
     /**
-     * \return the C++ counterpart of \p value. Values without one, such as
+     * \return the C++ counterpart of \p value, or the exception that stands
+     * for a value beyond what its C++ type holds, such as a Time outside
+     * the range of QDateTime. Values without a counterpart, such as
      * instances of script classes, travel as an \a Object::Ptr and come
      * back unchanged.
      */
-    QVariant toVariant(VALUE value);
+    std::expected<QVariant, VALUE> toVariant(VALUE value);
 
     /// \return the text of a String or Symbol \p value in UTF-8; anything else gives an empty string.
     QString toString(VALUE value);

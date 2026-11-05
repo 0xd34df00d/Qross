@@ -11,6 +11,7 @@
 #include <limits>
 #include <QtCore/QDateTime>
 #include <QtCore/QRect>
+#include <QtCore/qnumeric.h>
 #include <QtCore/QTimeZone>
 #include <QtCore/QUrl>
 #include <QtGui/QColor>
@@ -130,46 +131,103 @@ namespace
         return toString(string);
     }
 
-    QVariant fromTime(VALUE time)
+    struct TimeParts
     {
-        const timespec spec = rb_time_timespec(time);
-        const qint64 msecs = qint64(spec.tv_sec) * 1000 + spec.tv_nsec / 1000000;
-        const Result utc = callProtected(time, rb_intern("utc?"), {});
-        if (utc && RTEST(*utc))
-            return QDateTime::fromMSecsSinceEpoch(msecs, QTimeZone::UTC);
-        const Result offset = callProtected(time, rb_intern("utc_offset"), {});
-        const QDateTime local = QDateTime::fromMSecsSinceEpoch(msecs, QTimeZone::LocalTime);
-        if (!offset || !FIXNUM_P(*offset) || FIX2LONG(*offset) == local.offsetFromUtc())
-            return local;
-        return QDateTime::fromMSecsSinceEpoch(msecs, QTimeZone::fromSecondsAheadOfUtc(int(FIX2LONG(*offset))));
+        VALUE time;
+        timespec spec;
+    };
+
+    /// Runs under rb_protect, since rb_time_timespec() raises for a Time beyond time_t.
+    VALUE readTimeSpec(VALUE argument)
+    {
+        auto* const parts = reinterpret_cast<TimeParts*>(argument);
+        parts->spec = rb_time_timespec(parts->time);
+        return Qnil;
     }
 
-    QVariant fromDate(VALUE date)
+    std::expected<QVariant, VALUE> fromTime(VALUE time)
+    {
+        TimeParts parts { time, {} };
+        if (const Result read = runProtected(readTimeSpec, reinterpret_cast<VALUE>(&parts)); !read)
+            return std::unexpected(read.error());
+
+        qint64 msecs = 0;
+        const bool overflow = qMulOverflow(qint64(parts.spec.tv_sec), qint64(1000), &msecs) || qAddOverflow(msecs, qint64(parts.spec.tv_nsec / 1000000), &msecs);
+        const QDateTime utc = overflow ? QDateTime() : QDateTime::fromMSecsSinceEpoch(msecs, QTimeZone::UTC);
+        if (!utc.isValid())
+            return fail(rb_eRangeError, QStringLiteral("time beyond the range of QDateTime"));
+
+        const Result isUtc = callProtected(time, rb_intern("utc?"), {});
+        if (!isUtc)
+            return std::unexpected(isUtc.error());
+        if (RTEST(*isUtc))
+            return QVariant(utc);
+        const Result offset = callProtected(time, rb_intern("utc_offset"), {});
+        if (!offset)
+            return std::unexpected(offset.error());
+        const QDateTime local = utc.toLocalTime();
+        if (!FIXNUM_P(*offset) || FIX2LONG(*offset) == local.offsetFromUtc())
+            return QVariant(local);
+        return QVariant(utc.toTimeZone(QTimeZone::fromSecondsAheadOfUtc(int(FIX2LONG(*offset)))));
+    }
+
+    std::expected<QVariant, VALUE> fromDate(VALUE date)
     {
         const VALUE dateTimeClass = classNamed("DateTime");
         if (!NIL_P(dateTimeClass) && RTEST(rb_obj_is_kind_of(date, dateTimeClass)))
         {
             const Result time = callProtected(date, rb_intern("to_time"), {});
-            return time && RTEST(rb_obj_is_kind_of(*time, rb_cTime)) ? fromTime(*time) : QVariant();
+            if (!time)
+                return std::unexpected(time.error());
+            return fromTime(*time);
         }
+
         const Result year = callProtected(date, rb_intern("year"), {});
+        if (!year)
+            return std::unexpected(year.error());
         const Result month = callProtected(date, rb_intern("month"), {});
+        if (!month)
+            return std::unexpected(month.error());
         const Result day = callProtected(date, rb_intern("day"), {});
-        if (!year || !month || !day)
-            return {};
-        return QDate(int(NUM2LONG(*year)), int(NUM2LONG(*month)), int(NUM2LONG(*day)));
+        if (!day)
+            return std::unexpected(day.error());
+
+        const auto fitsInt = [](VALUE number) {
+            return FIXNUM_P(number) && FIX2LONG(number) >= std::numeric_limits<int>::min() && FIX2LONG(number) <= std::numeric_limits<int>::max();
+        };
+        const QDate result = fitsInt(*year) && fitsInt(*month) && fitsInt(*day) ? QDate(int(FIX2LONG(*year)), int(FIX2LONG(*month)), int(FIX2LONG(*day))) : QDate();
+        if (!result.isValid())
+            return fail(rb_eRangeError, QStringLiteral("date beyond the range of QDate"));
+        return QVariant(result);
     }
+
+    struct MapParts
+    {
+        QVariantMap map;
+        VALUE error = Qnil;
+    };
 
     int insertPair(VALUE key, VALUE value, VALUE argument)
     {
-        auto* const map = reinterpret_cast<QVariantMap*>(argument);
+        auto* const parts = reinterpret_cast<MapParts*>(argument);
         QString name = toString(key);
         if (!RB_TYPE_P(key, T_STRING) && !RB_SYMBOL_P(key))
         {
             const Result text = callProtected(key, rb_intern("to_s"), {});
-            name = text ? toString(*text) : QString();
+            if (!text)
+            {
+                parts->error = text.error();
+                return ST_STOP;
+            }
+            name = toString(*text);
         }
-        map->insert(name, toVariant(value));
+        auto converted = toVariant(value);
+        if (!converted)
+        {
+            parts->error = converted.error();
+            return ST_STOP;
+        }
+        parts->map.insert(name, std::move(*converted));
         return ST_CONTINUE;
     }
 }
@@ -300,37 +358,44 @@ Result Qross::toRuby(const QVariant& value)
     return fail(rb_eTypeError, QStringLiteral("cannot convert a value of type %1 to Ruby").arg(QString::fromLatin1(type.name())));
 }
 
-QVariant Qross::toVariant(VALUE value)
+std::expected<QVariant, VALUE> Qross::toVariant(VALUE value)
 {
     switch (rb_type(value))
     {
     case T_NIL:
-        return {};
+        return QVariant();
     case T_TRUE:
-        return true;
+        return QVariant(true);
     case T_FALSE:
-        return false;
+        return QVariant(false);
     case T_FIXNUM:
     case T_BIGNUM:
         return fromInteger(value);
     case T_FLOAT:
-        return RFLOAT_VALUE(value);
+        return QVariant(RFLOAT_VALUE(value));
     case T_STRING:
         return fromRubyString(value);
     case T_SYMBOL:
-        return toString(value);
+        return QVariant(toString(value));
     case T_ARRAY: {
         QVariantList list;
         const long count = RARRAY_LEN(value);
         list.reserve(count);
         for (long i = 0; i < count; ++i)
-            list << toVariant(rb_ary_entry(value, i));
-        return list;
+        {
+            auto item = toVariant(rb_ary_entry(value, i));
+            if (!item)
+                return std::unexpected(item.error());
+            list << std::move(*item);
+        }
+        return QVariant(list);
     }
     case T_HASH: {
-        QVariantMap map;
-        rb_hash_foreach(value, insertPair, reinterpret_cast<VALUE>(&map));
-        return map;
+        MapParts parts;
+        rb_hash_foreach(value, insertPair, reinterpret_cast<VALUE>(&parts));
+        if (!NIL_P(parts.error))
+            return std::unexpected(parts.error);
+        return QVariant(parts.map);
     }
     default:
         break;

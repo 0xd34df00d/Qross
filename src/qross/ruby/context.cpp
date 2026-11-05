@@ -124,7 +124,10 @@ std::expected<QVariant, Error> RubyContext::run(const QByteArray& code, const QS
     const Result result = callProtected(m_binding, rb_intern("eval"), std::size(arguments), arguments);
     if (!result)
         return std::unexpected(errorOf(result.error()));
-    return toVariant(*result);
+    const auto value = toVariant(*result);
+    if (!value)
+        return std::unexpected(errorOf(value.error()));
+    return *value;
 }
 
 std::expected<void, Error> RubyContext::execute()
@@ -208,7 +211,10 @@ std::expected<QVariant, Error> RubyContext::callFunction(const QString& name, co
     RB_GC_GUARD(arguments);
     if (!result)
         return std::unexpected(errorOf(result.error()));
-    return toVariant(*result);
+    const auto value = toVariant(*result);
+    if (!value)
+        return std::unexpected(errorOf(value.error()));
+    return *value;
 }
 
 std::expected<QVariant, Error> RubyContext::evaluate(const QByteArray& code)

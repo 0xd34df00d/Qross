@@ -158,7 +158,10 @@ namespace
     {
         if (type == QMetaType::fromType<QVariant>())
         {
-            argument.value = toVariant(value);
+            auto converted = toVariant(value);
+            if (!converted)
+                return std::unexpected(converted.error());
+            argument.value = std::move(*converted);
             argument.variant = true;
             return {};
         }
@@ -205,10 +208,12 @@ namespace
         if (convertGeometry(value, type, argument))
             return {};
 
-        QVariant converted = toVariant(value);
-        if (converted.metaType() == type || converted.convert(type))
+        auto converted = toVariant(value);
+        if (!converted)
+            return std::unexpected(converted.error());
+        if (converted->metaType() == type || converted->convert(type))
         {
-            argument.value = converted;
+            argument.value = std::move(*converted);
             return {};
         }
 

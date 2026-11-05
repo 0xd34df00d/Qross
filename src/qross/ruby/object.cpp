@@ -50,7 +50,10 @@ std::expected<QVariant, Error> RubyObject::callMethod(const QString& name, const
     RB_GC_GUARD(arguments);
     if (!result)
         return std::unexpected(errorOf(result.error()));
-    return toVariant(*result);
+    const auto value = toVariant(*result);
+    if (!value)
+        return std::unexpected(errorOf(value.error()));
+    return *value;
 }
 
 QStringList RubyObject::methodNames()

@@ -39,6 +39,7 @@ public Q_SLOTS:
     void keep(Qross::Object::Ptr object) { m_kept = object; }
     bool isNull(Qross::Object::Ptr object) { return object.isNull(); }
     Qross::Object::Ptr same(Qross::Object::Ptr object) { return object; }
+    QVariant echo(const QVariant& value) { return value; }
     QStringList methods(Qross::Object::Ptr object) { return object ? object->methodNames() : QStringList(); }
     QVariant call(Qross::Object::Ptr object, const QString& method, const QVariantList& args = QVariantList())
     {
@@ -305,6 +306,60 @@ end
         QVERIFY(!result);
         QVERIFY2(result.error().message.contains(QStringLiteral("thread")), qPrintable(result.error().message));
         QCOMPARE(script->evaluate("answer")->toInt(), 42);
+    }
+
+    void reportsConversionFailures()
+    {
+        const auto script = run(R"rb(
+class Unprintable
+  def to_s = raise('no name')
+end
+
+class Unplaceable < Time
+  def utc? = raise('no zone')
+end
+
+class Unoffset < Time
+  def utc_offset = raise('no offset')
+end
+)rb");
+        QVERIFY2(!script->error(), describe(*script).constData());
+
+        const auto key = script->evaluate("Global.echo({ Unprintable.new => 1 })");
+        QVERIFY(!key);
+        QVERIFY2(key.error().message.contains(QStringLiteral("no name")), qPrintable(key.error().message));
+        QVERIFY(!script->evaluate("{ Unprintable.new => 1 }"));
+        const auto zone = script->evaluate("Global.echo(Unplaceable.now)");
+        QVERIFY(!zone);
+        QVERIFY2(zone.error().message.contains(QStringLiteral("no zone")), qPrintable(zone.error().message));
+        const auto offset = script->evaluate("Global.echo(Unoffset.now)");
+        QVERIFY(!offset);
+        QVERIFY2(offset.error().message.contains(QStringLiteral("no offset")), qPrintable(offset.error().message));
+        QCOMPARE(script->evaluate("Global.echo({ 'k' => 1 })")->toMap().value(QStringLiteral("k")).toInt(), 1);
+    }
+
+    void refusesTimesBeyondRange()
+    {
+        const auto script = run(R"rb(
+def huge = Time.at(2**100)
+
+def far = Date.new(2**40, 1, 1)
+)rb");
+        QVERIFY2(!script->error(), describe(*script).constData());
+
+        const auto huge = script->call(QStringLiteral("huge"));
+        QVERIFY(!huge);
+        QVERIFY2(huge.error().message.contains(QStringLiteral("range")), qPrintable(huge.error().message));
+        const auto far = script->call(QStringLiteral("far"));
+        QVERIFY(!far);
+        QVERIFY2(far.error().message.startsWith(QStringLiteral("RangeError")), qPrintable(far.error().message));
+
+        const auto passed = script->evaluate("Global.echo(Time.at(2**100))");
+        QVERIFY(!passed);
+        QVERIFY2(passed.error().message.contains(QStringLiteral("range")), qPrintable(passed.error().message));
+        QVERIFY(!script->evaluate("[Time.at(2**100)]"));
+        QVERIFY(!script->evaluate("{ 'time' => Time.at(2**100) }"));
+        QCOMPARE(script->evaluate("Global.echo(Time.at(0).utc).year")->toInt(), 1970);
     }
 
     void wrapsScriptObjects()
