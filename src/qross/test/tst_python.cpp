@@ -214,6 +214,23 @@ def fired(n):
         QCOMPARE(script->evaluate("got")->toInt(), 7);
     }
 
+    void connectsSignalsOfManagerObjects()
+    {
+        Host shared;
+        Qross::Manager::self().addObject(&shared, QStringLiteral("Shared"), Qross::AutoConnectSignals);
+        const auto script = run(R"py(
+got = None
+
+def fired(n):
+    global got
+    got = n
+)py");
+        Qross::Manager::self().removeObject(QStringLiteral("Shared"));
+        QVERIFY2(!script->error(), describe(*script).constData());
+        Q_EMIT shared.fired(5);
+        QCOMPARE(script->evaluate("got")->toInt(), 5);
+    }
+
     void connectsSignalsFromScripts()
     {
         Host local;
