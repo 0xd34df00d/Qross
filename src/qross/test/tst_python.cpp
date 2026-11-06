@@ -503,6 +503,22 @@ except ValueError as error:
         QCOMPARE(script->evaluate("1 + 1")->toInt(), 2);
     }
 
+    void refusesUnencodableNames()
+    {
+        const auto script = run(R"py(
+results = []
+for call in (lambda: Global.setProperty('\ud800', 42), lambda: Global.property('\ud800'),
+             lambda: setattr(Global, '\ud800', 42), lambda: getattr(Global, '\ud800')):
+    try:
+        call()
+        results.append(None)
+    except UnicodeEncodeError:
+        results.append('refused')
+)py");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("results")->toStringList(), QStringList({ QStringLiteral("refused"), QStringLiteral("refused"), QStringLiteral("refused"), QStringLiteral("refused") }));
+    }
+
     void registersModules()
     {
         const auto first = run(R"py(

@@ -557,6 +557,8 @@ namespace
         if (!object)
             return nullptr;
         const char* const name = PyUnicode_AsUTF8(nameObject);
+        if (!name)
+            return nullptr;
         const int propertyIndex = object->metaObject()->indexOfProperty(name);
         Argument argument;
         const QMetaType type = propertyIndex >= 0 ? object->metaObject()->property(propertyIndex).metaType() : QMetaType::fromType<QVariant>();
