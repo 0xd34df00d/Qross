@@ -168,7 +168,9 @@ namespace
         const QDateTime local = utc.toLocalTime();
         if (!FIXNUM_P(*offset) || FIX2LONG(*offset) == local.offsetFromUtc())
             return QVariant(local);
-        return QVariant(utc.toTimeZone(QTimeZone::fromSecondsAheadOfUtc(int(FIX2LONG(*offset)))));
+        // Qt holds offsets within sixteen hours of UTC; any other time arrives as UTC at the same instant.
+        const QTimeZone zone = QTimeZone::fromSecondsAheadOfUtc(int(FIX2LONG(*offset)));
+        return QVariant(zone.isValid() ? utc.toTimeZone(zone) : utc);
     }
 
     std::expected<QVariant, VALUE> fromDate(VALUE date)

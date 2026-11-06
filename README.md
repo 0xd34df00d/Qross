@@ -142,10 +142,11 @@ script makes, by either route, last until its next run or its destruction.
 A `str` with a lone surrogate, as `os.fsdecode()` leaves for a byte that
 is not UTF-8, keeps it in the `QString` and gets it back.
 
-A `QDateTime` in local time is a naive `datetime` in Python and comes
-back as one; any other `QDateTime` carries its offset from UTC both ways.
-An offset Qt cannot hold, beyond sixteen hours or with a fraction of a
-second, arrives as UTC at the same instant.
+A `QDateTime` in local time is a naive `datetime` in Python and a local
+`Time` in Ruby, and comes back as one; any other `QDateTime` carries its
+offset from UTC both ways. An offset Qt cannot hold, beyond sixteen hours
+or, in Python, with a fraction of a second, arrives as UTC at the same
+instant.
 
 Objects stay owned by the application; a wrapper of an object that has
 been deleted raises an error when used. The JavaScript engine follows the

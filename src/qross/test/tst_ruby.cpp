@@ -442,6 +442,22 @@ def far = Date.new(2**40, 1, 1)
         QCOMPARE(script->evaluate("Global.echo(Time.at(0).utc).year")->toInt(), 1970);
     }
 
+    void keepsTimeZones()
+    {
+        const auto script = run(R"rb(
+east = Time.new(2026, 1, 2, 12, 0, 0, '+03:00')
+far = Time.new(2026, 1, 2, 12, 0, 0, '+23:00')
+checks = [
+  Global.echo(east) == east,
+  Global.echo(east).utc_offset == 3 * 3600,
+  Global.echo(far) == far,
+  Global.echo(far).utc?,
+]
+)rb");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("checks")->toList(), QVariantList({ true, true, true, true }));
+    }
+
     void wrapsScriptObjects()
     {
         const auto script = run(R"rb(
