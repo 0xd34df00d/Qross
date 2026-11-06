@@ -15,8 +15,11 @@
 class Host : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QStringList names READ names WRITE setNames)
 
     Qross::Object::Ptr m_kept;
+    QVariantList m_seen;
+    QStringList m_names { QStringLiteral("alpha"), QStringLiteral("beta") };
     QStringListModel m_model { QStringList({ QStringLiteral("alpha"), QStringLiteral("beta") }), this };
 public:
     enum Mode
@@ -28,12 +31,16 @@ public:
 
     Qross::Object::Ptr kept() const { return m_kept; }
     void forget() { m_kept.reset(); }
+    QVariantList seen() const { return m_seen; }
+    QStringList names() const { return m_names; }
+    void setNames(const QStringList& names) { m_names = names; }
     int listeners() const { return receivers(SIGNAL(fired(int))) + receivers(SIGNAL(named(QString))); }
 Q_SIGNALS:
     void fired(int n);
     void named(const QString& name);
 public Q_SLOTS:
     QObject* self() { return this; }
+    void see(const QVariant& value) { m_seen << value; }
     QAbstractItemModel* model() { return &m_model; }
     void keep(Qross::Object::Ptr object) { m_kept = object; }
     bool isNull(Qross::Object::Ptr object) { return object.isNull(); }
@@ -428,6 +435,71 @@ checks = [Global.echo(lone) == lone, Global.echo(wide) == wide, len(Global.echo(
         QCOMPARE(script->evaluate("lone")->toString(), lone);
         QCOMPARE(script->call(QStringLiteral("same"), { lone })->toString(), lone);
         QCOMPARE(script->evaluate("wide")->toString(), QString::fromUcs4(U"\U0001F600"));
+        QCOMPARE(script->evaluate("1 + 1")->toInt(), 2);
+    }
+
+    void reportsConversionFailures()
+    {
+        const auto script = run(R"py(
+from datetime import datetime, tzinfo
+
+class Unprintable:
+    def __str__(self):
+        raise ValueError('no name')
+
+class Unplaceable(tzinfo):
+    def utcoffset(self, dt):
+        raise ValueError('no offset')
+
+def bad_key():
+    return {Unprintable(): 1}
+
+huge = 10**1000
+)py");
+        QVERIFY2(!script->error(), describe(*script).constData());
+
+        const auto key = script->call(QStringLiteral("bad_key"));
+        QVERIFY(!key);
+        QCOMPARE(key.error().message, QStringLiteral("ValueError: no name"));
+        QCOMPARE(script->evaluate("1 + 1")->toInt(), 2);
+
+        const auto big = script->evaluate("huge");
+        QVERIFY(!big);
+        QVERIFY2(big.error().message.startsWith(QStringLiteral("OverflowError")), qPrintable(big.error().message));
+        QVERIFY(!script->evaluate("[huge]"));
+        QVERIFY(!script->evaluate("{'n': huge}"));
+        const auto zone = script->evaluate("datetime(2024, 1, 2, tzinfo=Unplaceable())");
+        QVERIFY(!zone);
+        QCOMPARE(zone.error().message, QStringLiteral("ValueError: no offset"));
+
+        const auto passed = script->evaluate("Global.see(huge)");
+        QVERIFY(!passed);
+        QVERIFY2(passed.error().message.startsWith(QStringLiteral("OverflowError")), qPrintable(passed.error().message));
+        QVERIFY(!script->evaluate("Global.see(bad_key())"));
+        QVERIFY(!script->evaluate("Global.see([huge])"));
+        QVERIFY(m_global.seen().isEmpty());
+        QCOMPARE(script->evaluate("1 + 1")->toInt(), 2);
+    }
+
+    void keepsPropertiesOnFailedSequences()
+    {
+        const auto script = run(R"py(
+class Broken:
+    def __len__(self):
+        raise ValueError('no length')
+
+    def __getitem__(self, index):
+        raise IndexError(index)
+
+try:
+    Global.names = Broken()
+    failed = None
+except ValueError as error:
+    failed = str(error)
+)py");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("failed")->toString(), QStringLiteral("no length"));
+        QCOMPARE(script->evaluate("Global.names")->toStringList(), QStringList({ QStringLiteral("alpha"), QStringLiteral("beta") }));
         QCOMPARE(script->evaluate("1 + 1")->toInt(), 2);
     }
 

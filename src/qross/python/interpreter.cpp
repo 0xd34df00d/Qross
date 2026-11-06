@@ -15,6 +15,14 @@ QROSS_EXPORT_INTERPRETER(Qross::PythonInterpreter)
 
 using namespace Qross;
 
+namespace
+{
+    QString textOf(PyObject* object)
+    {
+        return object && PyUnicode_Check(object) ? toString(object) : QString();
+    }
+}
+
 PythonInterpreter::PythonInterpreter(InterpreterInfo* info)
     : Interpreter(info)
 {
@@ -61,13 +69,13 @@ Error Qross::takeException()
 
     const Ref typeName(PyObject_GetAttrString(reinterpret_cast<PyObject*>(Py_TYPE(exception.get())), "__name__"));
     const Ref text(PyObject_Str(exception.get()));
-    const QString message = QStringLiteral("%1: %2").arg(toVariant(typeName.get()).toString(), toVariant(text.get()).toString());
+    const QString message = QStringLiteral("%1: %2").arg(textOf(typeName.get()), textOf(text.get()));
 
     QString trace;
     const Ref module(PyImport_ImportModule("traceback"));
     const Ref lines(module ? PyObject_CallMethod(module.get(), "format_exception", "O", exception.get()) : nullptr);
-    if (lines)
-        trace = toVariant(lines.get()).toStringList().join(QString()).trimmed();
+    if (const auto list = lines ? toVariant(lines.get()) : std::nullopt)
+        trace = list->toStringList().join(QString()).trimmed();
 
     long line = -1;
     for (Ref frame(PyException_GetTraceback(exception.get())); frame && frame.get() != Py_None; frame = Ref(PyObject_GetAttrString(frame.get(), "tb_next")))

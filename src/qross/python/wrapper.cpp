@@ -101,7 +101,10 @@ namespace
     bool numbers(PyObject* sequence, int count, double* out)
     {
         if (!PySequence_Check(sequence) || PyUnicode_Check(sequence) || PySequence_Size(sequence) != count)
+        {
+            PyErr_Clear();
             return false;
+        }
         for (int i = 0; i < count; ++i)
         {
             const Ref item(PySequence_GetItem(sequence, i));
@@ -156,7 +159,10 @@ namespace
     {
         if (type == QMetaType::fromType<QVariant>())
         {
-            argument.value = toVariant(object);
+            const auto converted = toVariant(object);
+            if (!converted)
+                return false;
+            argument.value = *converted;
             argument.variant = true;
             return true;
         }
@@ -208,10 +214,12 @@ namespace
         if (convertGeometry(object, type, argument))
             return true;
 
-        QVariant converted = toVariant(object);
-        if (converted.metaType() == type || converted.convert(type))
+        std::optional<QVariant> converted = toVariant(object);
+        if (!converted)
+            return false;
+        if (converted->metaType() == type || converted->convert(type))
         {
-            argument.value = converted;
+            argument.value = *converted;
             return true;
         }
 
@@ -221,6 +229,8 @@ namespace
         if (PySequence_Check(object) && !PyUnicode_Check(object) && argument.value.isValid() && QMetaType::view(type, argument.value.data(), QMetaType::fromType<QSequentialIterable>(), &sequence))
         {
             const Py_ssize_t count = PySequence_Size(object);
+            if (count < 0)
+                return false;
             for (Py_ssize_t i = 0; i < count; ++i)
             {
                 const Ref item(PySequence_GetItem(object, i));

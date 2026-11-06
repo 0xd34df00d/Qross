@@ -58,9 +58,10 @@ std::expected<QVariant, Error> PythonObject::callMethod(const QString& name, con
     }
 
     const Ref result(PyObject_CallObject(method.get(), arguments.get()));
-    if (!result)
+    const auto value = result ? toVariant(result.get()) : std::nullopt;
+    if (!value)
         return std::unexpected(takeException());
-    return toVariant(result.get());
+    return *value;
 }
 
 QStringList PythonObject::methodNames()
@@ -78,7 +79,9 @@ QStringList PythonObject::methodNames()
     for (Py_ssize_t i = 0; i < count; ++i)
     {
         PyObject* const name = PyList_GET_ITEM(directory.get(), i);
-        const QString text = toVariant(name).toString();
+        if (!PyUnicode_Check(name))
+            continue;
+        const QString text = toString(name);
         if (text.startsWith(QLatin1String("__")))
             continue;
         const Ref attribute(PyObject_GetAttr(m_object, name));

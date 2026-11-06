@@ -185,8 +185,10 @@ std::expected<QStringList, Error> PythonContext::functionNames()
     Py_ssize_t position = 0;
     while (PyDict_Next(dict, &position, &key, &value))
     {
-        const QString name = toVariant(key).toString();
-        if (name.startsWith(QLatin1String("__")) || !PyCallable_Check(value) || PyModule_Check(value))
+        if (!PyUnicode_Check(key) || !PyCallable_Check(value) || PyModule_Check(value))
+            continue;
+        const QString name = toString(key);
+        if (name.startsWith(QLatin1String("__")))
             continue;
         names << name;
     }
@@ -213,9 +215,10 @@ std::expected<QVariant, Error> PythonContext::callFunction(const QString& name, 
     }
 
     const Ref result(PyObject_CallObject(function, arguments.get()));
-    if (!result)
+    const auto value = result ? toVariant(result.get()) : std::nullopt;
+    if (!value)
         return std::unexpected(takeException());
-    return toVariant(result.get());
+    return *value;
 }
 
 std::expected<QVariant, Error> PythonContext::evaluate(const QByteArray& code)
@@ -232,7 +235,8 @@ std::expected<QVariant, Error> PythonContext::evaluate(const QByteArray& code)
         compiled = Ref(Py_CompileString(code.constData(), "<evaluate>", Py_file_input));
     }
     const Ref result(compiled ? PyEval_EvalCode(compiled.get(), dict, dict) : nullptr);
-    if (!result)
+    const auto value = result ? toVariant(result.get()) : std::nullopt;
+    if (!value)
         return std::unexpected(takeException());
-    return toVariant(result.get());
+    return *value;
 }

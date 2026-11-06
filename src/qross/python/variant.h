@@ -8,6 +8,7 @@
 #pragma once
 
 #include <Python.h>
+#include <optional>
 #include <QtCore/QVariant>
 
 namespace Qross
@@ -20,8 +21,14 @@ namespace Qross
     PyObject* toPython(const QVariant& value);
 
     /**
-     * \return the C++ counterpart of \p object. Objects without one, such as
-     * class instances, travel as an \a Object::Ptr and come back unchanged.
+     * \return the C++ counterpart of \p object, or nothing with the exception
+     * raised when a value on the way has none, such as an integer beyond
+     * double or a key whose str() fails. Objects without a counterpart of
+     * their own, such as class instances, travel as an \a Object::Ptr and
+     * come back unchanged.
      */
-    QVariant toVariant(PyObject* object);
+    std::optional<QVariant> toVariant(PyObject* object);
+
+    /// \return the text of the str \p object, lone surrogates included.
+    QString toString(PyObject* object);
 }

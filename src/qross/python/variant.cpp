@@ -91,28 +91,7 @@ namespace
         return fromString(color.name(color.alpha() == 255 ? QColor::HexRgb : QColor::HexArgb));
     }
 
-    QString toString(PyObject* object)
-    {
-        const Py_ssize_t length = PyUnicode_GET_LENGTH(object);
-        switch (PyUnicode_KIND(object))
-        {
-        case PyUnicode_1BYTE_KIND:
-            return QString::fromLatin1(reinterpret_cast<const char*>(PyUnicode_1BYTE_DATA(object)), length);
-        case PyUnicode_2BYTE_KIND:
-            return QString(reinterpret_cast<const QChar*>(PyUnicode_2BYTE_DATA(object)), length);
-        default:
-            break;
-        }
-        // A code point beyond the BMP takes a surrogate pair; a surrogate code point, which Python allows, stays a lone one.
-        QString result;
-        result.reserve(length);
-        const Py_UCS4* const data = PyUnicode_4BYTE_DATA(object);
-        for (Py_ssize_t i = 0; i < length; ++i)
-            result += QChar::fromUcs4(data[i]);
-        return result;
-    }
-
-    QVariant fromLong(PyObject* object)
+    std::optional<QVariant> fromLong(PyObject* object)
     {
         int overflow = 0;
         const long long value = PyLong_AsLongLongAndOverflow(object, &overflow);
@@ -120,19 +99,41 @@ namespace
         {
             const unsigned long long large = PyLong_AsUnsignedLongLong(object);
             if (!PyErr_Occurred())
-                return qulonglong(large);
+                return QVariant(qulonglong(large));
             PyErr_Clear();
         }
         if (overflow != 0)
         {
             const double approximate = PyLong_AsDouble(object);
-            PyErr_Clear();
-            return approximate;
+            if (PyErr_Occurred())
+                return std::nullopt;
+            return QVariant(approximate);
         }
         if (value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max())
-            return int(value);
-        return qlonglong(value);
+            return QVariant(int(value));
+        return QVariant(qlonglong(value));
     }
+}
+
+QString Qross::toString(PyObject* object)
+{
+    const Py_ssize_t length = PyUnicode_GET_LENGTH(object);
+    switch (PyUnicode_KIND(object))
+    {
+    case PyUnicode_1BYTE_KIND:
+        return QString::fromLatin1(reinterpret_cast<const char*>(PyUnicode_1BYTE_DATA(object)), length);
+    case PyUnicode_2BYTE_KIND:
+        return QString(reinterpret_cast<const QChar*>(PyUnicode_2BYTE_DATA(object)), length);
+    default:
+        break;
+    }
+    // A code point beyond the BMP takes a surrogate pair; a surrogate code point, which Python allows, stays a lone one.
+    QString result;
+    result.reserve(length);
+    const Py_UCS4* const data = PyUnicode_4BYTE_DATA(object);
+    for (Py_ssize_t i = 0; i < length; ++i)
+        result += QChar::fromUcs4(data[i]);
+    return result;
 }
 
 PyObject* Qross::toPython(const QVariant& value)
@@ -253,32 +254,37 @@ PyObject* Qross::toPython(const QVariant& value)
     return nullptr;
 }
 
-QVariant Qross::toVariant(PyObject* object)
+std::optional<QVariant> Qross::toVariant(PyObject* object)
 {
     if (!object || object == Py_None)
         return QVariant();
     if (PyBool_Check(object))
-        return object == Py_True;
+        return QVariant(object == Py_True);
     if (PyLong_Check(object))
         return fromLong(object);
     if (PyFloat_Check(object))
-        return PyFloat_AsDouble(object);
+        return QVariant(PyFloat_AsDouble(object));
     if (PyUnicode_Check(object))
-        return toString(object);
+        return QVariant(toString(object));
     if (PyBytes_Check(object))
-        return QByteArray(PyBytes_AS_STRING(object), PyBytes_GET_SIZE(object));
+        return QVariant(QByteArray(PyBytes_AS_STRING(object), PyBytes_GET_SIZE(object)));
     if (PyByteArray_Check(object))
-        return QByteArray(PyByteArray_AS_STRING(object), PyByteArray_GET_SIZE(object));
+        return QVariant(QByteArray(PyByteArray_AS_STRING(object), PyByteArray_GET_SIZE(object)));
     if (PyList_Check(object) || PyTuple_Check(object))
     {
         QVariantList list;
         const Py_ssize_t count = PySequence_Size(object);
+        if (count < 0)
+            return std::nullopt;
         for (Py_ssize_t i = 0; i < count; ++i)
         {
             const Ref item(PySequence_GetItem(object, i));
-            list << toVariant(item.get());
+            const auto value = item ? toVariant(item.get()) : std::nullopt;
+            if (!value)
+                return std::nullopt;
+            list << *value;
         }
-        return list;
+        return QVariant(list);
     }
     if (PyDict_Check(object))
     {
@@ -288,10 +294,13 @@ QVariant Qross::toVariant(PyObject* object)
         Py_ssize_t position = 0;
         while (PyDict_Next(object, &position, &key, &value))
         {
-            const Ref keyString(PyObject_Str(key));
-            map.insert(keyString ? toString(keyString.get()) : QString(), toVariant(value));
+            const Ref name(PyObject_Str(key));
+            const auto converted = name ? toVariant(value) : std::nullopt;
+            if (!converted)
+                return std::nullopt;
+            map.insert(toString(name.get()), *converted);
         }
-        return map;
+        return QVariant(map);
     }
     if (isWrapper(object))
         return QVariant::fromValue(unwrapObject(object));
@@ -302,24 +311,24 @@ QVariant Qross::toVariant(PyObject* object)
         const QDate date(PyDateTime_GET_YEAR(object), PyDateTime_GET_MONTH(object), PyDateTime_GET_DAY(object));
         const QTime time(PyDateTime_DATE_GET_HOUR(object), PyDateTime_DATE_GET_MINUTE(object), PyDateTime_DATE_GET_SECOND(object), PyDateTime_DATE_GET_MICROSECOND(object) / 1000);
         if (PyDateTime_DATE_GET_TZINFO(object) == Py_None)
-            return QDateTime(date, time);
+            return QVariant(QDateTime(date, time));
         const Ref offset(PyObject_CallMethod(object, "utcoffset", nullptr));
-        if (!offset || !PyDelta_Check(offset.get()))
-        {
-            PyErr_Clear();
-            return QDateTime(date, time);
-        }
+        if (!offset)
+            return std::nullopt;
+        // A tzinfo may answer None, which leaves the datetime naive after all.
+        if (!PyDelta_Check(offset.get()))
+            return QVariant(QDateTime(date, time));
         const int seconds = PyDateTime_DELTA_GET_DAYS(offset.get()) * 86400 + PyDateTime_DELTA_GET_SECONDS(offset.get());
         const int microseconds = PyDateTime_DELTA_GET_MICROSECONDS(offset.get());
         // Qt holds whole-second offsets within sixteen hours of UTC; any other datetime becomes UTC at the same instant.
         if (const QTimeZone zone = QTimeZone::fromSecondsAheadOfUtc(seconds); zone.isValid() && !microseconds)
-            return QDateTime(date, time, zone);
-        return QDateTime(date, time, QTimeZone::UTC).addMSecs(-(qint64(seconds) * 1000 + microseconds / 1000));
+            return QVariant(QDateTime(date, time, zone));
+        return QVariant(QDateTime(date, time, QTimeZone::UTC).addMSecs(-(qint64(seconds) * 1000 + microseconds / 1000)));
     }
     if (PyDate_Check(object))
-        return QDate(PyDateTime_GET_YEAR(object), PyDateTime_GET_MONTH(object), PyDateTime_GET_DAY(object));
+        return QVariant(QDate(PyDateTime_GET_YEAR(object), PyDateTime_GET_MONTH(object), PyDateTime_GET_DAY(object)));
     if (PyTime_Check(object))
-        return QTime(PyDateTime_TIME_GET_HOUR(object), PyDateTime_TIME_GET_MINUTE(object), PyDateTime_TIME_GET_SECOND(object), PyDateTime_TIME_GET_MICROSECOND(object) / 1000);
+        return QVariant(QTime(PyDateTime_TIME_GET_HOUR(object), PyDateTime_TIME_GET_MINUTE(object), PyDateTime_TIME_GET_SECOND(object), PyDateTime_TIME_GET_MICROSECOND(object) / 1000));
 
     return QVariant::fromValue(Object::Ptr(new PythonObject(object)));
 }
