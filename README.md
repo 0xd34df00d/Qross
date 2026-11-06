@@ -29,6 +29,9 @@ Qross needs CMake 4.3, a C++26 compiler (GCC 16 is the one it is
 developed and tested with), Qt 6.8 or later with Core, Gui, Widgets
 and Test, plus Qml for the JavaScript backend, the Python 3.12 embedding
 development files for the Python backend and Ruby 3.2 for the Ruby backend.
+An application including the headers needs C++23: `Qross::Core` requires
+it of whatever links it when Qross is built as a subdirectory, and a
+pkg-config user sets the standard themselves.
 
     cmake -S src/qross -B build -G Ninja
     cmake --build build
