@@ -388,6 +388,21 @@ private Q_SLOTS:
         QCOMPARE(script->evaluate("runs")->toInt(), 1);
     }
 
+    void resetsFromStarted()
+    {
+        Host local;
+        const auto script = run("var late = typeof Late !== 'undefined';");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("late")->toBool(), false);
+
+        connect(script.get(), &Qross::Script::started, script.get(), [&] {
+            script->reset();
+            script->addObject(&local, QStringLiteral("Late"));
+        });
+        QVERIFY2(script->run(), describe(*script).constData());
+        QCOMPARE(script->evaluate("late")->toBool(), true);
+    }
+
     void exposesTheEngine()
     {
         const auto script = run("var answer = 42;");

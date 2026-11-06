@@ -71,7 +71,7 @@ namespace Qross
         /// The error of the latest run(), call(), evaluate() or functionNames(), if it failed.
         std::optional<Error> error() const;
 
-        /// Drops the state of the runs so far; the next use starts afresh.
+        /// Drops the state of the runs so far; the next use starts afresh. Must not be called from within the running script.
         void reset();
         /// The backend's state, or nullptr before the first use and after reset().
         Context* context() const;
@@ -86,10 +86,12 @@ namespace Qross
         /// The functions the script has defined so far.
         Q_INVOKABLE QStringList functionNames();
     Q_SIGNALS:
-        /// Emitted by run() around the execution; error() is set before finished().
+        /// Emitted at the start of every run(); a slot may still reset() the script or add objects for it.
         void started();
+        /// Emitted at the end of every run(), after error() is set.
         void finished();
     private:
+        std::expected<void, Error> execute();
         std::expected<Context*, Error> ensureContext();
         std::unexpected<Error> fail(Error error);
     };

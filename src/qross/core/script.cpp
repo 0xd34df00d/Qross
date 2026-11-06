@@ -109,24 +109,24 @@ std::expected<Context*, Error> Script::ensureContext()
 std::expected<void, Error> Script::run()
 {
     m_error.reset();
-    if (const auto* const file = std::get_if<File>(&m_config.source))
-    {
-        QFile source(file->path);
-        if (!source.open(QIODevice::ReadOnly))
-            return fail({ QStringLiteral("Cannot read \"%1\": %2").arg(file->path, source.errorString()) });
-        m_code = source.readAll();
-    }
-
-    const auto context = ensureContext();
-    if (!context)
-        return fail(context.error());
-
     Q_EMIT started();
-    const auto result = (*context)->execute();
+    const auto result = execute();
     if (!result)
         m_error = result.error();
     Q_EMIT finished();
     return result;
+}
+
+std::expected<void, Error> Script::execute()
+{
+    if (const auto* const file = std::get_if<File>(&m_config.source))
+    {
+        QFile source(file->path);
+        if (!source.open(QIODevice::ReadOnly))
+            return std::unexpected(Error { QStringLiteral("Cannot read \"%1\": %2").arg(file->path, source.errorString()) });
+        m_code = source.readAll();
+    }
+    return ensureContext().and_then([](Context* context) { return context->execute(); });
 }
 
 std::expected<QVariant, Error> Script::call(const QString& function, const QVariantList& arguments)
