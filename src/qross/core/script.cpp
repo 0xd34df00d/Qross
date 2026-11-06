@@ -196,13 +196,13 @@ QString Script::interpreter() const
 QStringList Script::functionNames()
 {
     m_error.reset();
-    const auto context = ensureContext();
-    if (!context)
+    const auto names = ensureContext().and_then([](Context* context) { return context->functionNames(); });
+    if (!names)
     {
-        m_error = context.error();
+        m_error = names.error();
         return {};
     }
-    return (*context)->functionNames();
+    return *names;
 }
 
 WrapperInterface::~WrapperInterface() = default;

@@ -41,7 +41,7 @@ namespace Qross
         Script* script() const;
 
         virtual std::expected<void, Error> execute() = 0;
-        virtual QStringList functionNames() = 0;
+        virtual std::expected<QStringList, Error> functionNames() = 0;
         virtual std::expected<QVariant, Error> callFunction(const QString& name, const QVariantList& args = {}) = 0;
         virtual std::expected<QVariant, Error> evaluate(const QByteArray& code) = 0;
     };

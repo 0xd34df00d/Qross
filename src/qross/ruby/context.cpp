@@ -202,10 +202,10 @@ void RubyContext::connectSignals()
     }
 }
 
-QStringList RubyContext::functionNames()
+std::expected<QStringList, Error> RubyContext::functionNames()
 {
-    if (!prepare())
-        return {};
+    if (const auto ready = prepare(); !ready)
+        return std::unexpected(ready.error());
     const VALUE names = functions();
     QStringList result;
     for (long i = 0; i < RARRAY_LEN(names); ++i)

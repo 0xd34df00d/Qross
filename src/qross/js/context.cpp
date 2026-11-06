@@ -128,7 +128,7 @@ void JsContext::connectSignals(QQmlEngine& engine)
     }
 }
 
-QStringList JsContext::functionNames()
+std::expected<QStringList, Error> JsContext::functionNames()
 {
     const QJSValue names = ensureEngine().evaluate(QStringLiteral(R"js(
         Object.keys(this).filter(function(name) { return typeof this[name] === 'function'; }, this)

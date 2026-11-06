@@ -371,13 +371,21 @@ end
 
     void refusesOtherThreads()
     {
-        const auto script = run("answer = 42");
+        const auto script = run("def answer = 42");
         QVERIFY2(!script->error(), describe(*script).constData());
         std::expected<QVariant, Qross::Error> result;
-        std::thread([&] { result = script->evaluate("answer"); }).join();
+        QStringList names;
+        std::thread([&] {
+            result = script->evaluate("answer");
+            names = script->functionNames();
+        }).join();
         QVERIFY(!result);
         QVERIFY2(result.error().message.contains(QStringLiteral("thread")), qPrintable(result.error().message));
+        QVERIFY(names.isEmpty());
+        QVERIFY(script->error());
+        QVERIFY2(script->error()->message.contains(QStringLiteral("thread")), qPrintable(script->error()->message));
         QCOMPARE(script->evaluate("answer")->toInt(), 42);
+        QCOMPARE(script->functionNames(), QStringList { QStringLiteral("answer") });
     }
 
     void reportsConversionFailures()

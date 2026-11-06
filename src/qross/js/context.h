@@ -51,7 +51,7 @@ namespace Qross
         Q_INVOKABLE QObject* engine();
 
         std::expected<void, Error> execute() override;
-        QStringList functionNames() override;
+        std::expected<QStringList, Error> functionNames() override;
         std::expected<QVariant, Error> callFunction(const QString& name, const QVariantList& args = QVariantList()) override;
         std::expected<QVariant, Error> evaluate(const QByteArray& code) override;
     private:

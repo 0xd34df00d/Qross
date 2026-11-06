@@ -175,7 +175,7 @@ void PythonContext::connectSignals()
     }
 }
 
-QStringList PythonContext::functionNames()
+std::expected<QStringList, Error> PythonContext::functionNames()
 {
     const Gil gil;
     PyObject* const dict = PyModule_GetDict(ensureModule());
