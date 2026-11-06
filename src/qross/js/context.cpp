@@ -130,9 +130,24 @@ void JsContext::connectSignals(QQmlEngine& engine)
 
 std::expected<QStringList, Error> JsContext::functionNames()
 {
-    const QJSValue names = ensureEngine().evaluate(QStringLiteral(R"js(
-        Object.keys(this).filter(function(name) { return typeof this[name] === 'function'; }, this)
-    )js"));
+    QQmlEngine& engine = ensureEngine();
+    // Object.keys() reads every property on its way and so runs getters; for-in and the descriptor do not.
+    // The function keeps the variables out of the globals of the script.
+    QStringList trace;
+    const QJSValue names = engine.evaluate(QStringLiteral(R"js(
+        (function() {
+            var names = [];
+            for (var name in this) {
+                var property = Object.getOwnPropertyDescriptor(this, name);
+                if (property !== undefined && typeof property.value === 'function')
+                    names.push(name);
+            }
+            return names;
+        }).call(this)
+    )js"),
+        {}, 1, &trace);
+    if (!trace.isEmpty() || engine.isInterrupted())
+        return std::unexpected(errorOf(names, trace));
     return names.toVariant().toStringList();
 }
 

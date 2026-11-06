@@ -177,6 +177,51 @@ private Q_SLOTS:
         QCOMPARE(script->functionNames(), QStringList({ QStringLiteral("first"), QStringLiteral("second") }));
     }
 
+    void listsFunctionsWithoutRunningGetters()
+    {
+        const auto script = run(R"js(
+            function good() {}
+            var reads = 0;
+            Object.defineProperty(this, 'counted', { enumerable: true, get: function() { reads++; return function() {}; } });
+            Object.defineProperty(this, 'throwing', { enumerable: true, get: function() { throw new Error('no'); } });
+        )js");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->functionNames(), QStringList { QStringLiteral("good") });
+        QVERIFY(!script->error());
+        QCOMPARE(script->evaluate("reads")->toInt(), 0);
+    }
+
+    void keepsGlobalsWhileListingFunctions()
+    {
+        const auto script = run(R"js(
+            function good() {}
+            function name() { return 'n'; }
+            function names() { return 'ns'; }
+            function property() { return 'p'; }
+        )js");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        const QStringList expected { QStringLiteral("good"), QStringLiteral("name"), QStringLiteral("names"), QStringLiteral("property") };
+        QCOMPARE(script->functionNames(), expected);
+        QCOMPARE(script->functionNames(), expected);
+        QCOMPARE(script->call(QStringLiteral("names"))->toString(), QStringLiteral("ns"));
+    }
+
+    void reportsInterruptedEnumeration()
+    {
+        const auto script = run("function good() {}");
+        QObject* engine = nullptr;
+        QVERIFY(QMetaObject::invokeMethod(script->context(), "engine", Q_RETURN_ARG(QObject*, engine)));
+        auto* const jsEngine = qobject_cast<QJSEngine*>(engine);
+        QVERIFY(jsEngine);
+
+        jsEngine->setInterrupted(true);
+        QVERIFY(script->functionNames().isEmpty());
+        QVERIFY(script->error());
+        jsEngine->setInterrupted(false);
+        QCOMPARE(script->functionNames(), QStringList { QStringLiteral("good") });
+        QVERIFY(!script->error());
+    }
+
     void callsFunctions()
     {
         const auto script = run(R"js(
