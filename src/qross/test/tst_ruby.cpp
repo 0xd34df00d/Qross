@@ -10,8 +10,10 @@
 #include <expected>
 #include <thread>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QFile>
 #include <QtCore/QPointer>
 #include <QtCore/QStringListModel>
+#include <QtCore/QTemporaryDir>
 #include <QtTest/QTest>
 
 class Host : public QObject
@@ -565,6 +567,33 @@ def name_of = Local.objectName
         const auto failed = script->call(QStringLiteral("name_of"));
         QVERIFY(!failed);
         QVERIFY(failed.error().message.startsWith(QStringLiteral("RuntimeError")));
+    }
+
+    void reportsAFrozenLoadPath()
+    {
+        QTemporaryDir first;
+        QTemporaryDir second;
+        QVERIFY(first.isValid() && second.isValid());
+        const auto write = [](const QString& path) {
+            QFile file(path);
+            return file.open(QIODevice::WriteOnly) && file.write("def answer = 42\n") > 0;
+        };
+        const QString before = first.filePath(QStringLiteral("before.rb"));
+        const QString after = second.filePath(QStringLiteral("after.rb"));
+        QVERIFY(write(before) && write(after));
+
+        Qross::Script script(Qross::Config { .source = Qross::File { before }, .interpreter = QStringLiteral("ruby") });
+        QVERIFY2(script.run(), describe(script).constData());
+        QCOMPARE(script.call(QStringLiteral("answer"))->toInt(), 42);
+
+        // Freezing $LOAD_PATH is for good, which is why this test runs last.
+        QVERIFY(!run("$LOAD_PATH.freeze")->error());
+        Qross::Script frozen(Qross::Config { .source = Qross::File { after }, .interpreter = QStringLiteral("ruby") });
+        const auto result = frozen.run();
+        QVERIFY(!result);
+        QVERIFY2(result.error().message.contains(QStringLiteral("frozen")), qPrintable(result.error().message));
+        QVERIFY(frozen.error());
+        QVERIFY(!frozen.evaluate("1"));
     }
 };
 

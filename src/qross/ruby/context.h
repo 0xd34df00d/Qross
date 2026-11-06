@@ -11,6 +11,7 @@
 #include <QtCore/QList>
 #include <QtCore/QPointer>
 #include "../core/context.h"
+#include "call.h"
 #include "rubyapi.h"
 
 namespace Qross
@@ -72,7 +73,7 @@ namespace Qross
         std::expected<void, Error> ensureContext();
         void resetContext();
         void publish(VALUE accessors, const QString& name, QObject* object);
-        void appendLoadPath();
+        Result appendLoadPath();
         std::expected<QVariant, Error> run(const QByteArray& code, const QString& file);
         VALUE functions();
         void connectSignals();

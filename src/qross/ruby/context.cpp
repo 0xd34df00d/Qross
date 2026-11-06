@@ -113,7 +113,11 @@ std::expected<void, Error> RubyContext::ensureContext()
         return std::unexpected(errorOf(binding.error()));
     }
     m_binding = *binding;
-    appendLoadPath();
+    if (const Result path = appendLoadPath(); !path)
+    {
+        resetContext();
+        return std::unexpected(errorOf(path.error()));
+    }
     return {};
 }
 
@@ -128,17 +132,19 @@ void RubyContext::publish(VALUE accessors, const QString& name, QObject* object)
         rb_const_set(rb_singleton_class(m_self), id, wrapper);
 }
 
-void RubyContext::appendLoadPath()
+Result RubyContext::appendLoadPath()
 {
     // Appended rather than put first, so that a script named like an
     // installed library does not shadow it for itself.
     const QString directory = script()->directory();
     if (directory.isEmpty())
-        return;
+        return Qnil;
     const VALUE path = rb_gv_get("$LOAD_PATH");
     const VALUE entry = fromString(directory);
-    if (RB_TYPE_P(path, T_ARRAY) && !RTEST(rb_ary_includes(path, entry)))
-        rb_ary_push(path, entry);
+    const Result included = callProtected(path, rb_intern("include?"), { entry });
+    if (!included || RTEST(*included))
+        return included;
+    return callProtected(path, rb_intern("push"), { entry });
 }
 
 std::expected<QVariant, Error> RubyContext::run(const QByteArray& code, const QString& file)
