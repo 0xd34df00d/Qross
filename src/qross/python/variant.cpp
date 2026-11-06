@@ -31,8 +31,9 @@ namespace
 
     PyObject* fromString(const QString& string)
     {
-        const QByteArray utf8 = string.toUtf8();
-        return PyUnicode_FromStringAndSize(utf8.constData(), utf8.size());
+        // Decoded as UTF-16 rather than UTF-8 so that a lone surrogate, which both sides can hold, survives.
+        int byteOrder = Q_BYTE_ORDER == Q_LITTLE_ENDIAN ? -1 : 1;
+        return PyUnicode_DecodeUTF16(reinterpret_cast<const char*>(string.constData()), string.size() * 2, "surrogatepass", &byteOrder);
     }
 
     PyObject* fromList(const QVariantList& list)
@@ -92,9 +93,23 @@ namespace
 
     QString toString(PyObject* object)
     {
-        Py_ssize_t size = 0;
-        const char* const utf8 = PyUnicode_AsUTF8AndSize(object, &size);
-        return utf8 ? QString::fromUtf8(utf8, size) : QString();
+        const Py_ssize_t length = PyUnicode_GET_LENGTH(object);
+        switch (PyUnicode_KIND(object))
+        {
+        case PyUnicode_1BYTE_KIND:
+            return QString::fromLatin1(reinterpret_cast<const char*>(PyUnicode_1BYTE_DATA(object)), length);
+        case PyUnicode_2BYTE_KIND:
+            return QString(reinterpret_cast<const QChar*>(PyUnicode_2BYTE_DATA(object)), length);
+        default:
+            break;
+        }
+        // A code point beyond the BMP takes a surrogate pair; a surrogate code point, which Python allows, stays a lone one.
+        QString result;
+        result.reserve(length);
+        const Py_UCS4* const data = PyUnicode_4BYTE_DATA(object);
+        for (Py_ssize_t i = 0; i < length; ++i)
+            result += QChar::fromUcs4(data[i]);
+        return result;
     }
 
     QVariant fromLong(PyObject* object)

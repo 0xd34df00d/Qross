@@ -139,6 +139,9 @@ script makes, by either route, last until its next run or its destruction.
 | QObject*                  | wrapper                           | wrapper                | wrapper                   |
 | Qross::Object::Ptr        | value whose value() is the object | the script object      | the script object         |
 
+A `str` with a lone surrogate, as `os.fsdecode()` leaves for a byte that
+is not UTF-8, keeps it in the `QString` and gets it back.
+
 A `QDateTime` in local time is a naive `datetime` in Python and comes
 back as one; any other `QDateTime` carries its offset from UTC both ways.
 An offset Qt cannot hold, beyond sixteen hours or with a fraction of a

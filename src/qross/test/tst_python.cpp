@@ -412,6 +412,25 @@ checks = [
         QCOMPARE(script->evaluate("checks")->toList(), QVariantList({ true, true, true, true, true, true, true, true, true, true }));
     }
 
+    void carriesLoneSurrogates()
+    {
+        const auto script = run(R"py(
+def same(x):
+    return x
+
+lone = 'a\udcffb'
+wide = '\U0001F600'
+checks = [Global.echo(lone) == lone, Global.echo(wide) == wide, len(Global.echo(wide)) == 1]
+)py");
+        QVERIFY2(!script->error(), describe(*script).constData());
+        QCOMPARE(script->evaluate("checks")->toList(), QVariantList({ true, true, true }));
+        const QString lone = QStringLiteral("a") + QChar(char16_t(0xDCFF)) + QStringLiteral("b");
+        QCOMPARE(script->evaluate("lone")->toString(), lone);
+        QCOMPARE(script->call(QStringLiteral("same"), { lone })->toString(), lone);
+        QCOMPARE(script->evaluate("wide")->toString(), QString::fromUcs4(U"\U0001F600"));
+        QCOMPARE(script->evaluate("1 + 1")->toInt(), 2);
+    }
+
     void registersModules()
     {
         const auto first = run(R"py(
